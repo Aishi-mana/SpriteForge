@@ -159,7 +159,7 @@ def save(root, name, data):
     d = _dir(root, name)
     d.mkdir(parents=True, exist_ok=True)
     images = data.get("images") or {}
-    for key in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref"):
+    for key in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant"):
         f = d / f"{key}.png"
         if images.get(key):
             f.write_bytes(_decode_png(images[key]))
@@ -187,7 +187,7 @@ def load(root, name):
     doc["results"] = _load_results(d)
     doc["portrait"] = _load_portrait(d)
     doc["tileset"] = _load_tileset(d)
-    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref")}
+    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant")}
     return doc
 
 

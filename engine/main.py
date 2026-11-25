@@ -894,6 +894,7 @@ def dirs_generate(ref: Optional[UploadFile] = File(None), dirs: str = Form(...),
 class CharacterView(BaseModel):
     reference: str
     view: str
+    locks: Optional[List[str]] = None
     description: str = ""
     checkpoint: str
     lora: str = ""
@@ -925,7 +926,7 @@ def character_view(b: CharacterView):
         if art!="pixel" and b.size!=256: raise ValueError("HD direction canvas is limited to 256 px")
         anchor=character.decode_reference(b.reference)
         if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
-        prompt=character.view_prompt(b.view,b.description)
+        prompt=character.view_prompt(b.view,b.description,b.locks)
         if len(b.negative)>1800: raise ValueError("Negative prompt too long")
         ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
         seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
@@ -936,6 +937,42 @@ def character_view(b: CharacterView):
                     gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
         sprite=_dec_img(result["sprite"])
         return {**result,"dir":b.view,"seed":seed,"joints":rig.autoplace(sprite),"overrides":[]}
+    except ValueError as e: raise HTTPException(400,str(e))
+
+
+class CharacterVariation(CharacterView):
+    view: str = "S"  # variation does not force a camera angle
+    target: str = "outfit"
+    change: str
+    lock_palette: bool = False
+
+
+@app.post("/api/character/variation")
+def character_variation(b: CharacterVariation):
+    """Generate an independent candidate from the immutable master."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    art=_art_style(b.art_style)
+    try:
+        if not mf.describe(ckpt)["reference"]: raise ValueError("Select a model with image-reference support")
+        if b.size not in ((32,48,64,96,128) if art=="pixel" else (256,512,768,1024)):
+            raise ValueError("Unsupported output size")
+        prompt,locks=character.variation_prompt(b.description,b.target,b.change,b.locks)
+        if len(b.negative)>1800: raise ValueError("Negative prompt too long")
+        anchor=character.decode_reference(b.reference)
+        if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
+        ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        # Do not force the old low-colour palette when the selected change can introduce new colours.
+        palette_safe=b.lock_palette and b.target in ("pose","expression")
+        neg=", ".join(x for x in (b.negative,"multiple characters, duplicate figures, text, cropped feet, scenery") if x)
+        result=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,neg,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                    ref,max(0.,min(b.ip_scale,1.)),lambda raw:character.finish_variation(raw,anchor,art,b.size,b.colors,palette_safe,b.bg_tol),
+                    gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
+        result["info"].update(target=b.target,change=b.change,locks=locks,checkpoint=b.checkpoint,
+                              reference_method=lr.route(ckpt) or "sdxl_ip_adapter",lock_mode="reference_guidance")
+        return result
     except ValueError as e: raise HTTPException(400,str(e))
 
 
