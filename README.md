@@ -22,6 +22,10 @@ Built for an 8 GB laptop GPU (RTX 5070 Laptop, 32 GB RAM): SDXL runs with CPU of
 Also: a **pixel editor** (Edit buttons everywhere), **projects** (save/load/autosave), a **local assistant chat**
 (proposes prompts/settings as "Apply" buttons), and a **Diagnostics** panel (GPU, models, downloads, self-tests).
 
+## Phase 23: multi-style characters
+
+Generate and Reference pose now support retro pixel art, modern anime, four chibi presets and custom illustration. HD mode preserves full colour at 256–1024 px with optional background keying on Generate. Pick a compatible SDXL checkpoint and matching optional LoRA. See [Phase 23](docs/phases/PHASE23.md). HD animation and other pixel-specific tools remain outside this initial implementation.
+
 ## Install and run (Windows)
 
 1. Install **Python 3.10-3.12**. For the desktop window also install **Rust** (rustup.rs), the VS C++ Build Tools and WebView2 (built into Windows 11).

@@ -249,3 +249,6 @@ a random autotile map preview, and export with the neighbour lookup, a Godot 4 T
 ## Phase 22 - tile follow-ups
 Corner (dual-grid) sets and multi-terrain sets (81 / 256 tiles) with exact joins, animated tiles (scroll / ripple / shimmer, loop-perfect, GIF + Godot + Tiled export), per-tile solid flags exported as collision shapes,
 and AI seam repair (inpaint only the half-shifted seam cross). Details: docs/phases/PHASE22.md.
+
+## Phase 23 - multi-style character generation
+Style presets, HD full-colour output, reference pose support and queue/project settings. See docs/phases/PHASE23.md. Hardware validation pending.
