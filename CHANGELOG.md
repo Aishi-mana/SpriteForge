@@ -280,3 +280,6 @@ Separate master-image direction workflow, identity/view prompts, Qwen/Neta/SDXL 
 
 ## Phase 30 — Character identity and appearance locking
 Feature-specific reference guidance, temporary target unlocks, separate full-body pose/outfit/expression/hair variants, master/candidate comparison and persistence. Tests added; live verification pending.
+
+## Phase 31 — Modular character customization
+Non-destructive CPU layer stack, transparent body/outfit/hair/accessory import and swaps, per-layer transforms, composite PNG, reusable ZIP recipe and source assets, project persistence and Reference/Animate handoff. Tests added; browser validation pending.
