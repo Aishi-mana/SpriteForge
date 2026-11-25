@@ -233,7 +233,7 @@ def smoke_test(ckpt, lora, lora_dir):
 
 
 def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strength=0.45, steps=22, cfg=7.0, seed=0,
-            bg="magenta", kind="sprite", ip_image=None, ip_scale=0.7):
+            bg="magenta", kind="sprite", ip_image=None, ip_scale=0.7, art_style="pixel"):
     """Repaint only the white area of `mask` (low strength = stay close to what is there). Returns a PIL RGB image."""
     import torch
     with _lock:
@@ -244,9 +244,9 @@ def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strengt
             pipe.set_ip_adapter_scale(ip_scale)
             kw["ip_adapter_image"] = ip_image
         try:
-            neg = (negative + ", " if negative else "") + negative_for(kind)
+            neg = (negative + ", " if negative else "") + negative_for(kind, art_style)
             gen = torch.Generator("cpu").manual_seed(int(seed))
-            out = pipe(prompt=build_prompt(prompt, bg, kind), negative_prompt=neg, image=image, mask_image=mask,
+            out = pipe(prompt=build_prompt(prompt, bg, kind, art_style), negative_prompt=neg, image=image, mask_image=mask,
                        strength=strength, num_inference_steps=steps, guidance_scale=cfg,
                        width=image.width, height=image.height, generator=gen, **kw).images[0]
             torch.cuda.empty_cache()

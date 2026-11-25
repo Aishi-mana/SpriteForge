@@ -107,7 +107,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles
+from . import styles, inbetween
 
 
 def _art_style(value):
@@ -393,6 +393,81 @@ def rig_redo(b: RedoBody):
         raise HTTPException(500, f"{type(ex).__name__}: {ex}{hint}")
     return {"frames": [b64(f) for f in imgs], "redone": idx, "refine": info,
             "accept": [i not in set(info["reverted_idx"]) for i in range(len(imgs))]}
+
+
+class ReferenceFrames(BaseModel):
+    start: str
+    end: str
+    count: int = 8
+    fps: int = 10
+    method: str = "ai"
+    prompt: str = ""
+    negative: str = ""
+    checkpoint: str = ""
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "pixel"
+    steps: int = 25
+    cfg: float = 7.0
+    strength: float = .65
+    seed: int = -1
+    sampler: str = "euler_a"
+
+
+@app.post("/api/rig/reference_frames")
+def rig_reference_frames(b: ReferenceFrames):
+    try:
+        start,end=_dec_img(b.start),_dec_img(b.end)
+        inbetween.validate(start,end,b.count)
+    except Exception as e:
+        raise HTTPException(400,str(e))
+    if b.method not in ("ai","blend"):
+        raise HTTPException(400,"Unknown in-between method")
+    style=_art_style(b.art_style)
+    seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+    redraw=None
+    if b.method=="ai" and b.count>2:
+        ckpt,lora_dir=_paths(b.checkpoint)
+        gen.set_sampler(b.sampler)
+        def redraw(guide,t,i):
+            def run(image,mask,ref):
+                prompt=f"{b.prompt}, intermediate animation pose, {round(t*100)} percent through motion, consistent character and costume, single coherent pose, no ghosting"
+                return gen.inpaint(ckpt,b.lora,b.lora_weight,lora_dir,prompt,b.negative,image,mask,
+                                   strength=max(.15,min(.85,b.strength)),steps=max(12,min(50,b.steps)),cfg=b.cfg,
+                                   seed=seed,bg="magenta",ip_image=ref,ip_scale=.7,art_style=style)
+            return inbetween.ai_frame(guide,start,end,t,run,style)
+    try:
+        imgs=inbetween.frames(start,end,b.count,redraw)
+    except Exception as e:
+        raise HTTPException(500,f"{type(e).__name__}: {e}")
+    return {"frames":[b64(im) for im in imgs],"fps":max(1,min(60,b.fps)),"size":list(start.size),
+            "pivot":[start.width/2,start.height-1],"info":{"method":b.method,"seed":seed,"endpoints_locked":True}}
+
+
+class ReferenceExport(BaseModel):
+    frames: List[str]
+    fps: int = 10
+    name: str = "sprite"
+    options: dict = {}
+
+
+@app.post("/api/rig/reference_export")
+def rig_reference_export(b: ReferenceExport):
+    try:
+        if not 2<=len(b.frames)<=32:
+            raise ValueError("Need 2-32 frames")
+        imgs=[_dec_img(u) for u in b.frames]
+        inbetween.validate(imgs[0],imgs[-1],len(imgs))
+        if any(im.size!=imgs[0].size for im in imgs):
+            raise ValueError("Frames must share canvas dimensions")
+        w,h=imgs[0].size
+        opts=dict(b.options,crop=False,uniform=True,frames=True,smooth=rig.is_hd(imgs[0]))
+        return exporter.export_pack([{"name":"reference","fps":max(1,min(60,b.fps)),"loop":False,
+                                     "frames":imgs,"pivot":(w/2,h-1)}],opts,b.name,ROOT)
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    except Exception as e:
+        raise HTTPException(500,f"{type(e).__name__}: {e}")
 
 
 class ExportBody(BaseModel):
