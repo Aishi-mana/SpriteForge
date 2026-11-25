@@ -255,3 +255,6 @@ Style presets, HD full-colour output, reference pose support and queue/project s
 
 ## Phase 24 — HD rig animation (initial implementation)
 Automatic smooth rigid-bone rendering for sources above 160 px, alpha preservation, preview fitting, HD export filtering and memory budgets. Regression tests added; execution and visual validation pending.
+
+## Pose preset library
+Reference pose editor supports saving changes to existing pose templates, named custom poses, factory reset and clearing saved overrides. Stored in local browser/webview preferences; project/history snapshots retain their own edited skeletons. Tests added; execution pending.

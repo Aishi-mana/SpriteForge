@@ -282,7 +282,11 @@ img.px{image-rendering:pixelated}
  <div class="ctl">
   <div class="mut">Drag joints. <b>Shift+drag</b> moves the whole figure.</div>
   <label>Preset</label><select id="preset" onchange="loadPreset(this.value)"></select>
-  <div class="row"><button class="sec" onclick="mirror()">Mirror ⇄</button><button class="sec" onclick="loadPreset($('preset').value)">Reset</button></div>
+  <div class="row"><button class="sec" onclick="mirror()">Mirror ⇄</button><button class="sec" onclick="loadPreset($('preset').value)">Reset to saved</button></div>
+  <div class="row"><button class="sec" onclick="savePoseDefault()">Save changes</button><button class="sec" onclick="resetPoseFactory()">Reset factory</button></div>
+  <label>New preset name</label><input id="posepresetname" maxlength="60" placeholder="e.g. My chibi stand">
+  <div class="row"><button class="sec" onclick="savePoseNew()">Save as new</button><button class="sec" onclick="deletePoseSaved()">Clear saved / delete</button></div>
+  <div class="mut" id="posepresetstatus">Presets are saved locally on this device.</div>
   <label>Figure scale (about the feet)</label><input id="scl" type="range" min="0.5" max="1.5" step="0.01" value="1">
   <div class="chk"><input id="onion" type="checkbox" checked onchange="redraw()"><span>Show reference behind skeleton</span></div>
   <div class="mut" style="margin-top:10px">Tip: line the skeleton up over the reference in the "Stand" preset first, then keep the same scale for every pose so frames match.</div>
@@ -450,8 +454,26 @@ const PRESETS={
  'Crouch (side)':mk(SIDE,{[N]:[.58,.37],[NECK]:[.51,.44],[RS]:[.495,.45],[LS]:[.525,.45],[RE]:[.50,.55],[RW]:[.53,.62],[LE]:[.54,.55],[LW]:[.56,.63],[RH]:[.48,.65],[LH]:[.52,.65],[RK]:[.55,.74],[RA]:[.50,.86],[LK]:[.60,.745],[LA]:[.56,.86],[REY]:[.55,.35],[LEY]:[.575,.35],[RER]:[.51,.36],[LER]:[.53,.365]})};
 const SWAP=[[2,5],[3,6],[4,7],[8,11],[9,12],[10,13],[14,15],[16,17]];
 let pts=PRESETS['Stand (side, facing right)'].map(p=>p.slice()),drag=null,lastP=null,lastScale=1;
-$('preset').innerHTML=Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join('');$('preset').value='Stand (side, facing right)';
-function loadPreset(k){markDirty();pts=PRESETS[k].map(p=>p.slice());$('scl').value=1;lastScale=1;redraw()}
+/*POSE-PRESET-START*/
+const POSE_KEY='sf_pose_presets_v1', POSE_START='Stand (side, facing right)';
+const poseOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+function validPoseRecord(r){return !!r&&Array.isArray(r.pts)&&r.pts.length===18&&r.pts.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>Number.isFinite(v)&&v>=0&&v<=1))&&Number.isFinite(r.scale)&&r.scale>=.5&&r.scale<=1.5}
+function readPoseLibrary(){const out=Object.create(null);try{const data=JSON.parse(localStorage.getItem(POSE_KEY)||'{}');for(const [k,v] of Object.entries(data||{}))if(k.length<=60&&validPoseRecord(v))out[k]=v}catch(e){}return out}
+let poseLibrary=readPoseLibrary();
+function poseStatus(s){$('posepresetstatus').textContent=s}
+function writePoseLibrary(next){try{localStorage.setItem(POSE_KEY,JSON.stringify(next));poseLibrary=next;return true}catch(e){poseStatus('Could not save presets: '+e.message);return false}}
+function poseExists(k){return poseOwn(PRESETS,k)||poseOwn(poseLibrary,k)}
+function poseOptions(k){const sel=$('preset');sel.replaceChildren();for(const name of new Set([...Object.keys(PRESETS),...Object.keys(poseLibrary)])){const opt=document.createElement('option');opt.value=name;opt.textContent=name+(poseOwn(poseLibrary,name)?' (saved)':'');sel.appendChild(opt)}sel.value=poseExists(k)?k:POSE_START}
+function poseSnapshot(){return {pts:pts.map(p=>p.slice()),scale:+$('scl').value}}
+function applyPoseRecord(r){pts=r.pts.map(p=>p.slice());$('scl').value=r.scale;lastScale=r.scale;markDirty();redraw()}
+function loadPreset(k){if(!poseExists(k))k=POSE_START;$('preset').value=k;applyPoseRecord(poseOwn(poseLibrary,k)?poseLibrary[k]:{pts:PRESETS[k],scale:1})}
+function savePoseDefault(){const k=$('preset').value;if(!poseExists(k))return;const record=poseSnapshot();if(!validPoseRecord(record))return poseStatus('Invalid pose');const next=Object.assign(Object.create(null),poseLibrary,{[k]:record});if(writePoseLibrary(next)){poseOptions(k);poseStatus('Saved changes to '+k);markDirty()}}
+function savePoseNew(){const k=$('posepresetname').value.trim();if(!k||k.length>60)return poseStatus('Enter a name (1–60 characters).');if(poseExists(k))return poseStatus('Name already exists. Choose another or use Save changes.');const record=poseSnapshot();if(!validPoseRecord(record))return poseStatus('Invalid pose');const next=Object.assign(Object.create(null),poseLibrary,{[k]:record});if(writePoseLibrary(next)){poseOptions(k);$('posepresetname').value='';poseStatus('Created '+k);markDirty()}}
+function resetPoseFactory(){const k=$('preset').value;if(!poseOwn(PRESETS,k))return poseStatus('Custom presets have no factory version. Use Reset to saved.');applyPoseRecord({pts:PRESETS[k],scale:1});poseStatus('Factory pose restored; saved changes kept.')}
+function deletePoseSaved(){const k=$('preset').value;if(!poseOwn(poseLibrary,k))return poseStatus('No saved changes to clear.');if(!confirm('Clear saved pose "'+k+'"?'))return;const next=Object.assign(Object.create(null),poseLibrary);delete next[k];if(writePoseLibrary(next)){const target=poseOwn(PRESETS,k)?k:POSE_START;poseOptions(target);loadPreset(target);poseStatus('Cleared '+k)}}
+poseOptions(POSE_START);
+if(poseOwn(poseLibrary,POSE_START)){const r=poseLibrary[POSE_START];pts=r.pts.map(p=>p.slice());$('scl').value=r.scale;lastScale=r.scale}
+/*POSE-PRESET-END*/
 function mirror(){markDirty();pts=pts.map(p=>[1-p[0],p[1]]);SWAP.forEach(([a,b])=>{[pts[a],pts[b]]=[pts[b],pts[a]]});redraw()}
 function drawPose(ctx,W,stick,rad){
  LIMBS.forEach(([a,b],i)=>{const x1=pts[a][0]*W,y1=pts[a][1]*W,x2=pts[b][0]*W,y2=pts[b][1]*W;
@@ -610,7 +632,7 @@ async function loadProject(){const name=$('pname').value.trim();if(!name){updPSt
  try{const d=await api('/api/projects/'+encodeURIComponent(name));
   applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};
   if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
-  const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&PRESETS[sk.preset])$('preset').value=sk.preset}
+  const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}
   if(d.images.anim)setAnim(d.images.anim,{joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
   DR.slots=(d.directions&&d.directions.slots)||{};
   TR.a=d.images.terra||null;TR.b=d.images.terrb||null;TR.c=d.images.terrc||null;TR.d=d.images.terrd||null;TR.res=null;trSlots();TL.src=d.images.tile||null;TL.tiles=(d.tileset&&d.tileset.tiles)||[];tsRender();tlShow();TP.src=d.images.tpl||null;TP.ref=d.images.tplref||null;TP.joints=(d.template&&d.template.joints)||null;TP.ovr=(d.template&&d.template.ovr)||[];tpShow();
@@ -1091,7 +1113,7 @@ async function hOpen(id){try{const j=await api('/api/jobs/'+id),d=$('hdetail'),s
  d.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 function hUse(j){applySettings(j.ui||{});const im=j.images||{};
  if(j.kind=='reference'){if(im.ref)setRef(im.ref);$('useskel').checked=!!im.pose;const sk=(j.ui||{}).__skel;
-  if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&PRESETS[sk.preset])$('preset').value=sk.preset}}
+  if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}}
  markDirty();tab(hTab(j));$('status').className='';$('status').textContent='Settings loaded from history. Change anything you like and press Generate.'}
 async function hCompare(){const ids=[...QS.sel].slice(0,4);if(ids.length<2){$('status').className='err';$('status').textContent='Tick "compare" on 2-4 history cards first';return}
  try{const list=await Promise.all(ids.map(i=>api('/api/jobs/'+i))),diff=qDiff(list);$('status').className='';$('status').textContent=diff.length?`${diff.length} setting(s) differ: ${diff.join(', ')}`:'Identical settings';
