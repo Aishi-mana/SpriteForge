@@ -95,7 +95,7 @@ img.px{image-rendering:pixelated}
 <div class="mut" id="pstat">No project (type a name and press Save)</div>
 <div class="tabs"><button id="t1" class="on" onclick="tab(1)">Generate</button><button id="t2" onclick="tab(2)">Reference pose</button><button id="t3" onclick="tab(3)">Pixelize</button><button id="t4" onclick="tab(4)">Animate</button><button id="t5" onclick="tab(5)">Portrait</button><button id="t6" onclick="tab(6)">Palette</button><button id="t7" onclick="tab(7)">Template</button><button id="t8" onclick="tab(8)">Directions</button><button id="t9" onclick="tab(9)">Queue</button><button id="t10" onclick="tab(10)">Tiles &amp; props</button></div>
 
-<div id="p-style"><label>Art style</label><select id="artstyle" onchange="styleChanged()"><option value="pixel">Retro pixel art</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select><div id="hdsettings" class="hide"><label>HD output (long side)</label><select id="hdsize"><option>256</option><option>512</option><option selected>768</option><option>1024</option></select><label>Generate resolution (Generate tab)</label><select id="hdgen"><option>640</option><option>768</option><option selected>1024</option></select><div class="mut">Full colour; no palette reduction. Select an anime SDXL checkpoint and optional matching LoRA. Reference uses its own generation size; HD animation is not yet supported.</div></div></div>
+<div id="p-style"><label>Art style</label><select id="artstyle" onchange="styleChanged()"><option value="pixel">Retro pixel art</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select><div id="hdsettings" class="hide"><label>HD output (long side)</label><select id="hdsize"><option>256</option><option>512</option><option selected>768</option><option>1024</option></select><label>Generate resolution (Generate tab)</label><select id="hdgen"><option>640</option><option>768</option><option selected>1024</option></select><div class="mut">Full colour; no palette reduction. Select an anime SDXL checkpoint and optional matching LoRA. Reference uses its own generation size; HD animation uses smooth rigid-bone rendering; AI cleanup is pixel-only.</div></div></div>
 <div id="p-prompt"><label>Prompt</label><textarea id="prompt">knight with blue armor and red cape, holding a sword, standing</textarea></div>
 
 <div id="p-ref" class="hide">
@@ -481,7 +481,7 @@ function render(results,target){const o=target||$('out');o.innerHTML='';results.
  c.innerHTML=`<div class="pair">${d.raw?`<div><div class="mut">Raw</div><img width="220" src="${d.raw}"></div>`:''}<div><div class="mut">${txt}</div><img class="px" src="${d.sprite}"></div></div>
  <div class="row"><button class="sec" data-a="edit">Edit</button>${d.rig?'<button class="sec" data-a="rig">Animate (template rig)</button>':''}<button class="sec" data-a="ref">Use as reference</button><button class="sec" data-a="anim">Animate</button><button class="sec" data-a="tile">To tileset</button><button class="sec" data-a="save">Save</button><button class="sec" data-a="1">PNG</button><button class="sec" data-a="8">PNG 8×</button></div>`;
  const im=c.querySelector('img.px');im.onload=()=>{const k=Math.max(1,Math.floor(256/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=inf.pipeline=='hd'?Math.min(320,im.naturalWidth)+'px':im.naturalWidth*k+'px';if(inf.pipeline=='hd')im.style.imageRendering='auto'};
- if(inf.pipeline=='hd')c.querySelectorAll('[data-a="anim"],[data-a="edit"],[data-a="8"],[data-a="tile"]').forEach(b=>b.disabled=true);
+ if(inf.pipeline=='hd')c.querySelectorAll('[data-a="edit"],[data-a="8"],[data-a="tile"]').forEach(b=>b.disabled=true);
  c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='rig'?animateWithRig(d):b.dataset.a=='edit'?openEditor(d.sprite,{label:'Update this result',apply:u=>{d.sprite=u;render(results,target)}}):b.dataset.a=='ref'?useRef(d.sprite):b.dataset.a=='anim'?setAnim(d.sprite):b.dataset.a=='tile'?tlUse(d.sprite):b.dataset.a=='save'?saveSprite(d.sprite):dl(+b.dataset.a,d.sprite,inf.seed));o.appendChild(c)})}
 /*QUEUE-RUN*/
 async function run(){if(mode<3||mode==10){if(!checkModel())return;return runQueued()}
@@ -500,7 +500,7 @@ const BC=["#ff6363","#ffd666","#66d966","#50c8c8","#6699ff","#be78ff","#ff963c",
 let aImg=new Image(),joints=null,ovr=new Map(),partsImg=null,zoom=4,adrag=null,aframes=[],araw=[],aTimer=null,aFi=0,playing=true;
 $('bonesel').innerHTML=BN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
 $('afile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>setAnim(r.result);r.readAsDataURL(f)};
-function setAnim(u,restore){aSrc=u;ovr.clear();partsImg=null;joints=null;aImg=new Image();aImg.onload=async()=>{zoom=Math.max(2,Math.floor(440/Math.max(aImg.width,aImg.height)));
+function setAnim(u,restore){aSrc=u;ovr.clear();partsImg=null;joints=null;aImg=new Image();aImg.onload=async()=>{const hd=Math.max(aImg.width,aImg.height)>160;zoom=hd?Math.min(1,440/Math.max(aImg.width,aImg.height)):Math.max(2,Math.floor(440/Math.max(aImg.width,aImg.height)));$('refine').disabled=hd;if(hd)$('refine').checked=false;
  const c=$('rig');c.width=aImg.width*zoom;c.height=aImg.height*zoom;c.style.width=c.width+'px';c.style.height=c.height+'px';
  if(restore&&restore.joints){joints=restore.joints;(restore.ovr||[]).forEach(([x,y,b])=>ovr.set(x+','+y,b));drawRig();refreshParts()}else{tab(4);await autoPlace();markDirty()}};aImg.src=u}
 async function sprBlob(){return await (await fetch(aSrc)).blob()}
@@ -508,14 +508,14 @@ async function autoPlace(){if(!aSrc)return;try{const fd=new FormData();fd.append
 let pt=null;async function refreshParts(){if(!aSrc||!joints)return;clearTimeout(pt);pt=setTimeout(async()=>{try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify(joints));
  fd.append('overrides',JSON.stringify(Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})));const d=await api('/api/rig/parts',{method:'POST',body:fd});
  partsImg=new Image();partsImg.onload=drawRig;partsImg.src=d.overlay}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}},80)}
-function drawRig(){if(!aSrc||!aImg.width)return;const c=$('rig'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;
+function drawRig(){if(!aSrc||!aImg.width)return;const c=$('rig'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.imageSmoothingEnabled=Math.max(aImg.width,aImg.height)>160;
  x.drawImage(aImg,0,0,c.width,c.height);
  if($('showparts').checked&&partsImg&&partsImg.width){x.globalAlpha=.5;x.drawImage(partsImg,0,0,c.width,c.height);x.globalAlpha=1}
  ovr.forEach((b,k)=>{const[px,py]=k.split(',');x.fillStyle=BC[b];x.globalAlpha=.9;x.fillRect(px*zoom,py*zoom,zoom,zoom);x.globalAlpha=1});
  if(!joints)return;BONES.forEach(([a,b],i)=>{x.strokeStyle=BC[i];x.lineWidth=2;x.beginPath();x.moveTo(joints[a][0]*zoom,joints[a][1]*zoom);x.lineTo(joints[b][0]*zoom,joints[b][1]*zoom);x.stroke()});
  x.font='10px system-ui';JN.forEach(n=>{const[jx,jy]=joints[n];x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=2;x.beginPath();x.arc(jx*zoom,jy*zoom,5,0,7);x.fill();x.stroke();x.fillStyle='#fff';x.fillText(n,jx*zoom+7,jy*zoom-5)})}
 const rpos=e=>{const r=$('rig').getBoundingClientRect();return[(e.clientX-r.left)*$('rig').width/r.width/zoom,(e.clientY-r.top)*$('rig').height/r.height/zoom]};
-function paintAt(p){const b=+$('bonesel').value,r=+$('brush').value-1,cx=Math.floor(p[0]),cy=Math.floor(p[1]);
+function paintAt(p){const b=+$('bonesel').value,r=Math.max(0,Math.round((+$('brush').value-1)/Math.min(1,zoom))),cx=Math.floor(p[0]),cy=Math.floor(p[1]);
  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(dx*dx+dy*dy<=r*r+r&&cx+dx>=0&&cy+dy>=0&&cx+dx<aImg.width&&cy+dy<aImg.height)ovr.set((cx+dx)+','+(cy+dy),b);drawRig()}
 $('rig').onpointerdown=e=>{if(!joints)return;const p=rpos(e);$('rig').setPointerCapture(e.pointerId);
  if($('paintmode').checked){adrag='paint';paintAt(p);return}
@@ -532,7 +532,7 @@ function mkDiffs(c){c.diffs=[];if(!c.ri.length)return;
   x.clearRect(0,0,w,h);x.putImageData(out,0,0);c.diffs.push(cv)})}
 async function buildCur(anim,d){const c={anim,frames:d.frames,raw:d.raw_frames||d.raw||[],accept:d.accept||d.frames.map(()=>true),fps:d.fps,size:d.size,pivot:d.pivot,key:d.key||null,info:d.refine||d.info||null};
  c.fi=await loadImgs(c.frames);c.ri=await loadImgs(c.raw);mkDiffs(c);return c}
-function showCur(c){cur=c;const[w,h]=c.size,z=Math.max(1,Math.floor(300/Math.max(w,h))),cv=$('animprev');cv.width=w*z;cv.height=h*z;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
+function showCur(c){cur=c;const[w,h]=c.size,z=Math.max(w,h)>240?Math.min(1,300/Math.max(w,h)):Math.max(1,Math.floor(300/Math.max(w,h))),cv=$('animprev');cv.width=w*z;cv.height=h*z;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
  const ai=c.ri.length>0;$('rawrow').classList.toggle('hide',!ai);$('reviewrow').classList.toggle('hide',!ai);
  renderStrip();$('previnfo').textContent=`${c.anim} · ${c.fi.length} frames · ${w}×${h} · ${c.fps} fps`+(ai?' · AI cleanup':'');startPlay(c.fps)}
 function renderStrip(){const c=cur,s=$('strip'),th=Math.max(32,Math.min(72,c.size[1])),ai=c.ri.length>0;s.innerHTML='';
@@ -542,7 +542,7 @@ function renderStrip(){const c=cur,s=$('strip'),th=Math.max(32,Math.min(72,c.siz
   const cb=cell.querySelector('input');if(cb)cb.onchange=()=>{c.accept[i]=cb.checked;im.src=cb.checked?u:c.raw[i];im.style.outline=cb.checked?'':'2px solid #ff8a8a';markDirty();drawFrame()};
   s.appendChild(cell)})}
 function drawFrame(){if(!cur)return;const c=cur,cv=$('animprev'),x=cv.getContext('2d'),n=c.fi.length,i=aFi%n,W=cv.width,H=cv.height;
- const fin=c.fi.map((im,k)=>(c.ri.length&&!c.accept[k])?c.ri[k]:im);x.imageSmoothingEnabled=false;x.clearRect(0,0,W,H);
+ const fin=c.fi.map((im,k)=>(c.ri.length&&!c.accept[k])?c.ri[k]:im);x.imageSmoothingEnabled=Math.max(...c.size)>240;x.clearRect(0,0,W,H);
  if($('aonion').checked&&n>1){x.globalAlpha=.28;x.drawImage(fin[(i-1+n)%n],0,0,W,H);x.globalAlpha=.14;x.drawImage(fin[(i+1)%n],0,0,W,H);x.globalAlpha=1}
  x.drawImage($('showraw').checked&&c.ri.length?c.ri[i]:fin[i],0,0,W,H);
  if($('showdiff').checked&&c.diffs&&c.diffs[i])x.drawImage(c.diffs[i],0,0,W,H)}
@@ -551,6 +551,7 @@ function togglePlay(){playing=!playing;$('playbtn').textContent=playing?'Pause':
 function setAll(v){if(!cur)return;cur.accept.fill(v);renderStrip();drawFrame();markDirty()}
 const secObj=()=>!$('secon').checked?null:{enabled:true,flutter:+$('secflut').value,stiffness:+$('secstiff').value,damping:+$('secdamp').value,parts:{cape:{segments:+$('seg_cape').value,front:$('front_cape').checked},hair:{segments:+$('seg_hair').value,front:$('front_hair').checked},tail:{segments:+$('seg_tail').value,front:$('front_tail').checked}}};
 async function previewAnim(exp){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
+ if(Math.max(aImg.width,aImg.height)>160)$('refine').checked=false;
  if($('refine').checked&&!checkModel())return;
  $('status').className='';$('status').textContent=$('refine').checked?'Rendering, then AI cleanup: about 20-60 s per frame, the first frame also loads the model. Please wait…':exp?'Rendering and exporting…':'Rendering…';
  try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify(joints));
