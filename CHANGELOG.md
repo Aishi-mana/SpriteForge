@@ -261,3 +261,6 @@ Reference pose editor supports saving changes to existing pose templates, named 
 
 ## Phase 25 — reference-guided custom keyframes
 Capture start/end and intermediate joint poses, import approximate reference-image joints, preview and export a custom clip, persist timelines in projects. Tests added; execution pending.
+
+## Phase 26 — actual start/end reference animation
+Locked first and final image frames, independent SDXL in-betweens or quick crossfade, reference clip persistence and exact-frame PNG export. Phase 25 custom keyframes retained separately. Tests added; execution pending.

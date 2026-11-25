@@ -1,7 +1,7 @@
 # Roadmap and known limits
 
 ## Candidate next features
-- **Animate: start and end reference** (requested): the Animate tab already takes a reference sprite; let it also take an optional **start** and **end** reference (first and last pose of the clip).
+- **Animate: start and end reference** (Phase 26 initial implementation; validation pending): the Animate tab already takes a reference sprite; let it also take an optional **start** and **end** reference (first and last pose of the clip).
   Ideas to evaluate: derive start/end poses from the two sprites (auto-placed rigs) and have the rig interpolate between them (extends *Custom clips*); and/or use both as references for AI in-betweens (IP-Adapter + skeleton per frame).
   Needs a design pass first (loop vs one-shot, how the two rigs map onto each other, palette lock).
 - **Tiles follow-ups (remaining)**: collision / navigation polygons derived from the art and for terrain tiles; hand-drawn-looking borders (AI inpaint along the mask edge); transitions with different border widths per terrain pair; verify the Godot multi-terrain painting rules and adjust the export if needed.

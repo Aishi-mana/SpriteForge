@@ -174,7 +174,18 @@ img.px{image-rendering:pixelated}
 <div class="row"><div><label>Flutter</label><input id="secflut" type="number" step=".1" min="0" max="2" value="1"></div><div><label>Stiffness</label><input id="secstiff" type="number" step=".1" min=".4" max="2" value="1"></div><div><label>Damping</label><input id="secdamp" type="number" step=".05" min=".1" max=".9" value="0.35"></div></div>
 <div class="row"><div><label>Cape segs</label><input id="seg_cape" type="number" min="1" max="6" value="3"></div><div><label>Hair segs</label><input id="seg_hair" type="number" min="1" max="6" value="2"></div><div><label>Tail segs</label><input id="seg_tail" type="number" min="1" max="6" value="3"></div></div>
 <div class="chk"><input id="front_cape" type="checkbox"><span>Cape in front of body</span></div><div class="chk"><input id="front_hair" type="checkbox"><span>Hair in front of head</span></div><div class="chk"><input id="front_tail" type="checkbox"><span>Tail in front of legs</span></div>
-<label>Animation</label><select id="anim" onchange="animChanged()"><optgroup label="Loops"><option>idle</option><option selected>walk</option><option>run</option><option>climb</option><option>cheer</option></optgroup><optgroup label="Play once"><option>attack</option><option>cast</option><option>block</option><option>jump</option><option>hurt</option><option>death</option><option>custom</option></optgroup></select>
+<label>Animation</label><select id="anim" onchange="animChanged()"><optgroup label="Loops"><option>idle</option><option selected>walk</option><option>run</option><option>climb</option><option>cheer</option></optgroup><optgroup label="Play once"><option>attack</option><option>cast</option><option>block</option><option>jump</option><option>hurt</option><option>death</option><option>custom</option><option value="reference">Start → end images</option></optgroup></select>
+<div id="endpointpanel" class="hide">
+<label>Start reference (first frame)</label><input id="startfile" type="file" accept="image/*" onchange="endpointFile('start',this)">
+<button class="sec" onclick="endpointSet('start',aSrc)">Use current source sprite</button><img id="startthumb" style="max-width:120px;max-height:120px">
+<label>End reference (final frame)</label><input id="endfile" type="file" accept="image/*" onchange="endpointFile('end',this)">
+<button class="sec" onclick="endpointSet('end',refURL)">Use Reference-tab sprite</button><img id="endthumb" style="max-width:120px;max-height:120px">
+<label>In-between method</label><select id="endpointmethod"><option value="ai">AI redraw (SDXL)</option><option value="blend">Quick crossfade (no AI)</option></select>
+<label>Motion description</label><textarea id="endpointprompt" placeholder="raise sword overhead, same character"></textarea>
+<label>In-between art style</label><select id="endpointstyle"><option value="pixel">Retro pixel</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select>
+<label>AI redraw strength</label><input id="endpointstrength" type="number" min=".15" max=".85" step=".05" value=".65">
+<div class="mut">Use equal canvas dimensions. First and last frames stay unchanged; only the middle frames are redrawn. One-shot animation. AI uses the selected checkpoint/LoRA; quick crossfade is not motion synthesis.</div>
+</div>
 <div id="customkeys" class="hide"><label>Custom keyframes (0–100%)</label><input id="keytime" type="number" min="0" max="100" value="0"><div class="row"><button class="sec" onclick="keyCapture()">Capture edited pose</button><button class="sec" onclick="keyRest()">Restore source rig</button></div><label>Reference pose image</label><input id="keyref" type="file" accept="image/*"><div class="row"><button class="sec" onclick="keyReference(0)">Set start from image</button><button class="sec" onclick="keyReference(1)">Set end from image</button></div><div id="keylist"></div><div class="mut">Capture poses by dragging joints. Reference images auto-place approximate joints; fine tune them before capture. The source sprite supplies artwork for every frame.</div></div>
 <div class="mut">Death needs a wide canvas (auto-padded); AI cleanup needs frames of 256 px or less.</div>
 <div class="row"><div><label>Frames</label><input id="afr" type="number" min="2" max="32" value="8"></div><div><label>FPS</label><input id="afps" type="number" min="1" max="60" value="10"></div></div>
@@ -412,7 +423,7 @@ const $=id=>document.getElementById(id);let mode=1,refURL=null,aSrc=null;
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
 function styleChanged(){const hd=$('artstyle').value!='pixel';show('hdsettings',hd);if(hd&&/pixel.art/i.test($('lora').value))$('lora').value='';markDirty()}
 function tab(n){mode=n;[1,2,3,4,5,6,7,8,9,10].forEach(i=>$('t'+i).classList.toggle('on',i==n));
- show('p-style',n==1||n==2);show('hdsettings',$('artstyle').value!='pixel');show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10);show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);if(n==8)dirDraw();show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&!!aSrc);show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9);if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
+ show('p-style',n==1||n==2);show('hdsettings',$('artstyle').value!='pixel');show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10||(n==4&&$('anim').value==='reference'));show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);if(n==8)dirDraw();show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&(!!aSrc||$('anim').value==='reference'));show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9);if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
  show('editor',n==2&&$('useskel').checked);redraw();
  $('go').textContent=['','Generate','Generate poses','Pixelize','','','','','','','Generate'][n];if(n==3)$('mode').value='auto'}
 let modelKinds={c:{},l:{}};
@@ -569,8 +580,8 @@ function drawFrame(){if(!cur)return;const c=cur,cv=$('animprev'),x=cv.getContext
  if($('aonion').checked&&n>1){x.globalAlpha=.28;x.drawImage(fin[(i-1+n)%n],0,0,W,H);x.globalAlpha=.14;x.drawImage(fin[(i+1)%n],0,0,W,H);x.globalAlpha=1}
  x.drawImage($('showraw').checked&&c.ri.length?c.ri[i]:fin[i],0,0,W,H);
  if($('showdiff').checked&&c.diffs&&c.diffs[i])x.drawImage(c.diffs[i],0,0,W,H)}
-function startPlay(fps){clearInterval(aTimer);aFi=0;aTimer=setInterval(()=>{if(cur&&playing){drawFrame();aFi=(aFi+1)%cur.fi.length}},1000/fps)}
-function togglePlay(){playing=!playing;$('playbtn').textContent=playing?'Pause':'Play'}
+function startPlay(fps){clearInterval(aTimer);aFi=0;if(cur&&cur.anim==='reference'){playing=true;$('playbtn').textContent='Pause';drawFrame()}aTimer=setInterval(()=>{if(cur&&playing){drawFrame();if(cur.anim==='reference'&&aFi===cur.fi.length-1){playing=false;$('playbtn').textContent='Replay'}else aFi=(aFi+1)%cur.fi.length}},1000/fps)}
+function togglePlay(){if(!playing&&cur&&cur.anim==='reference'&&aFi===cur.fi.length-1)aFi=0;playing=!playing;$('playbtn').textContent=playing?'Pause':'Play'}
 function setAll(v){if(!cur)return;cur.accept.fill(v);renderStrip();drawFrame();markDirty()}
 const secObj=()=>!$('secon').checked?null:{enabled:true,flutter:+$('secflut').value,stiffness:+$('secstiff').value,damping:+$('secdamp').value,parts:{cape:{segments:+$('seg_cape').value,front:$('front_cape').checked},hair:{segments:+$('seg_hair').value,front:$('front_hair').checked},tail:{segments:+$('seg_tail').value,front:$('front_tail').checked}}};
 let customKeys=[],customRest=null;
@@ -581,8 +592,16 @@ function keyPut(t,j){if(customKeys.length>=16&&!customKeys.some(k=>k.t===t))thro
 function keyCapture(){try{keyEnsure();const t=Number($('keytime').value)/100;if(!Number.isFinite(t)||t<0||t>1)throw Error('Time must be 0–100');keyPut(t,joints)}catch(e){$('status').textContent=e.message}}
 function keyRest(){if(customRest){joints=keyClone(customRest);drawRig();refreshParts()}}
 async function keyReference(t){try{keyEnsure();const file=$('keyref').files[0];if(!file)throw Error('Choose a reference image first');const fd=new FormData();fd.append('sprite',file);const d=await api('/api/rig/autoplace',{method:'POST',body:fd});const sx=aImg.width/d.size[0],sy=aImg.height/d.size[1];joints=Object.fromEntries(Object.entries(d.joints).map(([k,v])=>[k,[v[0]*sx,v[1]*sy]]));$('keytime').value=t*100;keyPut(t,joints);drawRig();$('status').textContent='Reference pose captured. Adjust joints and Capture edited pose to refine.'}catch(e){$('status').textContent=e.message}}
+let endpoint={start:null,end:null},endpointBusy=false;
+function endpointShow(){for(const k of ['start','end']){const im=$(k+'thumb');if(endpoint[k]){im.src=endpoint[k];im.style.display='block'}else{im.removeAttribute('src');im.style.display='none'}}}
+function endpointSet(k,u){if(endpointBusy)return;if(!u){$('status').textContent='No image selected';return}endpoint[k]=u;delete ares.reference;if(cur&&cur.anim==='reference'){cur=null;clearInterval(aTimer);$('strip').replaceChildren();const c=$('animprev');c.getContext('2d').clearRect(0,0,c.width,c.height)}endpointShow();markDirty()}
+function endpointFile(k,input){const file=input.files[0];if(!file)return;const r=new FileReader();r.onload=()=>endpointSet(k,r.result);r.readAsDataURL(file)}
+async function endpointPreview(exp){if(endpointBusy)return;if(!endpoint.start||!endpoint.end){$('status').textContent='Choose both start and end images';return}const method=$('endpointmethod').value;if(method==='ai'&&+$('afr').value>2&&!checkModel())return;endpointBusy=true;
+ $('status').textContent='Rendering reference animation…';
+ try{const d=await api('/api/rig/reference_frames',{...J,body:JSON.stringify({start:endpoint.start,end:endpoint.end,count:+$('afr').value,fps:+$('afps').value,method,prompt:$('endpointprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,art_style:$('endpointstyle').value,steps:+$('steps').value,cfg:+$('cfg').value,strength:+$('endpointstrength').value,seed:+$('seed').value,sampler:$('sampler').value})});const c=await buildCur('reference',d);ares.reference=c;showCur(c);markDirty();$('status').textContent='Done. First and last frames preserved.';if(exp)await endpointExport()}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}finally{endpointBusy=false}}
+async function endpointExport(){const c=ares.reference;if(!c){$('status').textContent='Preview reference animation first';return}try{const d=await api('/api/rig/reference_export',{...J,body:JSON.stringify({frames:c.frames,fps:c.fps,name:$('aname').value,options:xopts()})});$('status').textContent='Exported reference animation to '+d.dir}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 function keyPayload(){if(customKeys.length<2||customKeys[0].t!==0||customKeys[customKeys.length-1].t!==1)throw Error('Capture start (0%) and end (100%) poses first');return customKeys}
-async function previewAnim(exp){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
+async function previewAnim(exp){if($('anim').value==='reference')return endpointPreview(exp);if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
  if(Math.max(aImg.width,aImg.height)>160)$('refine').checked=false;
  if($('refine').checked&&!checkModel())return;
  $('status').className='';$('status').textContent=$('refine').checked?'Rendering, then AI cleanup: about 20-60 s per frame, the first frame also loads the model. Please wait…':exp?'Rendering and exporting…':'Rendering…';
@@ -607,7 +626,7 @@ async function doExport(anims){if(!aSrc||!joints){$('status').textContent='Set a
  try{const d=await api('/api/rig/export_pack',{...J,body:JSON.stringify({sprite:aSrc,joints:anims.some(a=>a.anim==='custom')&&customRest?customRest:joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]}),name:$('aname').value||'sprite',options:xopts(),secondary:secObj()||{enabled:false},anims})});
   $('status').textContent=`Exported ${d.frames} frames (${anims.length} animation(s)) to: ${d.dir}\nsheet ${d.sheet[0]}×${d.sheet[1]} · cell ${d.cell[0]}×${d.cell[1]} · feet pivot (${d.pivot[0]}, ${d.pivot[1]})\nSee README.txt in that folder for Godot / Unity steps.`}
  catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
-function exportAnim(){const a=$('anim').value,p=clipParams(a);
+function exportAnim(){if($('anim').value==='reference')return endpointExport();const a=$('anim').value,p=clipParams(a);
  if(cur&&(cur.ri.length||cur.edited)&&cur.anim==a&&$('xai').checked)Object.assign(p,aiFrames(cur));else if($('xai').checked&&ares[a]&&(ares[a].ri.length||ares[a].edited))Object.assign(p,aiFrames(ares[a]));
  doExport([p])}
 function exportPack(){const sel=CLIPS.filter(c=>$('xc_'+c).checked);if(!sel.length){$('status').textContent='Tick at least one animation';return}
@@ -622,13 +641,13 @@ async function redoRejected(){if(!cur||!cur.ri.length)return;if(!cur.key){$('sta
 
 /* ---------- projects ---------- */
 let curProject=null,dirty=false,animParams={},curAnim='walk';
-const ANIM_DEF={custom:{afr:12,afps:12},idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
+const ANIM_DEF={reference:{afr:8,afps:10},custom:{afr:12,afps:12},idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
 const AP=['afr','afps','amp','apad','aovl','face','near','weapon'];
 function updPStat(m){$('pstat').textContent=m||(curProject?`Project: ${curProject}${dirty?'  ● unsaved changes':'  ✓ saved'}`:'No project (type a name and press Save)')}
 function markDirty(){dirty=true;updPStat()}
 ['input','change'].forEach(ev=>document.querySelector('aside').addEventListener(ev,e=>{if(e.target.id!='pname'&&e.target.id!='mdir')markDirty()}));
 function stashAnim(){const o={};AP.forEach(k=>o[k]=$(k).value);animParams[curAnim]=o}
-function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
+function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');show('endpointpanel',curAnim==='reference');if(mode===4){show('rigcard',!!aSrc||curAnim==='reference');show('p-gen',curAnim==='reference')}if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
 function collect(){const s={};document.querySelectorAll('aside input,aside select,aside textarea').forEach(e=>{if(!e.id||e.type=='file'||e.id=='pname'||e.id=='mdir')return;s[e.id]=e.type=='checkbox'?e.checked:e.value});return s}
 function applySettings(s){$('artstyle').value=s.artstyle||'pixel';for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}}
 const J={method:'POST',headers:{'Content-Type':'application/json'}};
@@ -636,12 +655,12 @@ async function refreshProjects(){try{const d=await api('/api/projects');$('plist
 async function saveProject(silent){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first');return}
  if(!$('aname').value||$('aname').value=='sprite')$('aname').value=name;stashAnim();
  const body={name,settings:collect(),rig:aSrc&&joints?{joints:customRest||joints,customKeys,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})}:null,
-  skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,anim:aSrc,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
+  skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,anim:aSrc,animstart:endpoint.start,animend:endpoint.end,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
  try{const d=await api('/api/projects/save',{...J,body:JSON.stringify(body)});curProject=d.name;$('pname').value=d.name;dirty=false;localStorage.setItem('sf_last',d.name);
   updPStat(silent===true?null:`Saved ${new Date().toLocaleTimeString()} · ${d.name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
 async function loadProject(){const name=$('pname').value.trim();if(!name){updPStat('Type or pick a project name first');return}
  try{const d=await api('/api/projects/'+encodeURIComponent(name));
-  applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};
+  applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};endpoint={start:d.images.animstart||null,end:d.images.animend||null};endpointShow();show('endpointpanel',curAnim==='reference');
   if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
   const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}
   customKeys=(d.rig&&d.rig.customKeys)||[];customRest=customKeys.length&&d.rig?keyClone(d.rig.joints):null;keyList();show('customkeys',$('anim').value==='custom');if(d.images.anim)setAnim(d.images.anim,{keepKeys:true,joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
@@ -909,7 +928,7 @@ document.addEventListener('keydown',e=>{if(!edIsOpen()||/INPUT|SELECT|TEXTAREA/.
 // ---- where the editor is used ----
 function editSource(){if(!aSrc){$('status').textContent='Set a source sprite first';return}
  openEditor(aSrc,{label:'Use as rig source',apply:u=>{aSrc=u;aImg=new Image();aImg.onload=()=>{drawRig();refreshParts()};aImg.src=u;markDirty()}})}
-function editFrame(){if(!cur||!cur.fi.length){$('status').textContent='Preview an animation first, then click a frame to inspect it';return}
+function editFrame(){if(cur&&cur.anim==='reference'){ $('status').textContent='Reference animation endpoints are locked; regenerate to change the clip.';return }if(!cur||!cur.fi.length){$('status').textContent='Preview an animation first, then click a frame to inspect it';return}
  const n=cur.fi.length,i=playing?(aFi-1+n)%n:aFi%n;playing=false;$('playbtn').textContent='Play';const useRaw=cur.ri.length>0&&!cur.accept[i],fin=k=>(cur.ri.length&&!cur.accept[k])?cur.raw[k]:cur.frames[k];
  openEditor(useRaw?cur.raw[i]:cur.frames[i],{label:`Update frame ${i+1}`,onion:[fin((i-1+n)%n),fin((i+1)%n)],apply:async u=>{
   if(useRaw){cur.raw[i]=u;cur.ri=await loadImgs(cur.raw)}else{cur.frames[i]=u;cur.fi=await loadImgs(cur.frames)}
