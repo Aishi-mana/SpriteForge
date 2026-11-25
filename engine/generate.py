@@ -169,6 +169,17 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
     """Returns [(PIL image, seed), ...]. ip_image = reference sprite, control_image = OpenPose skeleton render."""
     import torch
     with _lock:
+        from . import local_runtime as lr
+        if lr.route(ckpt):
+            if control_image is not None:raise ValueError("Local model does not support SDXL ControlNet")
+            _cache.update(key=None,pipe=None);gc.collect();torch.cuda.empty_cache()
+            base=seed if seed is not None and seed>=0 else int(torch.randint(0,2**31-1,(1,)).item())
+            out=[]
+            for i in range(n):
+                py,req=lr.request(ckpt,lora_dir,lora,lora_w,build_prompt(prompt,bg,kind,art_style),(negative+", " if negative else "")+negative_for(kind,art_style),steps,cfg,base+i,size,ip_image,bg,ip_scale)
+                out.append((lr.run(py,req),req["seed"]))
+                if PROGRESS:PROGRESS(i+1,n)
+            return out
         pipe = _load(ckpt, lora, lora_w, lora_dir, ip_image is not None, control_image is not None, cn_dir)
         _apply_sampler(pipe)
         family=mf.identify(ckpt)

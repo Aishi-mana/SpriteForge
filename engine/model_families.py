@@ -25,6 +25,8 @@ def identify(path,lora=False):
         except Exception: return "broken"
     d=diag.inspect_file(p,lora)
     if d["status"]!="ok": return "broken"
+    if p.name=="NetaYumev35_pretrained_all_in_one.safetensors" and not lora:return "lumina2"
+    if p.name=="Qwen-Rapid-AIO-SFW-v23.safetensors" and not lora:return "qwen"
     h=header(p)
     meta=h.pop("__metadata__",{}) or {}
     ks=" ".join(h.keys()).lower()
@@ -35,10 +37,15 @@ def identify(path,lora=False):
     if "qwen" in tags or "img_mod" in ks and "txt_mod" in ks: return "qwen"
     if "sdxl" in tags or "stable-diffusion-xl" in tags: return "sdxl"
     if "sd1.5" in tags or "sd_v1" in tags or "stable-diffusion-v1" in tags: return "sd15"
+    if lora and p.name=="modern-anime.safetensors" and d["kind"] in ("other","unknown"):return "qwen"  # documented installed Qwen adapter
     return d["kind"]
 
 def describe(path):
     p=Path(path); family=identify(p)
+    from . import local_runtime as lr
+    route,missing=lr.readiness(p)
+    if route and family!="broken":
+        return {"family":family,"label":NAMES[family],"supported":not missing,"reference":not missing,"controlnet":False,"inpaint":False,"backend":route,"flow":True,"detail":("Local standalone runtime; image reference supported" if not missing else "Missing: "+", ".join(missing))}
     native=family in {"sdxl","sd15","unknown"} or (p.is_dir() and family in FLOW)
     # Comfy single-file Lumina transformer support requires explicitly installed local base pipeline.
     lumina_base=p.parent/"Lumina2-base"
