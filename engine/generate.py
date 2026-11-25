@@ -7,6 +7,7 @@ from PIL import Image
 from . import styles, model_families as mf
 
 _lock = threading.Lock()
+_job_context = threading.local()
 PROGRESS = None  # optional callback(done, total) set by the job queue; called after each finished image
 _cache = {"key": None, "pipe": None}
 
@@ -177,7 +178,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
             out=[]
             for i in range(n):
                 py,req=lr.request(ckpt,lora_dir,lora,lora_w,build_prompt(prompt,bg,kind,art_style),(negative+", " if negative else "")+negative_for(kind,art_style),steps,cfg,base+i,size,ip_image,bg,ip_scale)
-                out.append((lr.run(py,req),req["seed"]))
+                out.append((lr.run(py,req,cancelled=getattr(_job_context,"cancelled",None)),req["seed"]))
                 if PROGRESS:PROGRESS(i+1,n)
             return out
         pipe = _load(ckpt, lora, lora_w, lora_dir, ip_image is not None, control_image is not None, cn_dir)

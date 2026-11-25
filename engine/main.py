@@ -201,9 +201,10 @@ def _do_generate(p):
     else:
         post = lambda raw: px.pixelize(raw, p.mode, p.size, p.colors, p.palette, p.remove_bg, p.bg_tol,
                                        remove_shadow=p.remove_shadow, crisp=p.crisp, clean=p.clean, outline=_outline(p.outline))
+    from . import local_runtime as lr
     return _run(ckpt, lora_dir, p.lora, p.lora_weight, p.prompt, p.negative, p.steps, p.cfg, p.seed, p.bg,
                 max(1, min(p.n, 6)), None, 0, post, kind=kind, art_style=art_style,
-                gen_size=max(512, min(p.gen_size, 1024)) // 64 * 64 if art_style != "pixel" else 1024)
+                gen_size=max(512, min(p.gen_size, 1024)) // 64 * 64 if art_style != "pixel" or lr.route(ckpt) else 1024)
 
 
 @app.post("/api/generate")
@@ -901,6 +902,8 @@ class GpuTest(BaseModel):
 @app.post("/api/diag/gpu_test")
 def diag_gpu_test(b: GpuTest):
     ckpt, lora_dir = _paths(b.checkpoint)
+    from . import local_runtime as lr
+    if lr.route(ckpt):raise HTTPException(400,"This GPU benchmark is for SDXL; use the local worker readiness in the model picker and a small generation for a live check.")
     try:
         return gen.smoke_test(ckpt, b.lora, lora_dir)
     except Exception as e:
@@ -1308,12 +1311,14 @@ def terrain_export(b: TerrainBody):
 def _exec_job(kind, params, inputs, progress):
     """Runs one queued job (called by the queue's worker thread). Returns the list of results."""
     gen.PROGRESS = progress
+    gen._job_context.cancelled = getattr(progress,"cancelled",None)
     try:
         if kind == "generate":
             return _do_generate(GenParams(**params))["results"]
         return _do_reference(inputs["ref"], inputs.get("pose"), params)["results"]
     finally:
         gen.PROGRESS = None
+        gen._job_context.cancelled = None
 
 
 _JOBS = None

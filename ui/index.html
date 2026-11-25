@@ -95,7 +95,7 @@ img.px{image-rendering:pixelated}
 <div class="mut" id="pstat">No project (type a name and press Save)</div>
 <div class="tabs"><button id="t1" class="on" onclick="tab(1)">Generate</button><button id="t2" onclick="tab(2)">Reference pose</button><button id="t3" onclick="tab(3)">Pixelize</button><button id="t4" onclick="tab(4)">Animate</button><button id="t5" onclick="tab(5)">Portrait</button><button id="t6" onclick="tab(6)">Palette</button><button id="t7" onclick="tab(7)">Template</button><button id="t8" onclick="tab(8)">Directions</button><button id="t9" onclick="tab(9)">Queue</button><button id="t10" onclick="tab(10)">Tiles &amp; props</button></div>
 
-<div id="p-style"><label>Art style</label><select id="artstyle" onchange="styleChanged()"><option value="pixel">Retro pixel art</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select><div id="hdsettings" class="hide"><label>HD output (long side)</label><select id="hdsize"><option>256</option><option>512</option><option selected>768</option><option>1024</option></select><label>Generate resolution (Generate tab)</label><select id="hdgen"><option>640</option><option>768</option><option selected>1024</option></select><div class="mut">Full colour; no palette reduction. Select an anime SDXL checkpoint and optional matching LoRA. Reference uses its own generation size; HD animation uses smooth rigid-bone rendering; AI cleanup is pixel-only.</div></div></div>
+<div id="p-style"><label>Art style</label><select id="artstyle" onchange="styleChanged()"><option value="pixel">Retro pixel art</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select><div id="hdsettings" class="hide"><label>HD output (long side)</label><select id="hdsize"><option>256</option><option>512</option><option selected>768</option><option>1024</option></select><label>Generate resolution (Generate tab)</label><select id="hdgen"><option>640</option><option>768</option><option selected>1024</option></select><div class="mut">Full colour; no palette reduction. Select an anime checkpoint and optional matching LoRA. Reference uses its own generation size; HD animation uses smooth rigid-bone rendering; AI cleanup is pixel-only.</div></div></div>
 <div id="p-prompt"><label>Prompt</label><textarea id="prompt">knight with blue armor and red cape, holding a sword, standing</textarea></div>
 
 <div id="p-ref" class="hide">
@@ -103,7 +103,7 @@ img.px{image-rendering:pixelated}
 <img id="refimg" class="px"><div class="mut" id="refhint">Or press "Use as reference" under any result.</div>
 <label>Character description (optional, helps keep identity)</label><input id="char" placeholder="knight with blue armor and red cape">
 <label>Pose / action text (also used with skeleton)</label><textarea id="pose">jumping, sword raised, side view</textarea>
-<div class="chk"><input id="useskel" type="checkbox" checked onchange="tab(2)"><span><b>Use skeleton pose</b> (ControlNet)</span></div>
+<div class="chk"><input id="useskel" type="checkbox" checked onchange="tab(2)"><span><b>Use skeleton pose</b> (SDXL ControlNet only; NetaYume/Qwen use image reference)</span></div>
 <div class="row"><div><label>Skeleton strength</label><input id="cns" type="number" step=".05" min="0" max="1.5" value="0.8"></div><div><label>Canvas (px)</label><select id="canvas"><option>64</option><option>96</option><option selected>128</option><option>192</option><option>256</option></select></div></div>
 <label>Generation size (lower = less VRAM, faster)</label><select id="gsize"><option>640</option><option selected>768</option><option>896</option><option>1024</option></select>
 <div class="row"><div><label>Reference strength</label><input id="ips" type="number" step=".05" min="0" max="1" value="0.7"></div><div><label>Variations</label><input id="n" type="number" min="1" max="6" value="2"></div></div>
@@ -435,14 +435,15 @@ function tagOptions(){const m=modelInfo($('ckpt').value);
  for(const o of $('ckpt').options){const i=modelInfo(o.value);o.text=o.value+' · '+i.label+(i.supported?'':' (setup required / unsupported)')}
  let matched=0,unknown=0;
  for(const o of $('lora').options){if(!o.value){o.text='(none)';o.disabled=false;continue}const s=loraStatus(o.value,m.family);o.disabled=s==='incompatible';o.text=o.value+' · '+(s==='match'?'Family match':s==='unknown'?'Unverified':'Incompatible')+' ['+(modelKinds.l[o.value]||'unknown')+']';if(s==='match')matched++;if(s==='unknown')unknown++}
- const d=$('modeldetail');if(d)d.textContent=m.label+' — '+m.detail+(m.flow?' · native flow sampler':'');
+ const d=$('modeldetail');if(d)d.textContent=m.label+' — '+m.detail+(m.backend==='qwen'?' · res_multistep / simple · 4 steps / CFG 1':m.backend==='neta'?' · Euler / normal · 20 steps / CFG 4':m.flow?' · native flow sampler':'');
  const l=$('loradetail');if(l)l.textContent=matched+' family matches · '+unknown+' unverified. Family match is not a guarantee of exact adapter compatibility.';
 }
-function modelChanged(){tagOptions();if($('lora').value&&loraStatus($('lora').value,modelInfo($('ckpt').value).family)==='incompatible')$('lora').value='';tagOptions();markDirty()}
-function checkModel(){const c=$('ckpt').value,m=modelInfo(c),l=$('lora').value;$('status').className='err';
+function modelChanged(){const m=modelInfo($('ckpt').value);if($('lora').value&&loraStatus($('lora').value,m.family)==='incompatible')$('lora').value='';if(m.backend){$('useskel').checked=false;$('n1').value=1;$('n').value=1;$('steps').value=m.backend==='qwen'?4:20;$('cfg').value=m.backend==='qwen'?1:4;$('hdgen').value=m.backend==='qwen'?768:1024;$('gsize').value=m.backend==='qwen'?768:1024;if(m.backend==='qwen'&&[...$('lora').options].some(o=>o.value==='modern-anime.safetensors'&&loraStatus(o.value,m.family)==='match')){$('lora').value='modern-anime.safetensors';$('lw').value=1}}tagOptions();if(typeof mode!=='undefined'&&mode===2)tab(2);markDirty()}
+function checkModel(operation){const c=$('ckpt').value,m=modelInfo(c),l=$('lora').value;$('status').className='err';
  if(!c||!m.supported){$('status').textContent=m.detail||'Select a supported checkpoint';return false}
- const needsSDXL=typeof mode!=='undefined'&&mode!==1&&mode!==10;
- if(needsSDXL&&!m.reference){$('status').textContent=m.label+' supports text-to-image only for now. Select SDXL for this reference, template or inpaint operation.';return false}
+ const op=operation||(typeof mode==='undefined'||mode===1||mode===10?'text':mode===2?'reference':'inpaint');
+ if(op==='reference'&&m.backend&&$('useskel').checked){$('status').textContent='Turn off Use skeleton pose: this model uses image conditioning instead of SDXL ControlNet.';return false}
+ if((op==='reference'&&!m.reference)||(op==='inpaint'&&(!m.reference||m.inpaint===false))){$('status').textContent=m.label+' does not support this operation. Select SDXL for skeleton ControlNet or inpainting.';return false}
  if(l&&loraStatus(l,m.family)==='incompatible'){$('status').textContent='LoRA is incompatible with '+m.label+'. Choose a matching adapter or (none).';return false}
  $('status').className='';return true}
 /*MODEL-COMPAT-END*/
@@ -773,7 +774,7 @@ function renderBases(results){const o=$('out');o.innerHTML='';results.forEach(d=
  <div class="row"><button class="sec" data-a="b">Use as base</button><button class="sec" data-a="e">Edit</button><button class="sec" data-a="s">Save</button><button class="sec" data-a="p">PNG</button></div>`;
  const im=c.querySelector('img.px');im.onload=()=>{const k=Math.max(1,Math.floor(256/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
  c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='b'?useBase(d.sprite):b.dataset.a=='e'?openEditor(d.sprite,{label:'Update this portrait',apply:u=>{d.sprite=u;renderBases(results)}}):b.dataset.a=='s'?saveSprite(d.sprite):dl(1,d.sprite,d.info.seed));o.appendChild(c)})}
-async function portBase(){if(!checkModel())return;$('status').className='';
+async function portBase(){if(!checkModel('text'))return;$('status').className='';
  if($('ptsrc').value=='ref'&&!refURL){$('status').className='err';$('status').textContent='Set a reference sprite in the Reference tab first (or choose "Text only")';return}
  $('status').textContent='Generating base portraits… the first run loads the model'+($('ptsrc').value=='ref'?' and the IP-Adapter':'');
  try{const fd=new FormData();if($('ptsrc').value=='ref')fd.append('ref',await (await fetch(refURL)).blob(),'ref.png');
@@ -811,7 +812,7 @@ function renderDiag(d){const s=d.summary||{};$('diagsum').textContent=` ${s.ok||
  d.checks.forEach(c=>{if(c.section!==cur){cur=c.section;const h=document.createElement('div');h.className='ds';h.textContent=cur;l.appendChild(h)}diagRow(l,c.status,c.name,c.detail,c.fix)})}
 async function runDiag(){$('diagsum').textContent=' running checks…';try{const d=await api('/api/diag');diagText=d.text;renderDiag(d)}catch(e){$('diagsum').textContent=' failed: '+e.message}}
 function addTest(title,body,ok){const l=$('diaglist'),h=document.createElement('div');h.className='ds';h.textContent=title;l.appendChild(h);diagRow(l,ok?'ok':'fail',title,body,'');diagText+=`\n\n== ${title} ==\n${body}`;l.parentElement.scrollTop=l.parentElement.scrollHeight}
-async function gpuTest(){if(!checkModel()){addTest('GPU test',$('status').textContent,false);return}$('diagsum').textContent=' GPU test running: loads SDXL, can take a minute or two…';
+async function gpuTest(){if(!checkModel('text')){addTest('GPU test',$('status').textContent,false);return}if(modelInfo($('ckpt').value).backend){addTest('Local runtime','Files detected; no GPU generation has been tested. Use Generate with a small size for a live check.',true);return}$('diagsum').textContent=' GPU test running: loads SDXL, can take a minute or two…';
  try{const d=await api('/api/diag/gpu_test',{...J,body:JSON.stringify({checkpoint:$('ckpt').value,lora:$('lora').value})});
   addTest('GPU test',`model load ${d.load_s} s · 4 steps at 512 px in ${d.run_s} s · peak VRAM ${d.peak_vram_gb} of ${d.total_vram_gb} GB`,d.peak_vram_gb<d.total_vram_gb*.95);$('diagsum').textContent=' GPU test done'}
  catch(e){addTest('GPU test','FAILED: '+e.message,false);$('diagsum').textContent=' GPU test failed'}}

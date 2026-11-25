@@ -37,7 +37,7 @@ def readiness(path):
 def reference_uri(im,bg):
     from PIL import ImageColor
     im=im.convert("RGBA");im.thumbnail((1024,1024),Image.Resampling.LANCZOS)
-    canvas=Image.new("RGB",im.size,ImageColor.getrgb(bg));canvas.paste(im,(0,0),im)
+    canvas=Image.new("RGB",im.size,ImageColor.getrgb(bg.replace(" ","")));canvas.paste(im,(0,0),im)
     b=io.BytesIO()
     for quality in (92,85,75,60):
         b.seek(0);b.truncate();canvas.save(b,"JPEG",quality=quality)
@@ -65,7 +65,8 @@ def request(ckpt,lora_dir,lora,lw,prompt,negative,steps,cfg,seed,size,reference=
         if kind=="neta":req["referenceStrength"]=max(.2,min(.8,1-float(ip_scale)))
     return python,req
 
-def run(python,req,progress=None):
+def run(python,req,progress=None,cancelled=None):
+    if cancelled and cancelled():raise RuntimeError("Cancelled before worker launch")
     jobroot=ROOT/"local-image-jobs";jobroot.mkdir(exist_ok=True)
     job=Path(tempfile.mkdtemp(prefix="image-",dir=jobroot))
     input_path=job/"request.json"
@@ -77,6 +78,7 @@ def run(python,req,progress=None):
         try:
             last=None
             while child.poll() is None:
+                if cancelled and cancelled():raise RuntimeError("Cancelled local image worker")
                 if progress:
                     try:
                         d=json.loads((job/"progress.json").read_text(encoding="utf-8"))
@@ -86,7 +88,10 @@ def run(python,req,progress=None):
                 time.sleep(.25)
         finally:
             if child.poll() is None:
-                child.terminate();child.wait()
+                if os.name=="nt":
+                    subprocess.run(["taskkill.exe","/PID",str(child.pid),"/T","/F"],capture_output=True,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+                if child.poll() is None:child.terminate()
+                child.wait()
     png=job/"image.png"
     if child.returncode!=0 or not png.is_file():
         try: detail=json.loads((job/"progress.json").read_text(encoding="utf-8")).get("error","")
