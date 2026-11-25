@@ -275,9 +275,11 @@ img.px{image-rendering:pixelated}
 <div class="mut">A character that faces every direction. Only 5 views are needed: west, south-west and north-west are mirrors of east, south-east and north-east. Every animation is then rendered for every direction (front and back views step in place, three-quarter views swing less) and exported as one aligned sheet.</div>
 <label>Directions</label><select id="dmode" onchange="dirDraw()"><option value="8">8 directions (S SW W NW N NE E SE)</option><option value="4">4 directions (S W N E)</option></select>
 <label>Row order in the sheet</label><select id="dorder"><option value="cw">Clockwise from south</option><option value="rpg">RPG Maker: down, left, right, up (4 directions)</option></select>
-<label>Built-in dummy for generating the views</label>
+<label>View generation workflow</label><select id="dworkflow" onchange="dirWorkflow()"><option value="template">Original template / SDXL</option><option value="character">Character reference (Qwen / Neta / SDXL)</option></select>
+<div id="didentity" class="hide"><label>Master character reference</label><input id="drefupload" type="file" accept="image/*" onchange="dirAnchorFile(this)"><img id="drefpreview" style="max-width:160px;max-height:180px;display:none"><div class="row"><button class="sec" onclick="dirAnchor(refURL)">Use Reference tab</button><button class="sec" onclick="dirAnchor(DR.slots.S&&DR.slots.S.src)">Use front view</button><button class="sec" onclick="dirAnchor(null,true)">Clear</button></div><label>Identity details (optional)</label><textarea id="didentitytext" maxlength="1800" placeholder="Silver hair, blue eyes, short cape, asymmetric shoulder armor"></textarea><label>Pixel canvas (HD uses 256px)</label><select id="dcharcanvas"><option>32</option><option>48</option><option selected>64</option><option>96</option><option>128</option></select><div class="chk"><input id="dlockpal" type="checkbox" checked><span>Use master pixel palette if available</span></div><label>Reference influence (Neta / SDXL)</label><input id="drefweight" type="number" min="0.2" max="0.8" step=".05" value=".7"><div class="mut">All angles reuse the same master. Qwen uses native reference conditioning, not the influence slider. Lock approved views to skip regeneration. Generate sequentially and review each angle.</div><button class="sec" onclick="DR.stop=true">Stop after current view</button></div>
+<div id="dtemplate"><label>Built-in dummy for generating the views</label>
 <div class="row"><select id="dheight"><option>32</option><option>48</option><option selected>64</option><option>96</option><option>128</option></select><select id="dstyle"><option value="normal">Normal</option><option value="chibi">Chibi</option></select></div>
-<div class="mut">Uses the Template tab's reference image, prompt and strengths, and one seed for all views so they match.</div>
+<div class="mut">Uses the Template tab's reference image, prompt and strengths, and one seed for all views so they match.</div></div>
 <button onclick="dirGenerate(false)">Generate all views</button>
 <button class="sec" onclick="dirGenerate(true)">Generate only the empty views</button>
 <label>Animations to export</label><div id="dclips" class="grid" style="gap:2px 12px"></div>
@@ -424,7 +426,7 @@ const $=id=>document.getElementById(id);let mode=1,refURL=null,aSrc=null;
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
 function styleChanged(){const hd=$('artstyle').value!='pixel';show('hdsettings',hd);if(hd&&/pixel.art/i.test($('lora').value))$('lora').value='';markDirty()}
 function tab(n){mode=n;[1,2,3,4,5,6,7,8,9,10].forEach(i=>$('t'+i).classList.toggle('on',i==n));
- show('p-style',n==1||n==2);show('hdsettings',$('artstyle').value!='pixel');show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10||(n==4&&$('anim').value==='reference'));show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);if(n==8)dirDraw();show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&(!!aSrc||$('anim').value==='reference'));show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9);if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
+ show('p-style',n==1||n==2||n==8);show('hdsettings',$('artstyle').value!='pixel');show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10||(n==4&&$('anim').value==='reference'));show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);if(n==8){show('didentity',$('dworkflow').value==='character');show('dtemplate',$('dworkflow').value!=='character');dirDraw()}show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&(!!aSrc||$('anim').value==='reference'));show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9);if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
  show('editor',n==2&&$('useskel').checked);redraw();
  $('go').textContent=['','Generate','Generate poses','Pixelize','','','','','','','Generate'][n];if(n==3)$('mode').value='auto'}
 let modelKinds={c:{},l:{}};
@@ -443,7 +445,7 @@ function modelChanged(){const m=modelInfo($('ckpt').value);if($('lora').value&&l
 function checkModel(operation){const c=$('ckpt').value,m=modelInfo(c),l=$('lora').value;$('status').className='err';
  if(!c||!m.supported){$('status').textContent=m.detail||'Select a supported checkpoint';return false}
  const op=operation||(typeof mode==='undefined'||mode===1||mode===10?'text':mode===2?'reference':'inpaint');
- if(op==='reference'&&m.backend&&$('useskel').checked){$('status').textContent='Turn off Use skeleton pose: this model uses image conditioning instead of SDXL ControlNet.';return false}
+ if(op==='reference'&&m.backend&&typeof mode!=='undefined'&&mode===2&&$('useskel').checked){$('status').textContent='Turn off Use skeleton pose: this model uses image conditioning instead of SDXL ControlNet.';return false}
  if((op==='reference'&&!m.reference)||(op==='inpaint'&&(!m.reference||m.inpaint===false))){$('status').textContent=m.label+' does not support this operation. Select SDXL for skeleton ControlNet or inpainting.';return false}
  if(l&&loraStatus(l,m.family)==='incompatible'){$('status').textContent='LoRA is incompatible with '+m.label+'. Choose a matching adapter or (none).';return false}
  $('status').className='';return true}
@@ -526,10 +528,10 @@ function poseBlob(){const c=document.createElement('canvas');c.width=c.height=10
 function render(results,target){const o=target||$('out');o.innerHTML='';results.forEach((d,i)=>{const c=document.createElement('div');c.className='card';
  const inf=d.info,txt=`${inf.size[0]}×${inf.size[1]}`+(inf.grid?` · grid ${inf.grid}px`:'')+(inf.seed!=null?` · seed ${inf.seed}`:'')+(inf.label?` · ${inf.label}`:'');
  c.innerHTML=`<div class="pair">${d.raw?`<div><div class="mut">Raw</div><img width="220" src="${d.raw}"></div>`:''}<div><div class="mut">${txt}</div><img class="px" src="${d.sprite}"></div></div>
- <div class="row"><button class="sec" data-a="edit">Edit</button>${d.rig?'<button class="sec" data-a="rig">Animate (template rig)</button>':''}<button class="sec" data-a="ref">Use as reference</button><button class="sec" data-a="anim">Animate</button><button class="sec" data-a="tile">To tileset</button><button class="sec" data-a="save">Save</button><button class="sec" data-a="1">PNG</button><button class="sec" data-a="8">PNG 8×</button></div>`;
+ <div class="row"><button class="sec" data-a="edit">Edit</button>${d.rig?'<button class="sec" data-a="rig">Animate (template rig)</button>':''}<button class="sec" data-a="ref">Use as reference</button><button class="sec" data-a="identity">Use as character master</button><button class="sec" data-a="anim">Animate</button><button class="sec" data-a="tile">To tileset</button><button class="sec" data-a="save">Save</button><button class="sec" data-a="1">PNG</button><button class="sec" data-a="8">PNG 8×</button></div>`;
  const im=c.querySelector('img.px');im.onload=()=>{const k=Math.max(1,Math.floor(256/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=inf.pipeline=='hd'?Math.min(320,im.naturalWidth)+'px':im.naturalWidth*k+'px';if(inf.pipeline=='hd')im.style.imageRendering='auto'};
  if(inf.pipeline=='hd')c.querySelectorAll('[data-a="edit"],[data-a="8"],[data-a="tile"]').forEach(b=>b.disabled=true);
- c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='rig'?animateWithRig(d):b.dataset.a=='edit'?openEditor(d.sprite,{label:'Update this result',apply:u=>{d.sprite=u;render(results,target)}}):b.dataset.a=='ref'?useRef(d.sprite):b.dataset.a=='anim'?setAnim(d.sprite):b.dataset.a=='tile'?tlUse(d.sprite):b.dataset.a=='save'?saveSprite(d.sprite):dl(+b.dataset.a,d.sprite,inf.seed));o.appendChild(c)})}
+ c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='rig'?animateWithRig(d):b.dataset.a=='edit'?openEditor(d.sprite,{label:'Update this result',apply:u=>{d.sprite=u;render(results,target)}}):b.dataset.a=='ref'?useRef(d.sprite):b.dataset.a=='identity'?(dirAnchor(d.sprite),$('dworkflow').value='character',tab(8)):b.dataset.a=='anim'?setAnim(d.sprite):b.dataset.a=='tile'?tlUse(d.sprite):b.dataset.a=='save'?saveSprite(d.sprite):dl(+b.dataset.a,d.sprite,inf.seed));o.appendChild(c)})}
 /*QUEUE-RUN*/
 async function run(){if(mode<3||mode==10){if(!checkModel())return;return runQueued()}
  const b=$('go');b.disabled=true;$('status').className='';$('status').textContent='Working…';
@@ -669,7 +671,7 @@ async function refreshProjects(){try{const d=await api('/api/projects');$('plist
 async function saveProject(silent){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first');return}
  if(!$('aname').value||$('aname').value=='sprite')$('aname').value=name;stashAnim();
  const body={name,settings:collect(),rig:aSrc&&joints?{joints:customRest||joints,customKeys,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})}:null,
-  skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,anim:aSrc,animstart:endpoint.start,animend:endpoint.end,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
+  skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,characterref:DR.anchor,anim:aSrc,animstart:endpoint.start,animend:endpoint.end,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots,seed:DR.seed},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
  try{const d=await api('/api/projects/save',{...J,body:JSON.stringify(body)});curProject=d.name;$('pname').value=d.name;dirty=false;localStorage.setItem('sf_last',d.name);
   updPStat(silent===true?null:`Saved ${new Date().toLocaleTimeString()} · ${d.name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
 async function loadProject(){const name=$('pname').value.trim();if(!name){updPStat('Type or pick a project name first');return}
@@ -678,7 +680,7 @@ async function loadProject(){const name=$('pname').value.trim();if(!name){updPSt
   if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
   const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}
   customKeys=(d.rig&&d.rig.customKeys)||[];customRest=customKeys.length&&d.rig?keyClone(d.rig.joints):null;keyList();show('customkeys',$('anim').value==='custom');if(d.images.anim)setAnim(d.images.anim,{keepKeys:true,joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
-  DR.slots=(d.directions&&d.directions.slots)||{};
+  DR.slots=(d.directions&&d.directions.slots)||{};DR.seed=(d.directions&&d.directions.seed)??null;DR.anchor=d.images.characterref||null;const ci=$('drefpreview');if(DR.anchor){ci.src=DR.anchor;ci.style.display='block'}else{ci.removeAttribute('src');ci.style.display='none'}dirWorkflow();
   TR.a=d.images.terra||null;TR.b=d.images.terrb||null;TR.c=d.images.terrc||null;TR.d=d.images.terrd||null;TR.res=null;trSlots();TL.src=d.images.tile||null;TL.tiles=(d.tileset&&d.tileset.tiles)||[];tsRender();tlShow();TP.src=d.images.tpl||null;TP.ref=d.images.tplref||null;TP.joints=(d.template&&d.template.joints)||null;TP.ovr=(d.template&&d.template.ovr)||[];tpShow();
   PL.work=(d.palette&&d.palette.work)||[];PL.prot=new Set((d.palette&&d.palette.prot)||[]);plRender();
   ptBase=null;ptRes=[];if(d.portrait&&d.portrait.base){ptMask=d.portrait.mask||ptMask;setBase(d.portrait.base,d.portrait.exprs||[])}else{drawPort();renderExprs()}
@@ -1021,7 +1023,11 @@ async function tpGenerate(){if(!checkModel())return;$('status').className='';
  catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 
 /* ---------- 4 / 8 directions ---------- */
-const DR={slots:{},frames:{},cv:{},timer:null,fi:0,seed:null};
+const DR={slots:{},frames:{},cv:{},timer:null,fi:0,seed:null,anchor:null,busy:false,stop:false};
+function dirWorkflow(){const on=$('dworkflow').value==='character';show('didentity',on);show('dtemplate',!on);dirDraw();markDirty()}
+function dirAnchor(u,clear=false){if(DR.busy)return;if(!u&&!clear){$('status').textContent='Choose a master character image first';return}DR.anchor=u||null;DR.seed=null;const im=$('drefpreview');if(DR.anchor){im.src=DR.anchor;im.style.display='block'}else{im.removeAttribute('src');im.style.display='none'}markDirty()}
+function dirAnchorFile(input){const file=input.files[0];if(file)rd(file,u=>dirAnchor(u))}
+function dirInvalidate(){clearInterval(DR.timer);DR.frames={};DR.cv={};$('dprevwrap').replaceChildren()}
 const DNAME={S:'South · front',SE:'South-east · ¾ front',E:'East · side',NE:'North-east · ¾ back',N:'North · back'};
 const DDUMMY={S:'front',N:'back',E:'side',SE:'diag',NE:'diag_back'};
 const dirOut=()=>$('dmode').value=='4'?['S','W','N','E']:['S','SW','W','NW','N','NE','E','SE'];
@@ -1034,10 +1040,10 @@ function dirDraw(){const box=$('dslots');box.innerHTML='';dirNeed().forEach(d=>{
   c.innerHTML=`<div class="mut"><b>${d}</b> · ${DNAME[d]}</div><img class="dimg" style="display:${s?'block':'none'}"><div class="mut dst">${s?'':'empty'}</div>
   <div class="row"><button class="sec" data-a="up">Upload</button><button class="sec" data-a="dummy">Dummy</button><button class="sec" data-a="edit">Edit</button></div>
   <div class="row"><button class="sec" data-a="rig">Rig…</button><button class="sec" data-a="take">Take rig</button><button class="sec" data-a="regen">Regen</button></div>
-  <button class="sec" data-a="clear">Clear</button>`;
-  const im=c.querySelector('img');if(s){im.onload=()=>{const k=Math.max(1,Math.floor(180/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px';c.querySelector('.dst').textContent=`${im.naturalWidth}×${im.naturalHeight} px · ${s.joints?'rig ready':'auto rig'}`};im.src=s.src}
-  const H={up:()=>drUpload(d),dummy:()=>drDummy(d),edit:()=>drEdit(d),rig:()=>drToAnim(d),take:()=>drTake(d),regen:()=>dirGenerate(false,[d]),clear:()=>{delete DR.slots[d];dirDraw();markDirty()}};
-  c.querySelectorAll('button').forEach(b=>b.onclick=()=>H[b.dataset.a]());box.appendChild(c)})}
+  <div class="row"><button class="sec" data-a="lock">${s&&s.locked?"Unlock view":"Lock view"}</button><button class="sec" data-a="clear">Clear</button></div>`;
+  const im=c.querySelector('img');if(s){im.onload=()=>{const hd=Math.max(im.naturalWidth,im.naturalHeight)>160;const k=hd?Math.min(1,180/Math.max(im.naturalWidth,im.naturalHeight)):Math.max(1,Math.floor(180/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px';im.style.imageRendering=hd?'auto':'pixelated';c.querySelector('.dst').textContent=`${im.naturalWidth}×${im.naturalHeight} px · ${s.joints?'rig ready':'auto rig'}`};im.src=s.src}
+  const H={up:()=>drUpload(d),dummy:()=>drDummy(d),edit:()=>drEdit(d),rig:()=>drToAnim(d),take:()=>drTake(d),regen:()=>dirGenerate(false,[d]),lock:()=>{if(s){s.locked=!s.locked;dirDraw();markDirty()}},clear:()=>{delete DR.slots[d];dirInvalidate();dirDraw();markDirty()}};
+  c.querySelectorAll('button').forEach(b=>{b.disabled=DR.busy||(b.dataset.a==='lock'&&!s)||(s&&s.locked&&['regen','up','dummy','edit','take','clear'].includes(b.dataset.a));b.onclick=()=>H[b.dataset.a]()});box.appendChild(c)})}
 function drUpload(d){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(f)rd(f,u=>{DR.slots[d]={src:u,joints:null,ovr:[]};dirDraw();markDirty()})};i.click()}
 function drDummy(d){return plCall(async()=>{const r=await api(`/api/template/dummy?height=${$('dheight').value}&style=${$('dstyle').value}&view=${DDUMMY[d]}`);DR.slots[d]={src:r.sprite,joints:r.joints,ovr:r.overrides};dirDraw();markDirty();$('status').textContent=`${d}: dummy placed, with its rig`})}
 function drEdit(d){const s=DR.slots[d];if(!s){$('status').textContent=`The ${d} view is empty`;return}openEditor(s.src,{label:'Update this view',apply:u=>{s.src=u;dirDraw();markDirty()}})}
@@ -1045,21 +1051,37 @@ function drToAnim(d){const s=DR.slots[d];if(!s){$('status').textContent=`The ${d
 function drTake(d){if(!aSrc||!joints){$('status').className='err';$('status').textContent='The Animate tab has no rigged source sprite to take';return}$('status').className='';
   DR.slots[d]={src:aSrc,joints:dClone(joints),ovr:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})};dirDraw();markDirty();$('status').textContent=`${d} view updated from the Animate tab`}
 function dirSlots(){const o={};dirNeed().forEach(d=>{const s=DR.slots[d];if(!s)throw new Error(`The ${d} view (${DNAME[d]}) is empty: generate it, upload a sprite, or press Dummy`);o[d]={sprite:s.src,joints:s.joints,overrides:s.ovr}});return o}
-function dirGenerate(onlyEmpty,only){return plCall(async()=>{if(!checkModel())return;const need=only||dirNeed().filter(d=>!onlyEmpty||!DR.slots[d]);if(!need.length){$('status').textContent='Every view already has a sprite';return}
+function dirGenerate(onlyEmpty,only){if(DR.busy)return;if($('dworkflow').value==='character')return dirCharacterGenerate(onlyEmpty,only);return plCall(async()=>{if(!checkModel('inpaint'))return;const need=(only||dirNeed()).filter(d=>!DR.slots[d]?.locked&&(!onlyEmpty||!DR.slots[d]));if(!need.length){$('status').textContent='Every view already has a sprite';return}
  $('status').textContent=`Generating ${need.length} view(s) (${need.join(', ')}) one after another: about 30-60 s each, the first also loads the model`+(TP.ref?'':'. No reference image is set in the Template tab, so the prompt alone decides the look');
  const fd=new FormData();if(TP.ref)fd.append('ref',await (await fetch(TP.ref)).blob(),'ref.png');
  Object.entries({dirs:JSON.stringify(need),height:$('dheight').value,style:$('dstyle').value,prompt:$('tpprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,steps:$('steps').value,cfg:$('cfg').value,
   seed:only?-1:(onlyEmpty&&DR.seed!=null?DR.seed:$('seed').value),strength:$('tpstr').value,ip_scale:$('tpips').value,freedom:$('tpfree').value,colors:$('tpcolors').value,palette_src:$('tppal').value,clean:$('tpclean').checked,sampler:$('sampler').value}).forEach(([k,v])=>fd.append(k,v));
  const d=await api('/api/dirs/generate',{method:'POST',body:fd});if(!only)DR.seed=d.seed;d.results.forEach(r=>{DR.slots[r.dir]={src:r.sprite,joints:r.joints,ovr:r.overrides}});dirDraw();markDirty();
  $('status').className=d.error?'err':'';$('status').textContent=`Generated ${d.results.length} view(s)`+(d.error?` · stopped: ${d.error}. Press "Generate only the empty views" to continue.`:'. Check each view, fix any with Edit / Regen, then Preview.')})}
+function dirCharacterGenerate(onlyEmpty,only){return plCall(async()=>{
+ if(DR.busy||!checkModel('reference'))return;
+ if(!DR.anchor)throw Error('Set a master character reference first');
+ const need=(only||dirNeed()).filter(d=>!DR.slots[d]?.locked&&(!onlyEmpty||!DR.slots[d]));
+ if(!need.length){$('status').textContent='No unlocked views to generate';return}
+ const art=$('artstyle').value||'pixel',size=art==='pixel'?+$('dcharcanvas').value:256;
+ const params={reference:DR.anchor,description:$('didentitytext').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,art_style:art,size,gen_size:+$('hdgen').value||768,steps:+$('steps').value,cfg:+$('cfg').value,sampler:$('sampler').value,negative:$('neg').value,bg:$('bg').value,ip_scale:+$('drefweight').value,colors:+$('tpcolors').value||24,lock_palette:$('dlockpal').checked,bg_tol:+$('tol').value||40};
+ let seed=only?-1:onlyEmpty&&DR.seed!=null?DR.seed:+$('seed').value;
+ DR.busy=true;DR.stop=false;dirDraw();let count=0;
+ try{for(const view of need){if(DR.stop)break;$('status').textContent='Generating '+view+' ('+(count+1)+'/'+need.length+') from master reference…';
+ const r=await api('/api/character/view',{...J,body:JSON.stringify({...params,view,seed})});
+ DR.slots[view]={src:r.sprite,joints:r.joints,ovr:r.overrides,seed:r.seed,locked:false,info:r.info};
+ if(!only){seed=r.seed;DR.seed=seed}count++;dirInvalidate();dirDraw();markDirty()}
+ $('status').textContent='Generated '+count+' view(s). Review and lock approved views.'+(DR.stop?' Stopped after current view.':'');
+ }finally{DR.busy=false;dirDraw()}
+})}
 function dirPreview(){return plCall(async()=>{const slots=dirSlots(),clip=clipParams($('dprev').value);$('status').textContent='Rendering all directions…';
  const d=await api('/api/dirs/render',{...J,body:JSON.stringify({slots,clip,dirs:dirOut(),secondary:secObj()||{enabled:false}})});
  DR.frames={};for(const k of Object.keys(d.dirs))DR.frames[k]=await loadImgs(d.dirs[k].frames);
  const w=$('dprevwrap');w.innerHTML='';DR.cv={};
  ['NW','N','NE','W',null,'E','SW','S','SE'].forEach(p=>{const cell=document.createElement('div');
-  if(p&&DR.frames[p]){const im=DR.frames[p][0],z=Math.max(1,Math.floor(150/Math.max(im.width,im.height)));cell.className='card';cell.style.cssText='padding:6px;text-align:center';cell.innerHTML=`<div class="mut">${p}${['SW','W','NW'].includes(p)?' (mirror)':''}</div>`;
-   const cv=document.createElement('canvas');cv.width=im.width*z;cv.height=im.height*z;cv.style.cssText='image-rendering:pixelated;display:block;margin:auto';cell.appendChild(cv);DR.cv[p]=cv}w.appendChild(cell)});
- clearInterval(DR.timer);DR.fi=0;DR.timer=setInterval(()=>{for(const p in DR.cv){const cv=DR.cv[p],fr=DR.frames[p],x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,cv.width,cv.height);x.drawImage(fr[DR.fi%fr.length],0,0,cv.width,cv.height)}DR.fi++},1000/d.fps);
+  if(p&&DR.frames[p]){const im=DR.frames[p][0],z=Math.max(im.width,im.height)>240?Math.min(1,150/Math.max(im.width,im.height)):Math.max(1,Math.floor(150/Math.max(im.width,im.height)));cell.className='card';cell.style.cssText='padding:6px;text-align:center';cell.innerHTML=`<div class="mut">${p}${['SW','W','NW'].includes(p)?' (mirror)':''}</div>`;
+   const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(im.width*z));cv.height=Math.max(1,Math.round(im.height*z));cv.style.cssText='image-rendering:'+(Math.max(im.width,im.height)>240?'auto':'pixelated')+';display:block;margin:auto';cell.appendChild(cv);DR.cv[p]=cv}w.appendChild(cell)});
+ clearInterval(DR.timer);DR.fi=0;DR.timer=setInterval(()=>{for(const p in DR.cv){const cv=DR.cv[p],fr=DR.frames[p],x=cv.getContext('2d');x.imageSmoothingEnabled=Math.max(fr[0].width,fr[0].height)>240;x.clearRect(0,0,cv.width,cv.height);x.drawImage(fr[DR.fi%fr.length],0,0,cv.width,cv.height)}DR.fi++},1000/d.fps);
  $('status').textContent=`Previewing ${$('dprev').value} in ${Object.keys(DR.frames).length} directions at ${d.fps} fps`})}
 function dirExport(){return plCall(async()=>{const slots=dirSlots(),sel=CLIPS.filter(c=>$('dc_'+c).checked);if(!sel.length)throw new Error('Tick at least one animation');
  $('status').textContent=`Exporting ${sel.length} animation(s) in ${dirOut().length} directions…`;

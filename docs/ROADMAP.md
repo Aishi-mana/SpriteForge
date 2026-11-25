@@ -25,3 +25,5 @@
 Phase 27 initial soft elbow/knee mesh deformation is implemented (validation pending); rigid animation remains available. More advanced mesh weights and volume-preserving deformation remain possible follow-ups.
 
 Phase 28 follow-up: prioritize the user's installed NetaYume and Qwen Rapid standalone runtimes, reusing shared model files and memory-management practices from Mana. Image-reference generation is available in these specific routes; SDXL-only skeleton/inpaint remains. Live hardware validation pending.
+
+Phase 29: reference-led multi-view character workflow, project master image, approved-view locks, common canvas/palette and sequential view generation. Identity fidelity remains probabilistic; richer appearance locking is a later phase. Tile and terrain work remains deferred.
