@@ -270,3 +270,5 @@ Optional CPU two-bone mesh skinning for elbows and knees; per-clip softness, pre
 
 ## Phase 28 — character model compatibility
 Architecture-aware text generation and checkpoint-specific LoRA compatibility labels. Local Diffusers folders and experimental Lumina single-file transformer route. Existing SDXL reference/inpaint retained. GPU validation pending.
+
+Phase 28 follow-up: shared Comfy Desktop standalone NetaYume/Qwen Rapid backends, model-specific defaults and references, SDXL cache release and owned local-worker cancellation. No server or duplicate model downloads.

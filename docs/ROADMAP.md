@@ -23,3 +23,5 @@
 - Not verified on real hardware as of phase 19 (the queue/history tab included): pixel editor in a real browser, palette tab UI, secondary motion, templates, directions, Godot/Unity import of exports, AI cleanup quality, `.tres`/importer script in the engines.
 
 Phase 27 initial soft elbow/knee mesh deformation is implemented (validation pending); rigid animation remains available. More advanced mesh weights and volume-preserving deformation remain possible follow-ups.
+
+Phase 28 follow-up: prioritize the user's installed NetaYume and Qwen Rapid standalone runtimes, reusing shared model files and memory-management practices from Mana. Image-reference generation is available in these specific routes; SDXL-only skeleton/inpaint remains. Live hardware validation pending.

@@ -436,6 +436,7 @@ function tagOptions(){const m=modelInfo($('ckpt').value);
  let matched=0,unknown=0;
  for(const o of $('lora').options){if(!o.value){o.text='(none)';o.disabled=false;continue}const s=loraStatus(o.value,m.family);o.disabled=s==='incompatible';o.text=o.value+' · '+(s==='match'?'Family match':s==='unknown'?'Unverified':'Incompatible')+' ['+(modelKinds.l[o.value]||'unknown')+']';if(s==='match')matched++;if(s==='unknown')unknown++}
  const d=$('modeldetail');if(d)d.textContent=m.label+' — '+m.detail+(m.backend==='qwen'?' · res_multistep / simple · 4 steps / CFG 1':m.backend==='neta'?' · Euler / normal · 20 steps / CFG 4':m.flow?' · native flow sampler':'');
+ const sampler=$('sampler');if(sampler)sampler.disabled=!!m.backend;
  const l=$('loradetail');if(l)l.textContent=matched+' family matches · '+unknown+' unverified. Family match is not a guarantee of exact adapter compatibility.';
 }
 function modelChanged(){const m=modelInfo($('ckpt').value);if($('lora').value&&loraStatus($('lora').value,m.family)==='incompatible')$('lora').value='';if(m.backend){$('useskel').checked=false;$('n1').value=1;$('n').value=1;$('steps').value=m.backend==='qwen'?4:20;$('cfg').value=m.backend==='qwen'?1:4;$('hdgen').value=m.backend==='qwen'?768:1024;$('gsize').value=m.backend==='qwen'?768:1024;if(m.backend==='qwen'&&[...$('lora').options].some(o=>o.value==='modern-anime.safetensors'&&loraStatus(o.value,m.family)==='match')){$('lora').value='modern-anime.safetensors';$('lw').value=1}}tagOptions();if(typeof mode!=='undefined'&&mode===2)tab(2);markDirty()}
@@ -451,8 +452,8 @@ function fill(sel,items,none){const q=s=>String(s).replace(/&/g,'&amp;').replace
 function load(s){$('gpu').textContent=s.gpu?'GPU: '+s.gpu:'No CUDA GPU detected';$('mdir').value=s.models_dir;
  $('gpu').className=s.models_dir_ok?'mut':'err';if(!s.models_dir_ok)$('gpu').textContent+=' - models folder not set or not found';
  fill($('ckpt'),s.checkpoints);fill($('lora'),s.loras,'(none)');modelKinds={c:s.ckpt_kinds||{},l:s.lora_families||s.lora_kinds||{},info:s.model_info||{}};tagOptions();fill($('pal'),s.palettes,'none (use color count)');fill($('tpal'),s.palettes,'none (use color count)');
- const sd=s.checkpoints.find(c=>c.startsWith('sd_xl_base')&&(s.ckpt_kinds||{})[c]!='broken')||s.checkpoints.find(c=>(s.ckpt_kinds||{})[c]=='sdxl');if(sd)$('ckpt').value=sd;
- const pl=s.loras.find(l=>l.startsWith('pixel-art-xl')&&loraStatus(l,modelInfo($('ckpt').value).family)==='match');if(pl)$('lora').value=pl;tagOptions()}
+ const sd=s.checkpoints.find(c=>c.startsWith('sd_xl_base')&&modelInfo(c).supported)||s.checkpoints.find(c=>modelInfo(c).family==='sdxl'&&modelInfo(c).supported);const preferred=sd||s.checkpoints.find(c=>modelInfo(c).backend&&modelInfo(c).supported)||s.checkpoints.find(c=>modelInfo(c).supported);if(preferred)$('ckpt').value=preferred;
+ const pl=s.loras.find(l=>l.startsWith('pixel-art-xl')&&loraStatus(l,modelInfo($('ckpt').value).family)==='match');if(pl)$('lora').value=pl;if(modelInfo($('ckpt').value).backend)modelChanged();else tagOptions()}
 async function api(url,opt){const r=await fetch(url,opt);let d;try{d=await r.json()}catch(e){throw new Error('Server error '+r.status)}
  if(!r.ok)throw new Error(typeof d.detail=='string'?d.detail:JSON.stringify(d.detail));return d}
 async function init(){try{load(await api('/api/state'))}catch(e){$('gpu').className='err';$('gpu').textContent='Engine error: '+e.message+' (check the console window)'}}

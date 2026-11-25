@@ -171,6 +171,9 @@ def check_models(models_dir):
     out.append(C(S, "Models folder", "ok", str(md)))
     from . import model_families as mf
     ck = sorted(p for p in (md / "checkpoints").iterdir() if (p.is_file() and p.suffix==".safetensors") or (p.is_dir() and (p/"model_index.json").is_file())) if (md / "checkpoints").exists() else []
+    from . import local_runtime as lr
+    qwen=md/"diffusion_models"/lr.QWEN
+    if qwen.is_file() and not any(p.name==qwen.name for p in ck):ck.append(qwen)
     lo = sorted((md / "loras").glob("*.safetensors")) if (md / "loras").exists() else []
     sdxl, rows, supported = [], [], []
     for p in ck:
@@ -180,7 +183,7 @@ def check_models(models_dir):
         if r["family"] in ("sdxl","unknown") and r["supported"]: sdxl.append(p.name)
     out.append(C(S,"Checkpoints","fail" if not supported else ("warn" if len(supported)<len(ck) else "ok"),
                  f"{len(supported)} selectable of {len(ck)}: "+"; ".join(rows[:12]),
-                 "Use SDXL for reference and inpaint; other architectures use text-to-image. See Phase 28 setup."))
+                 "SDXL: skeleton/inpaint; local NetaYume/Qwen: image references; other architectures: text-to-image. See Phase 28 setup."))
     base = [n for n in sdxl if n.startswith("sd_xl_base")]
     out.append(C(S, "Recommended base (sd_xl_base_1.0)", "ok" if base else "warn", base[0] if base else "not found",
                  "" if base else "The pixel-art-xl LoRA was trained on SDXL base; other SDXL checkpoints may give different looks"))
