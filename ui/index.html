@@ -174,7 +174,8 @@ img.px{image-rendering:pixelated}
 <div class="row"><div><label>Flutter</label><input id="secflut" type="number" step=".1" min="0" max="2" value="1"></div><div><label>Stiffness</label><input id="secstiff" type="number" step=".1" min=".4" max="2" value="1"></div><div><label>Damping</label><input id="secdamp" type="number" step=".05" min=".1" max=".9" value="0.35"></div></div>
 <div class="row"><div><label>Cape segs</label><input id="seg_cape" type="number" min="1" max="6" value="3"></div><div><label>Hair segs</label><input id="seg_hair" type="number" min="1" max="6" value="2"></div><div><label>Tail segs</label><input id="seg_tail" type="number" min="1" max="6" value="3"></div></div>
 <div class="chk"><input id="front_cape" type="checkbox"><span>Cape in front of body</span></div><div class="chk"><input id="front_hair" type="checkbox"><span>Hair in front of head</span></div><div class="chk"><input id="front_tail" type="checkbox"><span>Tail in front of legs</span></div>
-<label>Animation</label><select id="anim" onchange="animChanged()"><optgroup label="Loops"><option>idle</option><option selected>walk</option><option>run</option><option>climb</option><option>cheer</option></optgroup><optgroup label="Play once"><option>attack</option><option>cast</option><option>block</option><option>jump</option><option>hurt</option><option>death</option></optgroup></select>
+<label>Animation</label><select id="anim" onchange="animChanged()"><optgroup label="Loops"><option>idle</option><option selected>walk</option><option>run</option><option>climb</option><option>cheer</option></optgroup><optgroup label="Play once"><option>attack</option><option>cast</option><option>block</option><option>jump</option><option>hurt</option><option>death</option><option>custom</option></optgroup></select>
+<div id="customkeys" class="hide"><label>Custom keyframes (0–100%)</label><input id="keytime" type="number" min="0" max="100" value="0"><div class="row"><button class="sec" onclick="keyCapture()">Capture edited pose</button><button class="sec" onclick="keyRest()">Restore source rig</button></div><label>Reference pose image</label><input id="keyref" type="file" accept="image/*"><div class="row"><button class="sec" onclick="keyReference(0)">Set start from image</button><button class="sec" onclick="keyReference(1)">Set end from image</button></div><div id="keylist"></div><div class="mut">Capture poses by dragging joints. Reference images auto-place approximate joints; fine tune them before capture. The source sprite supplies artwork for every frame.</div></div>
 <div class="mut">Death needs a wide canvas (auto-padded); AI cleanup needs frames of 256 px or less.</div>
 <div class="row"><div><label>Frames</label><input id="afr" type="number" min="2" max="32" value="8"></div><div><label>FPS</label><input id="afps" type="number" min="1" max="60" value="10"></div></div>
 <div class="row"><div><label>Sprite faces</label><select id="face"><option>right</option><option>left</option></select></div><div><label>Nearer limbs</label><select id="near"><option value="r">screen-right</option><option value="l">screen-left</option><option value="both">both (front view)</option></select></div></div>
@@ -522,7 +523,7 @@ const BC=["#ff6363","#ffd666","#66d966","#50c8c8","#6699ff","#be78ff","#ff963c",
 let aImg=new Image(),joints=null,ovr=new Map(),partsImg=null,zoom=4,adrag=null,aframes=[],araw=[],aTimer=null,aFi=0,playing=true;
 $('bonesel').innerHTML=BN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
 $('afile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>setAnim(r.result);r.readAsDataURL(f)};
-function setAnim(u,restore){aSrc=u;ovr.clear();partsImg=null;joints=null;aImg=new Image();aImg.onload=async()=>{const hd=Math.max(aImg.width,aImg.height)>160;zoom=hd?Math.min(1,440/Math.max(aImg.width,aImg.height)):Math.max(2,Math.floor(440/Math.max(aImg.width,aImg.height)));$('refine').disabled=hd;if(hd)$('refine').checked=false;
+function setAnim(u,restore){if(!restore||!restore.keepKeys){customKeys=[];customRest=null;keyList()}aSrc=u;ovr.clear();partsImg=null;joints=null;aImg=new Image();aImg.onload=async()=>{const hd=Math.max(aImg.width,aImg.height)>160;zoom=hd?Math.min(1,440/Math.max(aImg.width,aImg.height)):Math.max(2,Math.floor(440/Math.max(aImg.width,aImg.height)));$('refine').disabled=hd;if(hd)$('refine').checked=false;
  const c=$('rig');c.width=aImg.width*zoom;c.height=aImg.height*zoom;c.style.width=c.width+'px';c.style.height=c.height+'px';
  if(restore&&restore.joints){joints=restore.joints;(restore.ovr||[]).forEach(([x,y,b])=>ovr.set(x+','+y,b));drawRig();refreshParts()}else{tab(4);await autoPlace();markDirty()}};aImg.src=u}
 async function sprBlob(){return await (await fetch(aSrc)).blob()}
@@ -572,11 +573,21 @@ function startPlay(fps){clearInterval(aTimer);aFi=0;aTimer=setInterval(()=>{if(c
 function togglePlay(){playing=!playing;$('playbtn').textContent=playing?'Pause':'Play'}
 function setAll(v){if(!cur)return;cur.accept.fill(v);renderStrip();drawFrame();markDirty()}
 const secObj=()=>!$('secon').checked?null:{enabled:true,flutter:+$('secflut').value,stiffness:+$('secstiff').value,damping:+$('secdamp').value,parts:{cape:{segments:+$('seg_cape').value,front:$('front_cape').checked},hair:{segments:+$('seg_hair').value,front:$('front_hair').checked},tail:{segments:+$('seg_tail').value,front:$('front_tail').checked}}};
+let customKeys=[],customRest=null;
+const keyClone=o=>JSON.parse(JSON.stringify(o));
+function keyList(){const el=$('keylist');el.replaceChildren();for(const k of customKeys){const row=document.createElement('div');row.className='row';const b=document.createElement('button');b.className='sec';b.textContent=Math.round(k.t*100)+'% · edit';b.onclick=()=>{joints=keyClone(k.joints);$('keytime').value=Math.round(k.t*100);drawRig()};const del=document.createElement('button');del.className='sec';del.textContent='Remove';del.onclick=()=>{customKeys=customKeys.filter(v=>v!==k);keyList();delete ares.custom;markDirty()};row.append(b,del);el.appendChild(row)}}
+function keyEnsure(){if(!aSrc||!joints)throw Error('Set a rig source first');if(!customRest)customRest=keyClone(joints)}
+function keyPut(t,j){if(customKeys.length>=16&&!customKeys.some(k=>k.t===t))throw Error('Maximum 16 keyframes');customKeys=customKeys.filter(k=>k.t!==t);customKeys.push({t,joints:keyClone(j)});customKeys.sort((a,b)=>a.t-b.t);keyList();delete ares.custom;markDirty()}
+function keyCapture(){try{keyEnsure();const t=Number($('keytime').value)/100;if(!Number.isFinite(t)||t<0||t>1)throw Error('Time must be 0–100');keyPut(t,joints)}catch(e){$('status').textContent=e.message}}
+function keyRest(){if(customRest){joints=keyClone(customRest);drawRig();refreshParts()}}
+async function keyReference(t){try{keyEnsure();const file=$('keyref').files[0];if(!file)throw Error('Choose a reference image first');const fd=new FormData();fd.append('sprite',file);const d=await api('/api/rig/autoplace',{method:'POST',body:fd});const sx=aImg.width/d.size[0],sy=aImg.height/d.size[1];joints=Object.fromEntries(Object.entries(d.joints).map(([k,v])=>[k,[v[0]*sx,v[1]*sy]]));$('keytime').value=t*100;keyPut(t,joints);drawRig();$('status').textContent='Reference pose captured. Adjust joints and Capture edited pose to refine.'}catch(e){$('status').textContent=e.message}}
+function keyPayload(){if(customKeys.length<2||customKeys[0].t!==0||customKeys[customKeys.length-1].t!==1)throw Error('Capture start (0%) and end (100%) poses first');return customKeys}
 async function previewAnim(exp){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
  if(Math.max(aImg.width,aImg.height)>160)$('refine').checked=false;
  if($('refine').checked&&!checkModel())return;
  $('status').className='';$('status').textContent=$('refine').checked?'Rendering, then AI cleanup: about 20-60 s per frame, the first frame also loads the model. Please wait…':exp?'Rendering and exporting…':'Rendering…';
- try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify(joints));
+ try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify($('anim').value==='custom'&&customRest?customRest:joints));
+  if($('anim').value==='custom')fd.append('keyframes',JSON.stringify(keyPayload()));
   fd.append('overrides',JSON.stringify(Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})));
   Object.entries({anim:$('anim').value,frames:$('afr').value,fps:$('afps').value,facing:$('face').value,near:$('near').value,weapon:$('weapon').value,amp:$('amp').value,pad:$('apad').value,overlap:$('aovl').value,ss:4,export:exp,name:$('aname').value,refine:$('refine').checked,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,character:$('rchar').value,negative:$('neg').value,strength:$('rstr').value,radius:$('rrad').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,sampler:$('sampler').value,secondary:JSON.stringify(secObj()||{enabled:false})}).forEach(([k,v])=>fd.append(k,v));
   const d=await api('/api/rig/animate',{method:'POST',body:fd});
@@ -589,11 +600,11 @@ $('xclips').innerHTML=CLIPS.map(c=>`<label class="chk" style="margin:0"><input t
 const xopts=()=>({layout:$('xlayout').value,columns:+$('xcols').value||8,padding:+$('xpad').value||0,pot:$('xpot').checked,crop:$('xcrop').checked,uniform:$('xuni').checked,
  godot:$('xgodot').checked,godot_path:$('xgpath').value,unity:$('xunity').checked,ppu:+$('xppu').value||32,gif:$('xgif').checked,frames:$('xfrm').checked});
 function clipParams(a){stashAnim();const p=animParams[a]||{...ANIM_DEF[a]},g=k=>p[k]!==undefined?p[k]:$(k).value;
- return{anim:a,count:+g('afr'),fps:+g('afps'),facing:g('face'),near:g('near'),weapon:g('weapon'),amp:+g('amp'),pad:+g('apad')||0,overlap:+g('aovl')||0}}
+ return{...(a==='custom'?{keyframes:keyPayload()}:{}),anim:a,count:+g('afr'),fps:+g('afps'),facing:g('face'),near:g('near'),weapon:g('weapon'),amp:+g('amp'),pad:+g('apad')||0,overlap:+g('aovl')||0}}
 function aiFrames(r){return{frames:r.frames.map((u,i)=>r.accept[i]?u:r.raw[i]),pivot:r.pivot}}
 async function doExport(anims){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
  $('status').className='';$('status').textContent=`Exporting ${anims.length} animation(s)…`;
- try{const d=await api('/api/rig/export_pack',{...J,body:JSON.stringify({sprite:aSrc,joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]}),name:$('aname').value||'sprite',options:xopts(),secondary:secObj()||{enabled:false},anims})});
+ try{const d=await api('/api/rig/export_pack',{...J,body:JSON.stringify({sprite:aSrc,joints:anims.some(a=>a.anim==='custom')&&customRest?customRest:joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]}),name:$('aname').value||'sprite',options:xopts(),secondary:secObj()||{enabled:false},anims})});
   $('status').textContent=`Exported ${d.frames} frames (${anims.length} animation(s)) to: ${d.dir}\nsheet ${d.sheet[0]}×${d.sheet[1]} · cell ${d.cell[0]}×${d.cell[1]} · feet pivot (${d.pivot[0]}, ${d.pivot[1]})\nSee README.txt in that folder for Godot / Unity steps.`}
  catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 function exportAnim(){const a=$('anim').value,p=clipParams(a);
@@ -611,20 +622,20 @@ async function redoRejected(){if(!cur||!cur.ri.length)return;if(!cur.key){$('sta
 
 /* ---------- projects ---------- */
 let curProject=null,dirty=false,animParams={},curAnim='walk';
-const ANIM_DEF={idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
+const ANIM_DEF={custom:{afr:12,afps:12},idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
 const AP=['afr','afps','amp','apad','aovl','face','near','weapon'];
 function updPStat(m){$('pstat').textContent=m||(curProject?`Project: ${curProject}${dirty?'  ● unsaved changes':'  ✓ saved'}`:'No project (type a name and press Save)')}
 function markDirty(){dirty=true;updPStat()}
 ['input','change'].forEach(ev=>document.querySelector('aside').addEventListener(ev,e=>{if(e.target.id!='pname'&&e.target.id!='mdir')markDirty()}));
 function stashAnim(){const o={};AP.forEach(k=>o[k]=$(k).value);animParams[curAnim]=o}
-function animChanged(){stashAnim();curAnim=$('anim').value;const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
+function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
 function collect(){const s={};document.querySelectorAll('aside input,aside select,aside textarea').forEach(e=>{if(!e.id||e.type=='file'||e.id=='pname'||e.id=='mdir')return;s[e.id]=e.type=='checkbox'?e.checked:e.value});return s}
 function applySettings(s){$('artstyle').value=s.artstyle||'pixel';for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}}
 const J={method:'POST',headers:{'Content-Type':'application/json'}};
 async function refreshProjects(){try{const d=await api('/api/projects');$('plist').innerHTML=d.projects.map(p=>`<option value="${p.name}">`).join('')}catch(e){}}
 async function saveProject(silent){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first');return}
  if(!$('aname').value||$('aname').value=='sprite')$('aname').value=name;stashAnim();
- const body={name,settings:collect(),rig:aSrc&&joints?{joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})}:null,
+ const body={name,settings:collect(),rig:aSrc&&joints?{joints:customRest||joints,customKeys,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})}:null,
   skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,anim:aSrc,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
  try{const d=await api('/api/projects/save',{...J,body:JSON.stringify(body)});curProject=d.name;$('pname').value=d.name;dirty=false;localStorage.setItem('sf_last',d.name);
   updPStat(silent===true?null:`Saved ${new Date().toLocaleTimeString()} · ${d.name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
@@ -633,7 +644,7 @@ async function loadProject(){const name=$('pname').value.trim();if(!name){updPSt
   applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};
   if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
   const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}
-  if(d.images.anim)setAnim(d.images.anim,{joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
+  customKeys=(d.rig&&d.rig.customKeys)||[];customRest=customKeys.length&&d.rig?keyClone(d.rig.joints):null;keyList();show('customkeys',$('anim').value==='custom');if(d.images.anim)setAnim(d.images.anim,{keepKeys:true,joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
   DR.slots=(d.directions&&d.directions.slots)||{};
   TR.a=d.images.terra||null;TR.b=d.images.terrb||null;TR.c=d.images.terrc||null;TR.d=d.images.terrd||null;TR.res=null;trSlots();TL.src=d.images.tile||null;TL.tiles=(d.tileset&&d.tileset.tiles)||[];tsRender();tlShow();TP.src=d.images.tpl||null;TP.ref=d.images.tplref||null;TP.joints=(d.template&&d.template.joints)||null;TP.ovr=(d.template&&d.template.ovr)||[];tpShow();
   PL.work=(d.palette&&d.palette.work)||[];PL.prot=new Set((d.palette&&d.palette.prot)||[]);plRender();

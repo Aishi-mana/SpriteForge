@@ -16,7 +16,7 @@ mk(md / "checkpoints" / "flux1.safetensors", ["model.diffusion_model.double_bloc
 M.CFG_PATH.write_text(json.dumps({"models_dir": str(md)})); M.llmm.stop(); M.llmm = M.llm.Manager(tmp, M.cfg, M._save_cfg)
 DEF = dict(negative="", lora="", lora_weight=1.0, steps=25, cfg=7.0, seed=-1, sampler="euler_a", bg_tol=40, clean=True, strength=.85, ip_scale=.8, freedom=2, colors=20, palette_src="reference", n=2, height=64, style="normal",
            prompt="", ref=None, mode="auto", size=64, palette="none", remove_bg=True, remove_shadow=True, crisp=True, outline="none", overrides="[]", anim="walk", frames=8, fps=10, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, export=False, name="sprite", refine=False, checkpoint="sd_xl_base_1.0.safetensors", character="", radius=0.0, secondary="", transparent=False, view="front")
+           pad=0, overlap=1, ss=4, export=False, name="sprite", refine=False, checkpoint="sd_xl_base_1.0.safetensors", character="", radius=0.0, secondary="", keyframes="[]", art_style="pixel", hd_size=768, transparent=False, view="front")
 def A(fn, **kw):
     """Call an endpoint function, filling unspecified Form/File params from DEF (works with stubs and with real fastapi)."""
     args = {}

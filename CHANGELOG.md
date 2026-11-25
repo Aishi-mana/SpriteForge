@@ -258,3 +258,6 @@ Automatic smooth rigid-bone rendering for sources above 160 px, alpha preservati
 
 ## Pose preset library
 Reference pose editor supports saving changes to existing pose templates, named custom poses, factory reset and clearing saved overrides. Stored in local browser/webview preferences; project/history snapshots retain their own edited skeletons. Tests added; execution pending.
+
+## Phase 25 — reference-guided custom keyframes
+Capture start/end and intermediate joint poses, import approximate reference-image joints, preview and export a custom clip, persist timelines in projects. Tests added; execution pending.

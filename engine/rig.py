@@ -35,7 +35,7 @@ SEC_DEFAULTS = {"cape": dict(omega=.75, grav=.45, gain=3.0, segments=3), "hair":
 WIND_SPEED = {"walk": 1.5, "run": 6.0, "climb": 0.0}  # pseudo air-speed blowing backwards (normalised px/frame)
 BREEZE = {"idle": 3.0}                                 # degrees of gentle periodic sway for looping clips
 CLIPS = ["idle", "walk", "run", "attack", "jump", "hurt", "death", "cast", "climb", "block", "cheer"]
-ONE_SHOT = {"attack", "jump", "hurt", "death", "cast", "block"}  # play once; the rest loop (written to the atlas as "loop")
+ONE_SHOT = {"custom", "attack", "jump", "hurt", "death", "cast", "block"}  # play once; the rest loop (written to the atlas as "loop")
 CLIP_PAD = {"death": .8, "jump": .3, "attack": .28, "cast": .28}  # canvas margin as a fraction of sprite size
 
 
@@ -308,11 +308,52 @@ def _simulate(pt, psi, pa, anim, cyclic, F, H0, sec, cycles=None):
     return rel
 
 
+def custom_keys(keys):
+    """Validate a normalized timeline of target joint positions."""
+    if not isinstance(keys, list) or not 2 <= len(keys) <= 16:
+        raise ValueError("Custom clip needs 2-16 keyframes")
+    out = []
+    for k in keys:
+        try:
+            t = float(k["t"])
+            j = {name: [float(v) for v in k["joints"][name]] for name in JOINTS}
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("Invalid keyframe joints or time")
+        if not math.isfinite(t) or not 0 <= t <= 1 or any(len(v) != 2 or not all(math.isfinite(x) and -4096 <= x <= 4096 for x in v) for v in j.values()):
+            raise ValueError("Invalid keyframe coordinates")
+        out.append((t, j))
+    out.sort(key=lambda k: k[0])
+    if out[0][0] != 0 or out[-1][0] != 1 or any(a[0] >= b[0] for a,b in zip(out,out[1:])):
+        raise ValueError("Keyframes need unique times including 0 and 1")
+    return out
+
+
+def _custom_pose(keys, t, rest, pad, ss):
+    """Ease target joints; retain source bone lengths and artwork."""
+    target = keys[-1][1]
+    for (a, ja), (b, jb) in zip(keys, keys[1:]):
+        if t <= b:
+            u = _ease(max(0, min(1, (t-a)/(b-a))))
+            target = {n: (1-u)*np.array(ja[n])+u*np.array(jb[n]) for n in JOINTS}
+            break
+    mats = {}
+    for name, a, b, _, _, _ in BONES:
+        A, B = np.array(rest[a]), np.array(rest[b])
+        C, D = np.array(target[a]), np.array(target[b])
+        v, w = B-A, D-C
+        angle = math.degrees(math.atan2(w[1],w[0])-math.atan2(v[1],v[0])) if np.linalg.norm(v)>1e-6 and np.linalg.norm(w)>1e-6 else 0
+        R = _rot((A[0]+pad)*ss,(A[1]+pad)*ss,angle)
+        R[:2,2] += (C-A)*ss
+        mats[name] = R
+    return np.eye(3), mats
+
+
 def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, secondary=None, view="side"):
+           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
     hd = is_hd(sprite)
+    keys_custom = custom_keys(keyframes) if anim == "custom" else None
     if hd:
         if max(W0, H0) > 1024:
             raise ValueError('HD rig source must be at most 1024 px')
@@ -372,6 +413,9 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     pivot_bone = {b[1]: b[0] for b in BONES}
     poses = []  # pass 1: body pose of every frame
     for fi in range(n):
+        if keys_custom is not None:
+            poses.append(_custom_pose(keys_custom, fi/max(1,n-1), joints, pad, ss))
+            continue
         sem = _sem(anim, fi, n, amp, weapon, view)
         ang, dx, dy, rot = _angles(sem, F, "r" if facing == "right" else "l")
         T = np.array([[1, 0, dx * H0 * ss], [0, 1, dy * H0 * ss], [0, 0, 1]]) @ _rot(feet[0], feet[1], -F * rot)  # tilt about the feet, then translate
