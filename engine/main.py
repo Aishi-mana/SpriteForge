@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf
+from . import styles, inbetween, model_families as mf, character
 
 
 def _art_style(value):
@@ -889,6 +889,54 @@ def dirs_generate(ref: Optional[UploadFile] = File(None), dirs: str = Form(...),
         results.append({"dir": d, "sprite": b64(r["sprite"]), "raw": b64(r["raw"].resize((256, 256))), "joints": joints,
                         "overrides": ov, "info": r["info"]})
     return {"results": results, "seed": base, "error": err}
+
+
+class CharacterView(BaseModel):
+    reference: str
+    view: str
+    description: str = ""
+    checkpoint: str
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "anime"
+    size: int = 256
+    gen_size: int = 768
+    steps: int = 20
+    cfg: float = 4.0
+    seed: int = -1
+    sampler: str = "euler_a"
+    negative: str = ""
+    bg: str = "white"
+    ip_scale: float = .7
+    colors: int = 24
+    lock_palette: bool = True
+    bg_tol: int = 40
+
+
+@app.post("/api/character/view")
+def character_view(b: CharacterView):
+    """Generate one view from the same master image; no mutation of existing views."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    art=_art_style(b.art_style)
+    try:
+        if not mf.describe(ckpt)["reference"]: raise ValueError("Select a model with image-reference support")
+        if art=="pixel" and b.size not in (32,48,64,96,128): raise ValueError("Choose a pixel canvas of 32–128 px")
+        if art!="pixel" and b.size!=256: raise ValueError("HD direction canvas is limited to 256 px")
+        anchor=character.decode_reference(b.reference)
+        if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
+        prompt=character.view_prompt(b.view,b.description)
+        if len(b.negative)>1800: raise ValueError("Negative prompt too long")
+        ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        neg=", ".join(x for x in (b.negative,"multiple characters, duplicate views, text, cropped feet, scenery") if x)
+        result=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,neg,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                    ref,max(0.,min(b.ip_scale,1.)),lambda raw:character.finish(raw,anchor,art,b.size,b.colors,b.lock_palette,b.bg_tol),
+                    gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
+        sprite=_dec_img(result["sprite"])
+        return {**result,"dir":b.view,"seed":seed,"joints":rig.autoplace(sprite),"overrides":[]}
+    except ValueError as e: raise HTTPException(400,str(e))
 
 
 # ---------------- diagnostics ----------------
