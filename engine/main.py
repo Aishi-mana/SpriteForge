@@ -53,7 +53,10 @@ def b64(img):
 
 def scan(sub):
     d = Path(cfg()["models_dir"]) / sub
-    return sorted(p.name for p in d.glob("*.safetensors")) if cfg()["models_dir"] and d.exists() else []
+    if not cfg()["models_dir"] or not d.exists(): return []
+    names=[p.name for p in d.glob("*.safetensors") if p.is_file()]
+    if sub=="checkpoints": names += [p.name for p in d.iterdir() if p.is_dir() and (p/"model_index.json").is_file()]
+    return sorted(names)
 
 
 @app.get("/api/state")
@@ -67,9 +70,15 @@ def state():
     kinds = {"checkpoints": {}, "loras": {}}
     for sub in kinds:  # tag files that cannot work with the SDXL pipelines (Flux, SD1.5, video...) or are broken
         for name in scan(sub):
-            r = diag.inspect_file(Path(md) / sub / name, sub == "loras")
+            path = Path(md) / sub / name
+            if path.is_dir():
+                kinds[sub][name]=mf.identify(path)
+                continue
+            r = diag.inspect_file(path, sub == "loras")
             kinds[sub][name] = r["kind"] if r["status"] == "ok" else "broken"
-    return {"ckpt_kinds": kinds["checkpoints"], "lora_kinds": kinds["loras"], "models_dir": md, "models_dir_ok": bool(md) and Path(md).exists(), "checkpoints": scan("checkpoints"),
+    models={name:mf.describe(Path(md)/"checkpoints"/name) for name in scan("checkpoints")}
+    lora_families={name:mf.identify(Path(md)/"loras"/name,True) for name in scan("loras")}
+    return {"model_info":models,"lora_families":lora_families,"ckpt_kinds": kinds["checkpoints"], "lora_kinds": kinds["loras"], "models_dir": md, "models_dir_ok": bool(md) and Path(md).exists(), "checkpoints": scan("checkpoints"),
             "loras": scan("loras"), "palettes": list(px.PALETTES), "gpu": gpu}
 
 
@@ -87,9 +96,13 @@ def set_cfg(c: Cfg):
 
 def _paths(checkpoint):
     md = Path(cfg()["models_dir"])
+    if not checkpoint or Path(checkpoint).name != checkpoint:
+        raise HTTPException(400,"Select a valid checkpoint")
     ckpt = md / "checkpoints" / checkpoint
     if not ckpt.exists():
         raise HTTPException(400, f"checkpoint not found: {ckpt}")
+    info=mf.describe(ckpt)
+    if not info["supported"]: raise HTTPException(400,info["detail"])
     return str(ckpt), str(md / "loras")
 
 
@@ -107,7 +120,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween
+from . import styles, inbetween, model_families as mf
 
 
 def _art_style(value):
