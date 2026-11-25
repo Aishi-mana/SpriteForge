@@ -21,3 +21,5 @@
 - AI joint cleanup needs frames <= 256 px and is slow (20-60 s per frame).
 - Template/direction generation: the AI sees only the dummy's silhouette and shading (no pose-control model), so limb placement can wander; lower *Redraw strength*, or Regen/Edit a view.
 - Not verified on real hardware as of phase 19 (the queue/history tab included): pixel editor in a real browser, palette tab UI, secondary motion, templates, directions, Godot/Unity import of exports, AI cleanup quality, `.tres`/importer script in the engines.
+
+Phase 27 initial soft elbow/knee mesh deformation is implemented (validation pending); rigid animation remains available. More advanced mesh weights and volume-preserving deformation remain possible follow-ups.

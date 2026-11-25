@@ -192,6 +192,7 @@ img.px{image-rendering:pixelated}
 <div class="row"><div><label>Sprite faces</label><select id="face"><option>right</option><option>left</option></select></div><div><label>Nearer limbs</label><select id="near"><option value="r">screen-right</option><option value="l">screen-left</option><option value="both">both (front view)</option></select></div></div>
 <div class="row"><div><label>Weapon arm (attack, cast, block)</label><select id="weapon"><option value="r">screen-right</option><option value="l">screen-left</option></select></div><div><label>Amplitude</label><input id="amp" type="number" step=".1" min=".3" max="2" value="1"></div></div>
 <div class="row"><div><label>Canvas padding (0 = auto)</label><input id="apad" type="number" min="0" value="0"></div><div><label>Joint overlap px</label><input id="aovl" type="number" min="0" max="3" value="1"></div></div>
+<div id="softjointpanel"><label>Soft joint deformation (%)</label><input id="asoft" type="number" min="0" max="100" step="5" value="0" onchange="softChanged()"><div class="mut">0 = original rigid bones. Try 35–60 for elbows and knees; stronger values may stretch artwork. CPU-only mesh deformation.</div></div>
 <div class="chk"><input id="refine" type="checkbox"><span><b>AI joint cleanup</b> (SDXL inpaint, slow)</span></div>
 <label>Character description (helps the AI repaint seams)</label><input id="rchar" placeholder="knight with blue armor and red cape">
 <div class="row"><div><label>Cleanup strength</label><input id="rstr" type="number" step=".05" min=".1" max=".9" value=".45"></div><div><label>Radius px (0 = auto)</label><input id="rrad" type="number" step=".5" min="0" value="0"></div></div>
@@ -608,7 +609,7 @@ async function previewAnim(exp){if($('anim').value==='reference')return endpoint
  try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify($('anim').value==='custom'&&customRest?customRest:joints));
   if($('anim').value==='custom')fd.append('keyframes',JSON.stringify(keyPayload()));
   fd.append('overrides',JSON.stringify(Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})));
-  Object.entries({anim:$('anim').value,frames:$('afr').value,fps:$('afps').value,facing:$('face').value,near:$('near').value,weapon:$('weapon').value,amp:$('amp').value,pad:$('apad').value,overlap:$('aovl').value,ss:4,export:exp,name:$('aname').value,refine:$('refine').checked,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,character:$('rchar').value,negative:$('neg').value,strength:$('rstr').value,radius:$('rrad').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,sampler:$('sampler').value,secondary:JSON.stringify(secObj()||{enabled:false})}).forEach(([k,v])=>fd.append(k,v));
+  Object.entries({anim:$('anim').value,frames:$('afr').value,fps:$('afps').value,facing:$('face').value,near:$('near').value,weapon:$('weapon').value,amp:$('amp').value,pad:$('apad').value,overlap:$('aovl').value,softness:+$('asoft').value||0,ss:4,export:exp,name:$('aname').value,refine:$('refine').checked,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,character:$('rchar').value,negative:$('neg').value,strength:$('rstr').value,radius:$('rrad').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,sampler:$('sampler').value,secondary:JSON.stringify(secObj()||{enabled:false})}).forEach(([k,v])=>fd.append(k,v));
   const d=await api('/api/rig/animate',{method:'POST',body:fd});
   const c=await buildCur($('anim').value,d);showCur(c);const lost=!d.refine&&ares[c.anim]&&ares[c.anim].edited&&!ares[c.anim].ri.length;if(lost)delete ares[c.anim];if(d.refine){ares[c.anim]=c;markDirty()}
   const rf=d.refine?` · cleanup seed ${d.refine.seed}, radius ${d.refine.radius}px`+(d.refine.reverted?`, ${d.refine.reverted} frame(s) reverted to rig-only (AI changed too much)`:''):'';
@@ -619,7 +620,7 @@ $('xclips').innerHTML=CLIPS.map(c=>`<label class="chk" style="margin:0"><input t
 const xopts=()=>({layout:$('xlayout').value,columns:+$('xcols').value||8,padding:+$('xpad').value||0,pot:$('xpot').checked,crop:$('xcrop').checked,uniform:$('xuni').checked,
  godot:$('xgodot').checked,godot_path:$('xgpath').value,unity:$('xunity').checked,ppu:+$('xppu').value||32,gif:$('xgif').checked,frames:$('xfrm').checked});
 function clipParams(a){stashAnim();const p=animParams[a]||{...ANIM_DEF[a]},g=k=>p[k]!==undefined?p[k]:$(k).value;
- return{...(a==='custom'?{keyframes:keyPayload()}:{}),anim:a,count:+g('afr'),fps:+g('afps'),facing:g('face'),near:g('near'),weapon:g('weapon'),amp:+g('amp'),pad:+g('apad')||0,overlap:+g('aovl')||0}}
+ return{...(a==='custom'?{keyframes:keyPayload()}:{}),anim:a,count:+g('afr'),fps:+g('afps'),facing:g('face'),near:g('near'),weapon:g('weapon'),amp:+g('amp'),pad:+g('apad')||0,overlap:+g('aovl')||0,softness:p.asoft===undefined?0:(+p.asoft||0)}}
 function aiFrames(r){return{frames:r.frames.map((u,i)=>r.accept[i]?u:r.raw[i]),pivot:r.pivot}}
 async function doExport(anims){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
  $('status').className='';$('status').textContent=`Exporting ${anims.length} animation(s)…`;
@@ -642,12 +643,13 @@ async function redoRejected(){if(!cur||!cur.ri.length)return;if(!cur.key){$('sta
 /* ---------- projects ---------- */
 let curProject=null,dirty=false,animParams={},curAnim='walk';
 const ANIM_DEF={reference:{afr:8,afps:10},custom:{afr:12,afps:12},idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
-const AP=['afr','afps','amp','apad','aovl','face','near','weapon'];
+const AP=['afr','afps','amp','apad','aovl','face','near','weapon','asoft'];
+function softChanged(){const a=$('anim').value;delete ares[a];if(cur&&cur.anim===a){cur=null;clearInterval(aTimer);$('strip').replaceChildren();const c=$('animprev');c.getContext('2d').clearRect(0,0,c.width,c.height)}markDirty()}
 function updPStat(m){$('pstat').textContent=m||(curProject?`Project: ${curProject}${dirty?'  ● unsaved changes':'  ✓ saved'}`:'No project (type a name and press Save)')}
 function markDirty(){dirty=true;updPStat()}
 ['input','change'].forEach(ev=>document.querySelector('aside').addEventListener(ev,e=>{if(e.target.id!='pname'&&e.target.id!='mdir')markDirty()}));
 function stashAnim(){const o={};AP.forEach(k=>o[k]=$(k).value);animParams[curAnim]=o}
-function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');show('endpointpanel',curAnim==='reference');if(mode===4){show('rigcard',!!aSrc||curAnim==='reference');show('p-gen',curAnim==='reference')}if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
+function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');show('endpointpanel',curAnim==='reference');show('softjointpanel',curAnim!=='reference');if(mode===4){show('rigcard',!!aSrc||curAnim==='reference');show('p-gen',curAnim==='reference')}if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};$('asoft').value=o.asoft??0;for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
 function collect(){const s={};document.querySelectorAll('aside input,aside select,aside textarea').forEach(e=>{if(!e.id||e.type=='file'||e.id=='pname'||e.id=='mdir')return;s[e.id]=e.type=='checkbox'?e.checked:e.value});return s}
 function applySettings(s){$('artstyle').value=s.artstyle||'pixel';for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}}
 const J={method:'POST',headers:{'Content-Type':'application/json'}};
@@ -660,7 +662,7 @@ async function saveProject(silent){const name=$('pname').value.trim();if(!name){
   updPStat(silent===true?null:`Saved ${new Date().toLocaleTimeString()} · ${d.name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
 async function loadProject(){const name=$('pname').value.trim();if(!name){updPStat('Type or pick a project name first');return}
  try{const d=await api('/api/projects/'+encodeURIComponent(name));
-  applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};endpoint={start:d.images.animstart||null,end:d.images.animend||null};endpointShow();show('endpointpanel',curAnim==='reference');
+  $('asoft').value=0;applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};endpoint={start:d.images.animstart||null,end:d.images.animend||null};endpointShow();show('endpointpanel',curAnim==='reference');show('softjointpanel',curAnim!=='reference');
   if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
   const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&[...$('preset').options].some(o=>o.value===sk.preset))$('preset').value=sk.preset}
   customKeys=(d.rig&&d.rig.customKeys)||[];customRest=customKeys.length&&d.rig?keyClone(d.rig.joints):null;keyList();show('customkeys',$('anim').value==='custom');if(d.images.anim)setAnim(d.images.anim,{keepKeys:true,joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}

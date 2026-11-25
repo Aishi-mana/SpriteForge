@@ -264,3 +264,6 @@ Capture start/end and intermediate joint poses, import approximate reference-ima
 
 ## Phase 26 — actual start/end reference animation
 Locked first and final image frames, independent SDXL in-betweens or quick crossfade, reference clip persistence and exact-frame PNG export. Phase 25 custom keyframes retained separately. Tests added; execution pending.
+
+## Phase 27 — soft joint deformation
+Optional CPU two-bone mesh skinning for elbows and knees; per-clip softness, preview/export and directional integration, rigid fallback, pixel/HD sampling, regression tests. Phase 25/26 retained.
