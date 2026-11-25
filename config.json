@@ -1,0 +1,10 @@
+{
+  "models_dir": "C:/Users/Admin/AppData/Local/Comfy-Desktop/ComfyUI-Shared/models",
+  "port": 8765,
+  "llm_server": "C:/AI/llama-cpp/llama-server.exe",
+  "llm_model": "C:/AI/ManaAI-GV3/models/gemma-3-4b-it-Q4_K_M.gguf",
+  "llm_gpu_layers": 0,
+  "llm_ctx": 4096,
+  "llm_idle_min": 10,
+  "llm_search_dir": "C:/AI"
+}

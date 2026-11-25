@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SpriteForge",
+  "version": "0.2.0",
+  "identifier": "com.spriteforge.app",
+  "build": { "frontendDist": "../shell" },
+  "app": {
+    "windows": [{ "label": "main", "title": "SpriteForge", "width": 1400, "height": 900, "minWidth": 900, "minHeight": 600 }],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": false, "icon": ["icons/icon.ico", "icons/icon.png"] }
+}

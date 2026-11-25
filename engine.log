@@ -1,0 +1,933 @@
+INFO:     Started server process [110976]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8765 (Press CTRL+C to quit)
+
+SpriteForge running at http://127.0.0.1:8765
+
+INFO:     127.0.0.1:58854 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49198 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55989 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58854 - "GET /api/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58854 - "GET /api/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58854 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57176 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53630 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59975 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60866 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64533 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+W1126 00:38:12.228000 110976 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1860.63it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+Loading pipeline components...:  29%|##8       | 2/7 [00:00<00:00, 17.64it/s]Loading pipeline components...:  57%|#####7    | 4/7 [00:00<00:00,  7.05it/s]There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00,  7.88it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00,  9.14it/s]
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+No LoRA keys associated to CLIPTextModel found with the prefix='text_encoder'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModel related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
+No LoRA keys associated to CLIPTextModelWithProjection found with the prefix='text_encoder_2'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModelWithProjection related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:07<03:04,  7.68s/it]  8%|8         | 2/25 [00:08<01:21,  3.55s/it]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:09<00:49,  2.25s/it]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:09<00:34,  1.64s/it]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:10<00:25,  1.28s/it]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:11<00:20,  1.08s/it]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:11<00:16,  1.06it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:12<00:14,  1.17it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:13<00:12,  1.25it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:13<00:11,  1.31it/s] 44%|####4     | 11/25 [00:14<00:10,  1.36it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:15<00:09,  1.40it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:15<00:08,  1.44it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:16<00:07,  1.46it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:17<00:06,  1.48it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:17<00:06,  1.49it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:18<00:05,  1.49it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:19<00:04,  1.49it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:19<00:04,  1.50it/s] 80%|########  | 20/25 [00:20<00:03,  1.50it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:21<00:02,  1.51it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:21<00:01,  1.50it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:22<00:01,  1.51it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:23<00:00,  1.51it/s]INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:23<00:00,  1.51it/s]100%|##########| 25/25 [00:23<00:00,  1.06it/s]
+C:\AI\SpriteForge\.venv\Lib\site-packages\diffusers\pipelines\stable_diffusion_xl\pipeline_stable_diffusion_xl.py:750: FutureWarning: `upcast_vae` is deprecated and will be removed in version 1.0.0. `upcast_vae` is deprecated. Please use `pipe.vae.to(torch.float32)`. For more details, please refer to: https://github.com/huggingface/diffusers/pull/12619#issue-3606633695.
+  deprecate(
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/jobs/20261126_003755_97801 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49675 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58707 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59567 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57407 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62928 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59299 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60287 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64650 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51835 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57534 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57534 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57534 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 897.71it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00,  7.61it/s]INFO:     127.0.0.1:57534 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00, 10.05it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 10.73it/s]
+Loading pixel was unsuccessful with the following error: 
+Target modules {'attn.to_out.0', 'out', 'k.proj', 'mlp.net.2', 'v.proj', 'attn.to_q', 'attn.to_k', 'q.proj', 'mlp.net.0.proj', 'attn.to_v', 'mod.1'} not found in the base model. Please check the target modules and try again.
+INFO:     127.0.0.1:57534 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57534 - "GET /api/jobs/20261126_003957_50902 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57534 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57843 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61292 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49205 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55224 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54445 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55314 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61284 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60217 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63377 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50367 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53907 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1771.99it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00,  8.44it/s]INFO:     127.0.0.1:55968 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00,  9.63it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 10.53it/s]
+Loading pixel was unsuccessful with the following error: 
+Target modules {'attn.to_out.0', 'out', 'k.proj', 'mlp.net.2', 'v.proj', 'attn.to_q', 'attn.to_k', 'q.proj', 'mlp.net.0.proj', 'attn.to_v', 'mod.1'} not found in the base model. Please check the target modules and try again.
+INFO:     127.0.0.1:55968 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "GET /api/jobs/20261126_004125_45603 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55968 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56001 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54324 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54117 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50866 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59163 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1475.34it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00, 11.05it/s]There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00, 11.79it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 13.03it/s]
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+No LoRA keys associated to CLIPTextModel found with the prefix='text_encoder'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModel related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
+No LoRA keys associated to CLIPTextModelWithProjection found with the prefix='text_encoder_2'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModelWithProjection related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:08<03:17,  8.24s/it]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:08<01:27,  3.81s/it]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:09<00:52,  2.39s/it] 16%|#6        | 4/25 [00:10<00:35,  1.71s/it]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:11<00:26,  1.35s/it]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:11<00:21,  1.13s/it]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:12<00:17,  1.02it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:13<00:14,  1.14it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:13<00:12,  1.23it/s] 40%|####      | 10/25 [00:14<00:11,  1.29it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:15<00:10,  1.34it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:15<00:09,  1.36it/s] 52%|#####2    | 13/25 [00:16<00:08,  1.39it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:17<00:07,  1.41it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:17<00:07,  1.42it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:18<00:06,  1.43it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:19<00:05,  1.44it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:19<00:04,  1.44it/s] 76%|#######6  | 19/25 [00:20<00:04,  1.45it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:21<00:03,  1.46it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:21<00:02,  1.48it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:22<00:02,  1.48it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:23<00:01,  1.49it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:23<00:00,  1.49it/s]INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:24<00:00,  1.49it/s]100%|##########| 25/25 [00:24<00:00,  1.02it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/jobs/20261126_004207_54404 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64994 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56915 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63981 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 453.63it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00, 10.92it/s]Loading pipeline components...:  71%|#######1  | 5/7 [00:00<00:00, 12.81it/s]There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 11.37it/s]Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 11.53it/s]
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+Loading weights:   0%|          | 0/144 [00:00<?, ?it/s]Loading weights: 100%|##########| 144/144 [00:00<00:00, 6767.66it/s]
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+Loading weights:   0%|          | 0/384 [00:00<?, ?it/s]Loading weights: 100%|##########| 384/384 [00:00<00:00, 6168.59it/s]
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:04<01:36,  4.04s/it]  8%|8         | 2/25 [00:04<00:47,  2.07s/it]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:05<00:31,  1.42s/it]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:06<00:23,  1.12s/it] 20%|##        | 5/25 [00:06<00:19,  1.04it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:07<00:16,  1.17it/s] 28%|##8       | 7/25 [00:08<00:14,  1.26it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:08<00:12,  1.32it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:09<00:11,  1.38it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:10<00:10,  1.41it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:10<00:09,  1.44it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:11<00:08,  1.46it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:12<00:08,  1.47it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:12<00:07,  1.49it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:13<00:06,  1.49it/s] 64%|######4   | 16/25 [00:14<00:06,  1.50it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:14<00:05,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:15<00:04,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:15<00:03,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:16<00:03,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:17<00:02,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:17<00:01,  1.51it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:18<00:01,  1.52it/s]INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:19<00:00,  1.52it/s]100%|##########| 25/25 [00:19<00:00,  1.52it/s]100%|##########| 25/25 [00:19<00:00,  1.25it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/jobs/20261126_004312_42805 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49882 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1474.03it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00,  7.03it/s]There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00,  8.35it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00,  9.11it/s]
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+Loading weights:   0%|          | 0/144 [00:00<?, ?it/s]Loading weights: 100%|##########| 144/144 [00:00<00:00, 12141.27it/s]
+Loading weights:   0%|          | 0/384 [00:00<?, ?it/s]Loading weights: 100%|##########| 384/384 [00:00<00:00, 8426.09it/s]
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:07<03:01,  7.54s/it]  8%|8         | 2/25 [00:08<01:20,  3.52s/it]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:08<00:48,  2.22s/it]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:09<00:33,  1.60s/it] 20%|##        | 5/25 [00:10<00:25,  1.27s/it]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:10<00:20,  1.06s/it]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:11<00:16,  1.08it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:12<00:14,  1.19it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:12<00:12,  1.28it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:13<00:11,  1.35it/s] 44%|####4     | 11/25 [00:14<00:10,  1.39it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:14<00:09,  1.43it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:15<00:08,  1.46it/s] 56%|#####6    | 14/25 [00:16<00:07,  1.48it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:16<00:06,  1.49it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:17<00:06,  1.48it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:18<00:05,  1.50it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:18<00:04,  1.51it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:19<00:03,  1.51it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:20<00:03,  1.50it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:20<00:02,  1.49it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:21<00:02,  1.49it/s] 92%|#########2| 23/25 [00:22<00:01,  1.48it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:22<00:00,  1.48it/s]INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:23<00:00,  1.47it/s]100%|##########| 25/25 [00:23<00:00,  1.06it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/jobs/20261126_004355_70106 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54595 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50198 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63718 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1552.33it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00, 10.51it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00, 11.30it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 12.46it/s]
+Loading pixel was unsuccessful with the following error: 
+Target modules {'attn.to_out.0', 'out', 'k.proj', 'mlp.net.2', 'v.proj', 'attn.to_q', 'attn.to_k', 'q.proj', 'mlp.net.0.proj', 'attn.to_v', 'mod.1'} not found in the base model. Please check the target modules and try again.
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/jobs/20261126_004453_34907 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+Fetching 17 files:   0%|          | 0/17 [00:00<?, ?it/s]Fetching 17 files: 100%|##########| 17/17 [00:00<00:00, 1414.21it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]Loading pipeline components...:  43%|####2     | 3/7 [00:00<00:00, 11.73it/s]There are modules in UNet2DConditionModel that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...:  86%|########5 | 6/7 [00:00<00:00, 11.55it/s]There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+Loading pipeline components...: 100%|##########| 7/7 [00:00<00:00, 12.87it/s]
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:03<01:24,  3.54s/it]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:04<00:41,  1.81s/it] 12%|#2        | 3/25 [00:04<00:27,  1.23s/it]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:05<00:20,  1.03it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:05<00:16,  1.23it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:06<00:14,  1.36it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:06<00:12,  1.48it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:07<00:10,  1.55it/s] 36%|###6      | 9/25 [00:08<00:09,  1.62it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:08<00:09,  1.66it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:09<00:08,  1.70it/s] 48%|####8     | 12/25 [00:09<00:07,  1.71it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:10<00:06,  1.72it/s] 56%|#####6    | 14/25 [00:10<00:06,  1.73it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:11<00:05,  1.73it/s] 64%|######4   | 16/25 [00:12<00:05,  1.74it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:12<00:04,  1.74it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:13<00:04,  1.74it/s] 76%|#######6  | 19/25 [00:13<00:03,  1.74it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:14<00:02,  1.76it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:14<00:02,  1.75it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:15<00:01,  1.75it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:16<00:01,  1.75it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:16<00:00,  1.75it/s]INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:17<00:00,  1.75it/s]100%|##########| 25/25 [00:17<00:00,  1.45it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/jobs/20261126_004500_10308 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50963 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54580 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51338 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57564 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<01:03,  2.66s/it]  8%|8         | 2/25 [00:03<00:32,  1.41s/it]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:03<00:22,  1.04s/it] 16%|#6        | 4/25 [00:04<00:17,  1.18it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:04<00:14,  1.35it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:05<00:12,  1.49it/s] 28%|##8       | 7/25 [00:05<00:11,  1.59it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:06<00:10,  1.67it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:07<00:09,  1.72it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:07<00:08,  1.77it/s] 44%|####4     | 11/25 [00:08<00:07,  1.80it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:08<00:07,  1.81it/s] 52%|#####2    | 13/25 [00:09<00:06,  1.83it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:09<00:05,  1.84it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:10<00:05,  1.86it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:10<00:04,  1.86it/s] 68%|######8   | 17/25 [00:11<00:04,  1.87it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:11<00:03,  1.87it/s] 76%|#######6  | 19/25 [00:12<00:03,  1.87it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:12<00:02,  1.86it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:13<00:02,  1.86it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:14<00:01,  1.86it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:14<00:01,  1.86it/s] 96%|#########6| 24/25 [00:15<00:00,  1.85it/s]INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:15<00:00,  1.86it/s]100%|##########| 25/25 [00:15<00:00,  1.60it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64709 - "GET /api/jobs/20261126_004608_81209 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60516 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:01<00:46,  1.92s/it]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:02<00:25,  1.12s/it] 12%|#2        | 3/25 [00:02<00:18,  1.20it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:03<00:15,  1.39it/s] 20%|##        | 5/25 [00:04<00:12,  1.56it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:04<00:11,  1.65it/s] 28%|##8       | 7/25 [00:05<00:10,  1.74it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:05<00:09,  1.78it/s] 36%|###6      | 9/25 [00:06<00:08,  1.82it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:06<00:08,  1.84it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:07<00:07,  1.87it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:07<00:06,  1.88it/s] 52%|#####2    | 13/25 [00:08<00:06,  1.89it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:08<00:05,  1.90it/s] 60%|######    | 15/25 [00:09<00:05,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:09<00:04,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:10<00:04,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:10<00:03,  1.89it/s] 76%|#######6  | 19/25 [00:11<00:03,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:11<00:02,  1.89it/s] 84%|########4 | 21/25 [00:12<00:02,  1.89it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:12<00:01,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:13<00:01,  1.89it/s] 96%|#########6| 24/25 [00:14<00:00,  1.90it/s]INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:14<00:00,  1.90it/s]100%|##########| 25/25 [00:14<00:00,  1.72it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/jobs/20261126_004643_89710 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52072 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62574 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57179 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54059 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53047 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61291 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:01<00:47,  1.98s/it]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:02<00:26,  1.15s/it] 12%|#2        | 3/25 [00:03<00:18,  1.17it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:03<00:15,  1.36it/s] 20%|##        | 5/25 [00:04<00:13,  1.52it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:04<00:11,  1.61it/s] 28%|##8       | 7/25 [00:05<00:10,  1.71it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:05<00:09,  1.74it/s] 36%|###6      | 9/25 [00:06<00:08,  1.80it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:06<00:08,  1.82it/s] 44%|####4     | 11/25 [00:07<00:07,  1.86it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:07<00:06,  1.88it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:08<00:06,  1.91it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:08<00:05,  1.92it/s] 60%|######    | 15/25 [00:09<00:05,  1.93it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:09<00:04,  1.93it/s] 68%|######8   | 17/25 [00:10<00:04,  1.93it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:10<00:03,  1.93it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:11<00:03,  1.92it/s] 80%|########  | 20/25 [00:11<00:02,  1.92it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:12<00:02,  1.92it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:12<00:01,  1.92it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:13<00:01,  1.92it/s] 96%|#########6| 24/25 [00:14<00:00,  1.92it/s]INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:14<00:00,  1.92it/s]100%|##########| 25/25 [00:14<00:00,  1.72it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/jobs/20261126_004757_27511 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59028 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51097 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52102 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<01:05,  2.71s/it]  8%|8         | 2/25 [00:03<00:32,  1.42s/it]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 12%|#2        | 3/25 [00:03<00:22,  1.03s/it]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:04<00:17,  1.21it/s] 20%|##        | 5/25 [00:04<00:14,  1.37it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:05<00:12,  1.51it/s] 28%|##8       | 7/25 [00:05<00:11,  1.59it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:06<00:10,  1.68it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:07<00:09,  1.71it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:07<00:08,  1.75it/s] 44%|####4     | 11/25 [00:08<00:07,  1.78it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 48%|####8     | 12/25 [00:08<00:07,  1.80it/s] 52%|#####2    | 13/25 [00:09<00:06,  1.80it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:09<00:06,  1.80it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:10<00:05,  1.79it/s] 64%|######4   | 16/25 [00:10<00:05,  1.79it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:11<00:04,  1.80it/s] 72%|#######2  | 18/25 [00:12<00:03,  1.81it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:12<00:03,  1.82it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:13<00:02,  1.81it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:13<00:02,  1.82it/s] 88%|########8 | 22/25 [00:14<00:01,  1.81it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+ 92%|#########2| 23/25 [00:14<00:01,  1.81it/s] 96%|#########6| 24/25 [00:15<00:00,  1.80it/s]INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:15<00:00,  1.80it/s]100%|##########| 25/25 [00:15<00:00,  1.57it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/jobs/20261126_004851_59012 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56304 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61582 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56748 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58707 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<00:51,  2.13s/it]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:02<00:28,  1.23s/it] 12%|#2        | 3/25 [00:03<00:20,  1.09it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:03<00:16,  1.26it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:04<00:14,  1.43it/s] 24%|##4       | 6/25 [00:04<00:12,  1.52it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:05<00:11,  1.59it/s] 32%|###2      | 8/25 [00:06<00:10,  1.63it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:06<00:09,  1.68it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:07<00:08,  1.73it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:07<00:07,  1.76it/s] 48%|####8     | 12/25 [00:08<00:07,  1.78it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:08<00:06,  1.80it/s] 56%|#####6    | 14/25 [00:09<00:06,  1.81it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:09<00:05,  1.82it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:10<00:04,  1.82it/s] 68%|######8   | 17/25 [00:11<00:04,  1.82it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:11<00:03,  1.81it/s] 76%|#######6  | 19/25 [00:12<00:03,  1.81it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:12<00:02,  1.82it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:13<00:02,  1.82it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:13<00:01,  1.82it/s] 92%|#########2| 23/25 [00:14<00:01,  1.82it/s]INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:14<00:00,  1.82it/s]100%|##########| 25/25 [00:15<00:00,  1.81it/s]100%|##########| 25/25 [00:15<00:00,  1.62it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60784 - "GET /api/jobs/20261126_004946_97013 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60025 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49319 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53660 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60103 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<00:49,  2.07s/it]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:02<00:27,  1.20s/it] 12%|#2        | 3/25 [00:03<00:19,  1.12it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:03<00:16,  1.31it/s] 20%|##        | 5/25 [00:04<00:13,  1.48it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:04<00:12,  1.56it/s] 28%|##8       | 7/25 [00:05<00:10,  1.66it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:05<00:10,  1.70it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:06<00:09,  1.75it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:07<00:08,  1.74it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:07<00:07,  1.76it/s] 48%|####8     | 12/25 [00:08<00:07,  1.76it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:08<00:06,  1.77it/s] 56%|#####6    | 14/25 [00:09<00:06,  1.77it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:09<00:05,  1.77it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:10<00:05,  1.76it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:11<00:04,  1.75it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:11<00:03,  1.76it/s] 76%|#######6  | 19/25 [00:12<00:03,  1.77it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:12<00:02,  1.78it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:13<00:02,  1.78it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:13<00:01,  1.78it/s] 92%|#########2| 23/25 [00:14<00:01,  1.77it/s]INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:14<00:00,  1.76it/s]100%|##########| 25/25 [00:15<00:00,  1.75it/s]100%|##########| 25/25 [00:15<00:00,  1.61it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/jobs/20261126_005044_51814 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52427 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63592 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55967 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59759 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54248 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63132 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<00:51,  2.14s/it]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:02<00:28,  1.22s/it] 12%|#2        | 3/25 [00:03<00:19,  1.11it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:03<00:16,  1.30it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 20%|##        | 5/25 [00:04<00:13,  1.47it/s] 24%|##4       | 6/25 [00:04<00:12,  1.57it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 28%|##8       | 7/25 [00:05<00:10,  1.67it/s] 32%|###2      | 8/25 [00:05<00:09,  1.71it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:06<00:09,  1.76it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 40%|####      | 10/25 [00:07<00:08,  1.78it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:07<00:07,  1.81it/s] 48%|####8     | 12/25 [00:08<00:07,  1.81it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:08<00:06,  1.84it/s] 56%|#####6    | 14/25 [00:09<00:05,  1.84it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:09<00:05,  1.85it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:10<00:04,  1.85it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:10<00:04,  1.85it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:11<00:03,  1.85it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:11<00:03,  1.84it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:12<00:02,  1.84it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 84%|########4 | 21/25 [00:12<00:02,  1.83it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:13<00:01,  1.83it/s] 92%|#########2| 23/25 [00:14<00:01,  1.82it/s]INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:14<00:00,  1.81it/s]100%|##########| 25/25 [00:15<00:00,  1.80it/s]100%|##########| 25/25 [00:15<00:00,  1.64it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/jobs/20261126_005141_24415 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55751 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59973 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65286 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58450 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62706 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60386 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50060 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49892 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52100 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57464 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62712 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54528 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51492 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55614 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61270 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54889 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65200 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62061 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55383 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51431 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56864 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51442 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "POST /api/queue/add HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+  0%|          | 0/25 [00:00<?, ?it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+  4%|4         | 1/25 [00:02<01:08,  2.84s/it]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+  8%|8         | 2/25 [00:03<00:34,  1.51s/it] 12%|#2        | 3/25 [00:03<00:23,  1.08s/it]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 16%|#6        | 4/25 [00:04<00:18,  1.14it/s] 20%|##        | 5/25 [00:05<00:15,  1.33it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 24%|##4       | 6/25 [00:05<00:13,  1.45it/s] 28%|##8       | 7/25 [00:06<00:11,  1.56it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 32%|###2      | 8/25 [00:06<00:10,  1.62it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 36%|###6      | 9/25 [00:07<00:09,  1.66it/s] 40%|####      | 10/25 [00:07<00:08,  1.71it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 44%|####4     | 11/25 [00:08<00:08,  1.73it/s] 48%|####8     | 12/25 [00:08<00:07,  1.76it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 52%|#####2    | 13/25 [00:09<00:06,  1.77it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 56%|#####6    | 14/25 [00:10<00:06,  1.76it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 60%|######    | 15/25 [00:10<00:05,  1.73it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 64%|######4   | 16/25 [00:11<00:05,  1.73it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 68%|######8   | 17/25 [00:11<00:04,  1.75it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 72%|#######2  | 18/25 [00:12<00:03,  1.76it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 76%|#######6  | 19/25 [00:12<00:03,  1.78it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 80%|########  | 20/25 [00:13<00:02,  1.78it/s] 84%|########4 | 21/25 [00:14<00:02,  1.77it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 88%|########8 | 22/25 [00:14<00:01,  1.76it/s] 92%|#########2| 23/25 [00:15<00:01,  1.76it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+ 96%|#########6| 24/25 [00:15<00:00,  1.75it/s]INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+100%|##########| 25/25 [00:16<00:00,  1.72it/s]100%|##########| 25/25 [00:16<00:00,  1.52it/s]
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+There are modules in AutoencoderKL that should be kept in float32: []. Casting directly with `to()` can lead to inconsistent results; set `torch_dtype` in `from_pretrained()` instead to keep these modules in float32.
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/jobs/20261126_005448_17316 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63924 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57740 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54907 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62443 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53726 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52339 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64519 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54193 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56365 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49888 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62525 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63863 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54118 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61454 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51367 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64271 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58707 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54640 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64705 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63179 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63058 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62528 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56886 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64063 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52439 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49674 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49674 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53447 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49888 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65265 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62247 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64711 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51981 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62411 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63325 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64573 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60270 - "GET /api/queue HTTP/1.1" 200 OK

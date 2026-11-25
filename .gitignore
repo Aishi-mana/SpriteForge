@@ -1,0 +1,8 @@
+claudesteps/
+node_modules/
+dist/
+__pycache__/
+.venv/
+asset-source/
+
+src-tauri/target/

@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SpriteForge</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#14151a;--panel:#1d1f27;--line:#2e313d;--fg:#e6e8ee;--mut:#8b90a0;--acc:#7c9cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif;display:flex;height:100vh}
+aside{width:350px;flex:none;padding:14px;background:var(--panel);border-right:1px solid var(--line);overflow:auto}
+main{flex:1;padding:16px;overflow:auto}
+h1{font-size:16px;margin:0 0 4px}small,.mut{color:var(--mut)}
+label{display:block;margin:10px 0 3px;color:var(--mut);font-size:12px}
+input,select,textarea,button{width:100%;background:#12131a;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px;font:inherit}
+textarea{resize:vertical;min-height:56px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{background:var(--acc);color:#0b0d14;font-weight:600;cursor:pointer;margin-top:12px}
+button.sec{background:#2a2d3a;color:var(--fg);margin-top:6px}button:disabled{opacity:.5;cursor:wait}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tabs button{flex:1 1 22%;margin:0;padding:7px 4px;background:#2a2d3a;color:var(--fg)}.tabs button.on{background:var(--acc);color:#0b0d14}
+.chk{display:flex;align-items:center;gap:6px;margin-top:8px}.chk input{width:auto}
+.grid{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;max-width:560px}
+.card .pair{display:flex;gap:10px;align-items:flex-start}
+img.px{image-rendering:pixelated}
+.card img,#refimg{display:block;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px}
+#refimg{margin-top:8px;max-height:140px;image-rendering:pixelated;display:none}
+#status{margin:10px 0;color:var(--mut);white-space:pre-wrap}.hide{display:none}
+.err{color:#ff8a8a}
+#editor{max-width:none;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
+#cv{width:512px;height:512px;background:#000;border-radius:6px;touch-action:none;cursor:crosshair}
+#editor .ctl{width:260px}
+#rigcard{max-width:none;margin-bottom:16px}
+#rigwrap{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+#rig{background:#15161c;border-radius:6px;touch-action:none;cursor:crosshair;image-rendering:pixelated}
+#animprev{background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px;image-rendering:pixelated;border-radius:6px}
+#strip{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;max-width:520px}#strip img{image-rendering:pixelated;background:#22242d;border-radius:3px}
+#gallery{max-width:none;margin-top:16px}
+#gal>div{width:104px}#gal img{max-width:100px;max-height:100px;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px;border-radius:4px}
+#gal button{padding:3px;font-size:11px;margin-top:4px}
+#chatfab{position:fixed;right:18px;bottom:18px;width:auto;margin:0;padding:10px 16px;border-radius:22px;box-shadow:0 4px 18px #0008;z-index:50}
+#chat{position:fixed;right:18px;bottom:66px;width:410px;max-width:calc(100vw - 36px);height:min(640px,calc(100vh - 100px));background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 32px #000a;z-index:50;display:flex;flex-direction:column;overflow:hidden}
+#chat.hide{display:none}
+#chathead{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+#chathead b{flex:none}#chatstat{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chathead button{width:30px;margin:0;padding:3px}
+#chatcfg{padding:8px 10px;border-bottom:1px solid var(--line);overflow:auto;max-height:55%}
+#chatlog{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.cm{padding:8px 10px;border-radius:10px;max-width:92%;white-space:pre-wrap;word-wrap:break-word;line-height:1.35}
+.cm.user{align-self:flex-end;background:#2c3a66}.cm.assistant{align-self:flex-start;background:#262936}
+.chip{display:block;text-align:left;margin:6px 0 0;padding:5px 8px;font-size:12px;font-weight:500}
+#chatin{display:flex;gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
+#chatin textarea{min-height:0;height:48px;flex:1}#chatin button{width:70px;margin:0}
+#ptcv{background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px;image-rendering:pixelated;border-radius:6px;cursor:crosshair;touch-action:none}
+#ptout>div{width:150px}#ptout img{image-rendering:pixelated;background:#22242d;border-radius:4px;display:block}
+#ptout button{padding:3px;font-size:11px;margin-top:4px}
+#diag{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(840px,calc(100vw - 40px));max-height:calc(100vh - 60px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 40px #000c;z-index:60;padding:12px}
+#diag.hide{display:none}#diaghead{display:flex;align-items:center;gap:10px;margin-bottom:8px}#diaghead span{flex:1}#diaghead button{width:32px;margin:0;padding:3px}
+#diagbtns button{margin-top:0}
+.ds{margin:12px 0 2px;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.dr{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.dr .b{flex:none;width:46px;height:20px;text-align:center;font-size:11px;line-height:20px;border-radius:4px;font-weight:700}
+.b.ok{background:#1f5f3a}.b.warn{background:#7a5a10}.b.fail{background:#7a1f2a}.b.info{background:#2c3a66}
+.dr .t{flex:1;white-space:pre-wrap;word-break:break-word}.dr .f{color:#e8c46a;font-size:12px;margin-top:2px}
+#ped{position:fixed;inset:0;background:rgba(8,9,14,.86);z-index:70;display:flex;align-items:center;justify-content:center}
+#ped.hide{display:none}
+#pedbox{display:flex;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(1240px,calc(100vw - 24px));height:calc(100vh - 24px);overflow:hidden}
+#pedtools{width:74px;flex:none;padding:8px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;overflow:auto}
+#pedtools button{margin:0;padding:6px 2px;font-size:18px;line-height:1.1}#pedtools button small{display:block;font-size:10px;color:inherit;opacity:.8}
+#pedtools button.on{background:var(--acc);color:#0b0d14}
+#pedmain{flex:1;min-width:0;display:flex;flex-direction:column}#edstat{padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px}
+#pedwrap{flex:1;overflow:auto;padding:16px;display:flex}#pedwrap canvas{margin:auto;flex:none;image-rendering:pixelated;cursor:crosshair;touch-action:none;
+ background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px;box-shadow:0 0 0 1px var(--line)}
+#pedside{width:270px;flex:none;padding:10px;border-left:1px solid var(--line);overflow:auto}
+#edpal{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}
+#edpal span{width:22px;height:22px;border-radius:4px;box-shadow:0 0 0 1px #0007;cursor:pointer}#edpal span.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--acc)}
+#pedside input[type=color]{padding:0;height:34px}
+.sw{display:inline-block;width:26px;height:26px;margin:2px;border-radius:4px;cursor:pointer;box-shadow:0 0 0 1px #0007;position:relative}
+.sw.prot::after{content:'🔒';font-size:11px;position:absolute;right:-3px;top:-5px}
+#plimg{background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px;image-rendering:pixelated;border-radius:4px;margin-top:6px;display:none}
+#tpimg,#tprimg{background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px;image-rendering:pixelated;border-radius:4px;margin-top:6px;display:none;max-width:320px;max-height:340px}
+.dimg{image-rendering:pixelated;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px;border-radius:4px;margin:6px 0}
+#dprevwrap{display:grid;grid-template-columns:repeat(3,auto);gap:10px;justify-content:start;margin-top:12px}
+.hc{width:132px;background:#161821;border:1px solid var(--line);border-radius:6px;padding:6px;font-size:12px}
+.hc.fav{border-color:#e8c46a}.hc img{display:block;margin:0 auto 4px;image-rendering:pixelated;max-width:100%;cursor:pointer;min-height:40px;border-radius:4px;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px}
+.hc .hp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hc .hph{height:60px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer}
+.hc .chk{margin-top:4px}#hgrid{gap:10px;margin-top:10px}#hdetail{margin-top:14px}.hcol{width:220px}.hcol table{font-size:12px;width:100%;border-collapse:collapse}.hcol td{padding:2px 4px;border-bottom:1px solid var(--line);word-break:break-word}
+#qstrip{cursor:pointer;margin-top:6px}#hdetail details{margin:8px 0}#hdetail table{font-size:12px}#hdetail td{padding:1px 8px 1px 0;vertical-align:top;word-break:break-word}
+.tc{background:#161821;border:1px solid var(--line);border-radius:4px;padding:3px;font-size:10px;text-align:center}.tc img{image-rendering:pixelated;display:block;margin:0 auto}
+</style></head><body>
+<aside>
+<h1>SpriteForge <small>phase 22</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
+<div class="mut" id="gpu">loading…</div>
+<label>Models folder (contains checkpoints/ and loras/)</label>
+<div class="row"><input id="mdir" placeholder="C:/.../ComfyUI-Shared/models"><button class="sec" style="width:70px;margin:0" onclick="saveDir()">Set</button></div>
+<label>Project (saves settings, reference, rig, paint, skeleton, sprites)</label>
+<input id="pname" list="plist" placeholder="character / project name"><datalist id="plist"></datalist>
+<div class="row"><button class="sec" onclick="saveProject()">Save</button><button class="sec" onclick="loadProject()">Load</button><button class="sec" id="delbtn" onclick="deleteProject()">Delete</button></div>
+<div class="mut" id="pstat">No project (type a name and press Save)</div>
+<div class="tabs"><button id="t1" class="on" onclick="tab(1)">Generate</button><button id="t2" onclick="tab(2)">Reference pose</button><button id="t3" onclick="tab(3)">Pixelize</button><button id="t4" onclick="tab(4)">Animate</button><button id="t5" onclick="tab(5)">Portrait</button><button id="t6" onclick="tab(6)">Palette</button><button id="t7" onclick="tab(7)">Template</button><button id="t8" onclick="tab(8)">Directions</button><button id="t9" onclick="tab(9)">Queue</button><button id="t10" onclick="tab(10)">Tiles &amp; props</button></div>
+
+<div id="p-prompt"><label>Prompt</label><textarea id="prompt">knight with blue armor and red cape, holding a sword, standing</textarea></div>
+
+<div id="p-ref" class="hide">
+<label>Reference sprite</label><input id="reffile" type="file" accept="image/*">
+<img id="refimg" class="px"><div class="mut" id="refhint">Or press "Use as reference" under any result.</div>
+<label>Character description (optional, helps keep identity)</label><input id="char" placeholder="knight with blue armor and red cape">
+<label>Pose / action text (also used with skeleton)</label><textarea id="pose">jumping, sword raised, side view</textarea>
+<div class="chk"><input id="useskel" type="checkbox" checked onchange="tab(2)"><span><b>Use skeleton pose</b> (ControlNet)</span></div>
+<div class="row"><div><label>Skeleton strength</label><input id="cns" type="number" step=".05" min="0" max="1.5" value="0.8"></div><div><label>Canvas (px)</label><select id="canvas"><option>64</option><option>96</option><option selected>128</option><option>192</option><option>256</option></select></div></div>
+<label>Generation size (lower = less VRAM, faster)</label><select id="gsize"><option>640</option><option selected>768</option><option>896</option><option>1024</option></select>
+<div class="row"><div><label>Reference strength</label><input id="ips" type="number" step=".05" min="0" max="1" value="0.7"></div><div><label>Variations</label><input id="n" type="number" min="1" max="6" value="2"></div></div>
+<div class="chk"><input id="lockpal" type="checkbox" checked><span>Lock palette to reference</span></div>
+<div class="chk"><input id="matchsz" type="checkbox" checked><span>Match reference size (no skeleton)</span></div>
+</div>
+
+<div id="p-tile" class="hide">
+<label>What to make</label><select id="tkind" onchange="tlKindChanged()"><option value="tile">Seamless tile (ground, wall, water…)</option><option value="prop">Prop (barrel, tree, crate…)</option><option value="icon">Item icon (potion, sword, coin…)</option><option value="ui">UI element (button, frame, bar…)</option></select>
+<label>Prompt</label><textarea id="tprompt">mossy cobblestone ground</textarea>
+<div class="row"><div><label>Size (px, tile side / long side)</label><select id="tsize"><option>16</option><option>24</option><option selected>32</option><option>48</option><option>64</option><option>96</option><option>128</option></select></div><div><label>Colors</label><input id="tcolors" type="number" min="2" max="64" value="12"></div></div>
+<div class="row"><div><label>Variations</label><input id="tn" type="number" min="1" max="6" value="4"></div><div><label>Fixed palette</label><select id="tpal"></select></div></div>
+<div class="chk" id="tseamrow"><input id="tseam" type="checkbox" checked><span><b>Make seamless</b> (the picture is blended so its edges continue into each other)</span></div>
+<div id="toutrow" class="hide"><label>Outline</label><select id="toutline"><option value="none">None</option><option value="selective">Selective (darkened edge colour)</option><option value="dark">Dark</option></select></div>
+<div class="ds">Terrain set (autotile)</div>
+<label>Set type</label><select id="atype" onchange="trSlots()"><option value="blob47">47-tile blob (sides + corners)</option><option value="edge16">16-tile (sides only)</option><option value="corner16">16-tile corners (dual grid, A + B)</option><option value="multi">Multi-terrain corners (A, B, C, D: 81 / 256 tiles)</option></select>
+<div class="row"><div><label>Border inset px (0 = auto)</label><input id="ainset" type="number" min="0" max="40" value="0"></div><div><label>Corner rounding px (empty = auto)</label><input id="around" type="number" min="0" max="25" value=""></div></div>
+<div class="row"><div><label>Rim</label><select id="arim"><option value="dark">Dark outline</option><option value="light">Light rim</option><option value="none">None</option></select></div><div><label>Ground</label><select id="abase"><option value="bake">Baked in (needs B)</option><option value="transparent">Transparent</option></select></div></div>
+<label>Export name</label><input id="atname" value="terrain">
+<label>Terrain names (A, B, C, D separated by commas)</label><input id="atterr" value="Grass,Dirt,Water,Snow">
+<div class="mut">For corner sets "Corner rounding" is the edge softness (0 = hard).</div>
+<div class="chk"><input id="atground" type="checkbox" checked><span>Add the plain ground tile to the sheet</span></div>
+<div class="ds">AI seam repair</div>
+<div class="row"><div><label>Strength</label><input id="rfstr" type="number" step="0.05" min="0.2" max="0.95" value="0.55"></div><div><label>Cross width %</label><input id="rfband" type="number" min="8" max="40" value="16"></div></div>
+<div class="ds">Animated tile</div>
+<div class="row"><div><label>Motion</label><select id="anmode"><option value="scroll">Scroll (conveyor, flow)</option><option value="ripple">Ripple (water)</option><option value="shimmer">Shimmer (sparkle, lava)</option></select></div><div><label>Direction (scroll)</label><select id="andir"><option value="right">right</option><option value="left">left</option><option value="down">down</option><option value="up">up</option><option value="diag">diagonal</option></select></div></div>
+<div class="row"><div><label>Frames</label><input id="anframes" type="number" min="2" max="32" value="8"></div><div><label>ms per frame</label><input id="anms" type="number" min="20" max="2000" value="120"></div><div><label>Amount (0 = auto)</label><input id="anamt" type="number" min="0" step="0.5" value="0"></div></div>
+<label>Animation name</label><input id="anname" value="animated_tile">
+<div class="ds">Tileset export</div>
+<label>Name</label><input id="tsname" value="tileset">
+<div class="row"><div><label>Columns</label><input id="tcols" type="number" min="1" max="64" value="8"></div><div><label>Spacing</label><input id="tspace" type="number" min="0" max="16" value="0"></div><div><label>Margin</label><input id="tmargin" type="number" min="0" max="16" value="0"></div></div>
+<div class="chk"><input id="tsgodot" type="checkbox" checked><span>Godot 4 TileSet (.tres), folder = the "Godot folder" under Animate export</span></div>
+<div class="chk"><input id="tstiled" type="checkbox" checked><span>Tiled tileset (.tsx)</span></div>
+</div>
+
+<div id="p-gen"><label>Negative (added to defaults)</label><input id="neg">
+<label>Checkpoint (SDXL)</label><select id="ckpt"></select>
+<label>LoRA</label><select id="lora"></select>
+<div class="row"><div><label>LoRA weight</label><input id="lw" type="number" step=".1" value="1"></div><div><label>Seed (-1 random)</label><input id="seed" type="number" value="-1"></div></div>
+<div class="row"><div><label>Steps</label><input id="steps" type="number" value="25"></div><div><label>CFG</label><input id="cfg" type="number" step=".5" value="7"></div></div>
+<label>Background to generate on</label><select id="bg"><option>white</option><option>light gray</option><option>green</option><option>magenta</option></select>
+<div class="chk"><input id="shadow" type="checkbox" checked><span>Remove ground shadow</span></div>
+<label>Sampler (try DPM++ for cleaner detail; keep the seed to compare)</label><select id="sampler"><option value="euler_a">Euler a</option><option value="dpmpp_2m_karras">DPM++ 2M Karras</option><option value="euler">Euler</option></select></div>
+
+<div id="p-upl" class="hide"><label>Image</label><input id="file" type="file" accept="image/*"></div>
+
+<div id="p-px">
+<div class="chk"><input id="pxcrisp" type="checkbox" checked><span><b>Crisp conversion</b> (recommended)</span></div>
+<div class="chk"><input id="pxclean" type="checkbox" checked><span>Clean stray pixels</span></div>
+<label>Outline</label><select id="pxoutline"><option value="none">None</option><option value="selective">Selective (darkened edge colour)</option><option value="dark">Dark</option></select>
+<label>Pixelize mode</label><select id="mode"><option value="fixed">Fixed size (long side)</option><option value="auto">Auto-detect grid</option></select>
+<div class="row"><div><label>Size (px)</label><input id="size" type="number" value="64"></div><div><label>Colors (0 = keep)</label><input id="colors" type="number" value="16"></div></div>
+<label>Fixed palette</label><select id="pal"></select>
+<div class="row"><div><label>BG tolerance</label><input id="tol" type="number" value="40"></div><div class="chk"><input id="rmbg" type="checkbox" checked><span>Remove BG</span></div></div>
+</div>
+<div id="p-anim" class="hide">
+<label>Source sprite</label><input id="afile" type="file" accept="image/*">
+<div class="mut">or press "Animate" under any result</div>
+<div class="row"><button class="sec" onclick="autoPlace()">Auto-place joints</button><button class="sec" onclick="refreshParts()">Refresh parts</button></div>
+<button class="sec" onclick="editSource()">✏ Edit source sprite (keeps joints and paint)</button>
+<div class="chk"><input id="showparts" type="checkbox" checked onchange="drawRig()"><span>Show part colors</span></div>
+<label>Fix wrongly assigned pixels, or paint cape / hair / tail: pick a part, tick Paint, drag on the sprite</label>
+<div class="row"><select id="bonesel"></select><input id="brush" type="number" min="1" max="6" value="2"></div>
+<div class="row"><div class="chk"><input id="paintmode" type="checkbox"><span>Paint mode</span></div><button class="sec" style="margin-top:4px" onclick="ovr.clear();refreshParts()">Clear paint</button></div>
+<label>Secondary motion: cape, hair, tail follow through</label>
+<div class="mut">Paint the loose pixels as <b>cape</b>, <b>hair</b> or <b>tail</b> above. They then lag behind the body, swing and settle. Unpainted sprites are unaffected.</div>
+<div class="chk"><input id="secon" type="checkbox" checked><span>Enable secondary motion</span></div>
+<div class="row"><div><label>Flutter</label><input id="secflut" type="number" step=".1" min="0" max="2" value="1"></div><div><label>Stiffness</label><input id="secstiff" type="number" step=".1" min=".4" max="2" value="1"></div><div><label>Damping</label><input id="secdamp" type="number" step=".05" min=".1" max=".9" value="0.35"></div></div>
+<div class="row"><div><label>Cape segs</label><input id="seg_cape" type="number" min="1" max="6" value="3"></div><div><label>Hair segs</label><input id="seg_hair" type="number" min="1" max="6" value="2"></div><div><label>Tail segs</label><input id="seg_tail" type="number" min="1" max="6" value="3"></div></div>
+<div class="chk"><input id="front_cape" type="checkbox"><span>Cape in front of body</span></div><div class="chk"><input id="front_hair" type="checkbox"><span>Hair in front of head</span></div><div class="chk"><input id="front_tail" type="checkbox"><span>Tail in front of legs</span></div>
+<label>Animation</label><select id="anim" onchange="animChanged()"><optgroup label="Loops"><option>idle</option><option selected>walk</option><option>run</option><option>climb</option><option>cheer</option></optgroup><optgroup label="Play once"><option>attack</option><option>cast</option><option>block</option><option>jump</option><option>hurt</option><option>death</option></optgroup></select>
+<div class="mut">Death needs a wide canvas (auto-padded); AI cleanup needs frames of 256 px or less.</div>
+<div class="row"><div><label>Frames</label><input id="afr" type="number" min="2" max="32" value="8"></div><div><label>FPS</label><input id="afps" type="number" min="1" max="60" value="10"></div></div>
+<div class="row"><div><label>Sprite faces</label><select id="face"><option>right</option><option>left</option></select></div><div><label>Nearer limbs</label><select id="near"><option value="r">screen-right</option><option value="l">screen-left</option><option value="both">both (front view)</option></select></div></div>
+<div class="row"><div><label>Weapon arm (attack, cast, block)</label><select id="weapon"><option value="r">screen-right</option><option value="l">screen-left</option></select></div><div><label>Amplitude</label><input id="amp" type="number" step=".1" min=".3" max="2" value="1"></div></div>
+<div class="row"><div><label>Canvas padding (0 = auto)</label><input id="apad" type="number" min="0" value="0"></div><div><label>Joint overlap px</label><input id="aovl" type="number" min="0" max="3" value="1"></div></div>
+<div class="chk"><input id="refine" type="checkbox"><span><b>AI joint cleanup</b> (SDXL inpaint, slow)</span></div>
+<label>Character description (helps the AI repaint seams)</label><input id="rchar" placeholder="knight with blue armor and red cape">
+<div class="row"><div><label>Cleanup strength</label><input id="rstr" type="number" step=".05" min=".1" max=".9" value=".45"></div><div><label>Radius px (0 = auto)</label><input id="rrad" type="number" step=".5" min="0" value="0"></div></div>
+<label>Export name</label><input id="aname" value="sprite">
+<button onclick="previewAnim(false)">Preview animation</button>
+<label>Export layout</label>
+<div class="row"><select id="xlayout"><option value="rows">One row per animation</option><option value="grid">Grid</option><option value="column">Single column</option></select><input id="xcols" type="number" min="1" max="64" value="8" title="Grid columns"></div>
+<div class="row"><div><label>Frame padding px</label><input id="xpad" type="number" min="0" max="16" value="0"></div><div><label>Unity pixels/unit</label><input id="xppu" type="number" min="1" value="32"></div></div>
+<div class="chk"><input id="xpot" type="checkbox"><span>Power-of-two sheet size</span></div>
+<div class="chk"><input id="xcrop" type="checkbox" checked><span>Crop to content (shared box, feet pivot kept)</span></div>
+<div class="chk"><input id="xuni" type="checkbox" checked><span>Same cell size for every animation</span></div>
+<div class="chk"><input id="xgodot" type="checkbox" checked><span>Godot 4 files (.tres + .tscn)</span></div>
+<label>Godot folder where you'll put the files</label><input id="xgpath" value="res://sprites/">
+<div class="chk"><input id="xunity" type="checkbox" checked><span>Unity files (json + importer script)</span></div>
+<div class="chk"><input id="xgif" type="checkbox" checked><span>GIF preview per animation</span></div>
+<div class="chk"><input id="xfrm" type="checkbox"><span>Individual frame PNGs</span></div>
+<label>Animations in the pack</label><div id="xclips" class="grid" style="gap:2px 12px"></div>
+<div class="chk"><input id="xai" type="checkbox" checked><span>Use reviewed / edited frames where available</span></div>
+<button onclick="exportAnim()">Export current animation</button>
+<button class="sec" onclick="exportPack()">Export pack (ticked animations)</button>
+</div>
+<div id="p-port" class="hide">
+<label>Portrait prompt (face, hair, eyes, collar)</label><textarea id="ptprompt">young knight, short red hair, blue eyes, blue armor collar</textarea>
+<label>Start from</label><select id="ptsrc"><option value="text">Text only</option><option value="ref">Reference sprite (Reference tab) via IP-Adapter</option></select>
+<div class="row"><div><label>Reference strength</label><input id="ptips" type="number" step=".05" min="0" max="1" value="0.6"></div><div><label>Variations</label><input id="ptn" type="number" min="1" max="4" value="2"></div></div>
+<div class="row"><div><label>Portrait size (px)</label><select id="ptsize"><option>64</option><option>96</option><option selected>128</option><option>192</option><option>256</option></select></div><div><label>Colors</label><input id="ptcolors" type="number" min="4" max="64" value="24"></div></div>
+<label>Background</label><select id="ptbg"><option>light gray</option><option>white</option><option>green</option><option>magenta</option></select>
+<div class="chk"><input id="pttrans" type="checkbox"><span>Transparent background (removes it)</span></div>
+<button onclick="portBase()">Generate base portrait</button>
+<label>Expressions to make</label><div id="ptexprs" class="grid" style="gap:2px 12px"></div>
+<label>Extra expression (your own words)</label><input id="ptcustom" placeholder="e.g. winking, tongue out">
+<div class="row"><div><label>Change strength</label><input id="ptstr" type="number" step=".05" min=".3" max=".95" value="0.82"></div><div><label>Extra colors allowed</label><input id="ptextra" type="number" min="0" max="8" value="4"></div></div>
+<label>Face area</label><select id="ptpreset" onchange="portPreset(this.value)"><option value="face">Whole face</option><option value="eyes">Eyes + brows</option><option value="mouth">Mouth</option></select>
+<div class="mut">Drag on the portrait to draw the area the AI may repaint. Everything outside stays pixel-identical.</div>
+<button onclick="portExpressions()">Generate expressions</button>
+<button class="sec" onclick="portExport()">Export portrait set (PNGs + sheet + Godot + Unity)</button>
+</div>
+<div id="p-pal" class="hide">
+<label>Source sprite</label><input id="plfile" type="file" accept="image/*">
+<div class="row"><button class="sec" onclick="plFrom('ref')">Reference</button><button class="sec" onclick="plFrom('rig')">Rig source</button><button class="sec" onclick="plFrom('base')">Portrait</button></div>
+<label>Palette library (built-in and yours)</label><select id="pllib"></select>
+<div class="row"><button class="sec" onclick="plLoadLib()">Load</button><button class="sec" id="pldel" onclick="plDeleteLib()">Delete</button></div>
+<label>Import (.hex .gpl .pal or a swatch PNG, e.g. from Lospec)</label><input id="plimport" type="file" accept=".hex,.gpl,.pal,.txt,.png,.gif,.bmp,.webp">
+<div class="row"><input id="plname" placeholder="name to save as"><button class="sec" style="width:80px;margin:0" onclick="plSave()">Save</button></div>
+<button class="sec" onclick="plExport()">Export .hex .gpl .pal .png files</button>
+<label>Working palette</label>
+<div class="row"><button class="sec" onclick="plExtract(0)">From image</button><button class="sec" onclick="plClear()">Clear</button></div>
+<div class="row"><select id="plsortk"><option value="lightness">Sort by lightness</option><option value="hue">Sort by hue</option></select><button class="sec" style="margin:0" onclick="plSort()">Sort</button></div>
+<div class="row"><input id="plpick" type="color" value="#ff0044" style="padding:0;height:34px"><button class="sec" style="margin:0" onclick="plAdd()">+ Add colour</button></div>
+<label>Remap the image to the working palette</label>
+<div class="row"><select id="pldither"><option value="none">No dithering</option><option value="bayer2">Ordered 2×2</option><option value="bayer4">Ordered 4×4</option><option value="floyd">Floyd–Steinberg</option></select><input id="plstr" type="number" step=".1" min="0" max="1" value="0.6" title="Dither strength"></div>
+<button onclick="plRemap()">Remap image</button>
+<label>Reduce / clean up</label>
+<div class="row"><input id="plreduce" type="number" min="2" max="64" value="16"><button class="sec" style="margin:0" onclick="plReduce()">Reduce to N colours</button></div>
+<div class="row"><input id="plmerge" type="number" step=".01" min=".01" max=".2" value="0.05" title="Merge distance"><button class="sec" style="margin:0" onclick="plMerge()">Merge similar colours</button></div>
+<label>Colour variants (hue shift, shading stays correct). Click swatches to protect them.</label>
+<div class="row"><div><label>Count</label><input id="plvn" type="number" min="1" max="12" value="5"></div><div><label>Step °</label><input id="plvstep" type="number" min="5" max="180" value="60"></div><div><label>Chroma ×</label><input id="plchroma" type="number" step=".1" min="0" max="2" value="1"></div></div>
+<div class="chk"><input id="plkeepdark" type="checkbox" checked><span>Keep very dark colours (outlines)</span></div>
+<button onclick="plVariants()">Make variants</button>
+<label>Shading ramp from a colour (shadows drift cool, highlights warm)</label>
+<div class="row"><input id="plrampc" type="color" value="#c83c32" style="padding:0;height:34px"><input id="plrampn" type="number" min="3" max="9" value="5"><button class="sec" style="margin:0" onclick="plRamp()">Ramp</button></div>
+</div>
+<div id="p-tpl" class="hide">
+<div class="mut">1 Template: a plain dummy sprite. 2 Reference: any picture whose look you want. 3 Generate: a sprite with the template's exact size and shape, drawn in the reference's style. A rig made for the template fits every result.</div>
+<label>Template sprite</label><input id="tpfile" type="file" accept="image/*">
+<div class="row"><button class="sec" onclick="tpFrom('rig')">Rig source</button><button class="sec" onclick="tpFrom('ref')">Reference tab</button><button class="sec" onclick="tpEditTemplate()">✏ Edit</button></div>
+<label>Or make a built-in dummy (comes with a ready rig)</label>
+<div class="row"><select id="tpheight"><option>32</option><option>48</option><option selected>64</option><option>96</option><option>128</option></select><select id="tpstyle"><option value="normal">Normal</option><option value="chibi">Chibi</option></select><select id="tpview"><option value="front">Front</option><option value="side">Side</option></select></div>
+<button class="sec" onclick="tpDummy()">Make dummy template</button>
+<label>Reference image (the look to copy)</label><input id="tpreffile" type="file" accept="image/*">
+<button class="sec" onclick="tpRefFrom()">Use the Reference-tab sprite</button>
+<label>What it is (optional)</label><textarea id="tpprompt">knight in blue plate armor with a red cape</textarea>
+<div class="row"><div><label>Redraw strength</label><input id="tpstr" type="number" step=".05" min=".4" max="1" value="0.85"></div><div><label>Reference strength</label><input id="tpips" type="number" step=".05" min="0" max="1" value="0.8"></div></div>
+<div class="row"><div><label>Silhouette freedom px</label><input id="tpfree" type="number" min="0" max="8" value="2"></div><div><label>Colors</label><input id="tpcolors" type="number" min="4" max="64" value="20"></div></div>
+<div class="row"><div><label>Palette from</label><select id="tppal"><option value="reference">Reference</option><option value="result">Result</option></select></div><div><label>Variations</label><input id="tpn" type="number" min="1" max="4" value="2"></div></div>
+<div class="chk"><input id="tpclean" type="checkbox" checked><span>Clean stray pixels</span></div>
+<button onclick="tpGenerate()">Generate from template</button>
+</div>
+<div id="p-dir" class="hide">
+<div class="mut">A character that faces every direction. Only 5 views are needed: west, south-west and north-west are mirrors of east, south-east and north-east. Every animation is then rendered for every direction (front and back views step in place, three-quarter views swing less) and exported as one aligned sheet.</div>
+<label>Directions</label><select id="dmode" onchange="dirDraw()"><option value="8">8 directions (S SW W NW N NE E SE)</option><option value="4">4 directions (S W N E)</option></select>
+<label>Row order in the sheet</label><select id="dorder"><option value="cw">Clockwise from south</option><option value="rpg">RPG Maker: down, left, right, up (4 directions)</option></select>
+<label>Built-in dummy for generating the views</label>
+<div class="row"><select id="dheight"><option>32</option><option>48</option><option selected>64</option><option>96</option><option>128</option></select><select id="dstyle"><option value="normal">Normal</option><option value="chibi">Chibi</option></select></div>
+<div class="mut">Uses the Template tab's reference image, prompt and strengths, and one seed for all views so they match.</div>
+<button onclick="dirGenerate(false)">Generate all views</button>
+<button class="sec" onclick="dirGenerate(true)">Generate only the empty views</button>
+<label>Animations to export</label><div id="dclips" class="grid" style="gap:2px 12px"></div>
+<label>Preview (all directions)</label>
+<div class="row"><select id="dprev"></select><button class="sec" style="margin:0" onclick="dirPreview()">Preview</button></div>
+<button class="sec" onclick="dirExport()">Export direction sheets</button>
+</div>
+<div id="p-n1" class="row"><div><label>Variations</label><input id="n1" type="number" min="1" max="6" value="1"></div></div>
+<button id="go" onclick="run()">Generate</button><button id="qadd" class="sec" onclick="queueAdd()" title="Run it later, in order, without waiting here">＋ Add to queue</button><div id="qstrip" class="mut" onclick="tab(9)"></div>
+<div id="status"></div>
+</aside>
+<main>
+<div class="card hide" id="editor">
+ <canvas id="cv" width="512" height="512"></canvas>
+ <div class="ctl">
+  <div class="mut">Drag joints. <b>Shift+drag</b> moves the whole figure.</div>
+  <label>Preset</label><select id="preset" onchange="loadPreset(this.value)"></select>
+  <div class="row"><button class="sec" onclick="mirror()">Mirror ⇄</button><button class="sec" onclick="loadPreset($('preset').value)">Reset</button></div>
+  <label>Figure scale (about the feet)</label><input id="scl" type="range" min="0.5" max="1.5" step="0.01" value="1">
+  <div class="chk"><input id="onion" type="checkbox" checked onchange="redraw()"><span>Show reference behind skeleton</span></div>
+  <div class="mut" style="margin-top:10px">Tip: line the skeleton up over the reference in the "Stand" preset first, then keep the same scale for every pose so frames match.</div>
+ </div>
+</div>
+<div class="card hide" id="palcard" style="max-width:none;margin-bottom:16px"><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+ <div><div class="mut" id="plinfo">Load a sprite (upload, or use the buttons on the left)</div><img id="plimg"></div>
+ <div style="flex:1;min-width:280px"><div class="mut" id="plcount">Working palette</div><div id="plsw"></div><div class="mut" style="margin-top:4px">Click a colour to protect it from hue shifts · Shift+click removes it</div>
+  <div class="mut" style="margin-top:12px">Ramp (click a colour to add it)</div><div id="plramp"></div></div></div></div>
+<div class="card hide" id="dircard" style="max-width:none;margin-bottom:16px"><div class="mut">Views: fill each with Generate, Upload, Dummy, or "Take rig" from the Animate tab. "Rig…" opens a view in Animate to refine its joints and painted parts; come back and press "Take rig".</div>
+ <div class="grid" id="dslots" style="margin-top:8px"></div><div id="dprevwrap"></div></div>
+<div class="card hide" id="tpcard" style="max-width:none;margin-bottom:16px"><div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+ <div><div class="mut" id="tpinfo">Template: not set</div><img id="tpimg"></div>
+ <div><div class="mut" id="tprinfo">Reference: not set</div><img id="tprimg"></div></div></div>
+<div class="card hide" id="portcard" style="max-width:none;margin-bottom:16px"><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+ <div><div class="mut" id="ptinfo">Generate base portraits below, then press "Use as base" on the one you like.</div><canvas id="ptcv" width="384" height="384"></canvas></div>
+ <div><div class="mut">Expressions</div><div class="grid" id="ptout"></div></div></div></div>
+<div class="card hide" id="rigcard"><div id="rigwrap">
+ <div><div class="mut" id="riginfo">Rig editor: drag joints onto the sprite's body. Colors show which part each pixel belongs to.</div><canvas id="rig"></canvas></div>
+ <div><div class="mut" id="previnfo">Preview</div><canvas id="animprev" width="256" height="256"></canvas>
+  <div class="row"><button class="sec" onclick="togglePlay()" id="playbtn">Pause</button><button class="sec" onclick="editFrame()" title="Pause on a frame (click it in the strip) and edit it by hand">✏ Edit frame</button></div><div class="chk"><input id="aonion" type="checkbox" onchange="drawFrame()"><span>Onion skin (previous / next frame)</span></div>
+<div class="hide" id="reviewrow"><div class="mut" style="margin-top:8px">Untick "AI" under a frame to keep its rig-only version. Click a frame to inspect it.</div>
+<div class="row"><button class="sec" onclick="setAll(true)">AI all</button><button class="sec" onclick="setAll(false)">Rig all</button></div>
+<button class="sec" onclick="redoRejected()">Redo unticked frames (new seed)</button>
+<div class="chk"><input id="showdiff" type="checkbox" onchange="drawFrame()"><span>Highlight what the AI changed</span></div></div>
+<div class="chk hide" id="rawrow"><input id="showraw" type="checkbox" onchange="drawFrame()"><span>Show before cleanup (rig only)</span></div><div id="strip"></div></div>
+</div></div>
+<div class="card hide" id="qcard" style="max-width:none;margin-bottom:16px">
+<div class="row" style="align-items:center"><b style="flex:none;max-width:70px">Queue</b><span class="mut" id="qinfo" style="flex:1"></span><button class="sec" id="qpause" style="margin:0" onclick="qPause()">Pause</button><button class="sec" id="qcancelall" style="margin:0" onclick="qCancelAll()">Cancel waiting</button></div>
+<div id="qlist"></div>
+<div class="ds">History <span class="mut" id="hcount"></span></div>
+<div class="row" style="align-items:center"><input id="hq" placeholder="search prompt, model, note…" oninput="hDebounce()"><select id="hkind" onchange="hLoad(true)"><option value="">all kinds</option><option value="generate">Generate</option><option value="reference">Reference pose</option></select><label class="chk" style="margin:0"><input id="hfav" type="checkbox" onchange="hLoad(true)"><span>★ only</span></label><button class="sec" style="margin:0" onclick="hCompare()">Compare ticked</button><button class="sec" id="hclear" style="margin:0" onclick="hClear()">Clear history</button></div>
+<div class="grid" id="hgrid"></div><button class="sec hide" id="hmore" onclick="hLoad(false)">Load more</button>
+<div id="hdetail"></div>
+</div>
+<div class="card hide" id="tilecard" style="max-width:none;margin-bottom:16px"><div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+<div style="flex:none"><div class="mut">Workbench tile <span id="tlinfo">(empty)</span></div>
+<canvas id="tlprev" style="margin-top:6px;border-radius:4px;image-rendering:pixelated;background:#15161c"></canvas>
+<div class="row" style="margin-top:6px"><select id="tlrep" onchange="tlShow()"><option value="2">repeat 2×2</option><option value="3" selected>repeat 3×3</option><option value="4">repeat 4×4</option></select><select id="tlzoom" onchange="tlShow()"><option value="0">auto zoom</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></div>
+<div class="row"><button class="sec" onclick="tlOffset()" title="shift by half with wrap-around: seams move to the middle">Offset ½ (show seams)</button><button class="sec" onclick="tlSeamless()" title="repair the seams of a pixel tile without new colours">Make seamless</button><button class="sec" onclick="tlEdit()">Edit</button></div>
+<div class="row"><button class="sec" id="tlrepair" onclick="tlRepair()" title="the AI redraws only the middle cross where the old seams are; the rest stays exactly">AI repair seams</button></div>
+<label>Or load an image as the tile</label><input id="tlfile" type="file" accept="image/*">
+<div class="row" style="margin-top:6px"><input id="tlname" placeholder="name (optional)"><button style="margin:0" onclick="tlAdd()">Add to tileset</button></div></div>
+<div style="flex:1;min-width:320px"><div class="mut" id="tscount"></div><div class="grid" id="tslist" style="margin-top:8px;gap:8px"></div>
+<div class="row" style="margin-top:8px"><button class="sec" onclick="tsMap()">Random map preview</button><button onclick="tsExport()">Export tileset</button></div>
+<canvas id="tsmap" style="margin-top:10px;max-width:100%;image-rendering:pixelated;border-radius:4px"></canvas></div></div></div>
+<div class="card hide" id="terraincard" style="max-width:none;margin-bottom:16px">
+<b>Terrain set (autotile)</b> <span class="mut">from two seamless tiles: the 47 (or 16) transition tiles are made for you</span>
+<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
+<div style="flex:none;text-align:center;min-width:120px"><div class="mut">Terrain A (gets the borders)</div><img id="tra" class="px" style="display:none;width:96px;margin:6px auto"><div class="mut" id="trnone">empty</div><button class="sec" onclick="trSet('a')">Use workbench tile as A</button></div>
+<div style="flex:none;text-align:center;min-width:120px"><div class="mut">Ground B <span id="trbhint"></span></div><img id="trb" class="px" style="display:none;width:96px;margin:6px auto"><button class="sec" onclick="trSet('b')">Use workbench tile as B</button><button class="sec" onclick="trClear()">Clear B, C, D</button></div>
+<div id="trslotc" class="hide" style="flex:none;text-align:center;min-width:120px"><div class="mut">Terrain C</div><img id="trc" class="px" style="display:none;width:96px;margin:6px auto"><button class="sec" onclick="trSet('c')">Use workbench tile as C</button></div>
+<div id="trslotd" class="hide" style="flex:none;text-align:center;min-width:120px"><div class="mut">Terrain D (optional)</div><img id="trd" class="px" style="display:none;width:96px;margin:6px auto"><button class="sec" onclick="trSet('d')">Use workbench tile as D</button></div>
+<div style="flex:1;min-width:260px"><div class="row"><button onclick="trGenerate()">Generate set</button><button class="sec" onclick="trMap()">Autotile map preview</button><button class="sec" onclick="trExport()">Export terrain set</button></div><div class="mut" id="trinfo" style="margin-top:6px"></div></div></div>
+<div class="grid" id="trgrid" style="margin-top:10px;gap:6px"></div>
+<canvas id="trmap" style="margin-top:10px;max-width:100%;image-rendering:pixelated;border-radius:4px"></canvas></div>
+<div class="card hide" id="animcard" style="max-width:none;margin-bottom:16px"><b>Animated tile</b> <span class="mut">loop-perfect water, lava, conveyors from the workbench tile (options in the sidebar)</span>
+<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:8px"><canvas id="anprev" style="border-radius:4px;image-rendering:pixelated;background:#15161c;min-width:96px;min-height:96px"></canvas>
+<div style="flex:1;min-width:240px"><div class="row"><button onclick="anMake()">Make frames from the workbench tile</button><button class="sec" onclick="anExport()">Export animated tile</button></div></div></div></div>
+<div class="grid" id="out"></div>
+<div class="card hide" id="gallery"><div class="mut" id="galtitle">Saved sprites</div><div class="grid" id="gal"></div></div></main>
+
+<div id="diag" class="hide">
+ <div id="diaghead"><b>🩺 Diagnostics</b><span id="diagsum" class="mut"></span><button class="sec" onclick="toggleDiag()">×</button></div>
+ <div id="diagbtns" class="row"><button onclick="runDiag()">Run checks</button><button class="sec" onclick="gpuTest()">GPU test (loads SDXL)</button><button class="sec" onclick="llmTest()">Assistant test</button><button class="sec" onclick="copyDiag()">Copy report</button></div>
+ <div class="mut" style="margin:6px 0">The report is also saved as diagnostics.txt in the app folder. Paste it when something goes wrong.</div>
+ <div id="diaglist"></div><textarea id="diagtext" class="hide" readonly style="height:120px"></textarea>
+</div>
+<div id="ped" class="hide"><div id="pedbox">
+ <div id="pedtools">
+  <button class="sec on" data-t="pencil" onclick="edTool('pencil')" title="Pencil (B)">✏<small>Pencil B</small></button>
+  <button class="sec" data-t="eraser" onclick="edTool('eraser')" title="Eraser (E)">◌<small>Eraser E</small></button>
+  <button class="sec" data-t="fill" onclick="edTool('fill')" title="Fill (G)">▓<small>Fill G</small></button>
+  <button class="sec" data-t="pick" onclick="edTool('pick')" title="Color picker (I)">💧<small>Pick I</small></button>
+  <button class="sec" data-t="line" onclick="edTool('line')" title="Line (L)">╱<small>Line L</small></button>
+  <button class="sec" data-t="rect" onclick="edTool('rect')" title="Rectangle (R)">▭<small>Rect R</small></button>
+  <button class="sec" data-t="ellipse" onclick="edTool('ellipse')" title="Ellipse (O)">◯<small>Oval O</small></button>
+  <button class="sec" data-t="select" onclick="edTool('select')" title="Select / move (M)">⬚<small>Select M</small></button>
+ </div>
+ <div id="pedmain"><div id="edstat" class="mut"></div><div id="pedwrap"><canvas id="edcv"></canvas></div></div>
+ <div id="pedside">
+  <label style="margin-top:0">Colors (click to use)</label><div id="edpal"></div>
+  <div class="row"><input id="edpick" type="color" value="#000000"><button class="sec" style="margin:0" onclick="edAddColor()">+ Add</button></div>
+  <div class="row"><button class="sec" onclick="edRecolor()" title="Change the selected color everywhere in the image">Recolor</button><button class="sec" onclick="edPrune()">Drop unused</button></div>
+  <label>Brush size</label><select id="edbrush"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+  <div class="chk"><input id="edround" type="checkbox"><span>Round brush</span></div>
+  <div class="chk"><input id="edfilled" type="checkbox"><span>Filled shapes</span></div>
+  <div class="chk"><input id="edglobal" type="checkbox"><span>Fill replaces this color everywhere</span></div>
+  <div class="chk"><input id="edmirror" type="checkbox" onchange="edDraw()"><span>Mirror left / right</span></div>
+  <div class="chk"><input id="edgrid" type="checkbox" onchange="edDraw()"><span>Grid</span></div>
+  <div class="chk hide" id="edonionrow"><input id="edonion" type="checkbox" checked onchange="edDraw()"><span>Onion skin (neighbour frames)</span></div>
+  <div class="chk"><input id="edcompare" type="checkbox" onchange="edDraw()"><span>Show original (compare)</span></div>
+  <label>Zoom</label><input id="edzoom" type="range" min="2" max="32" value="8" oninput="ED.zoom=+this.value;edDraw();edStat()">
+  <div class="row"><button class="sec" onclick="edUndo()">↶ Undo</button><button class="sec" onclick="edRedo()">↷ Redo</button></div>
+  <div class="row"><button class="sec" onclick="edFlip(false)" title="Flip selection, or the whole image">⇋ Flip H</button><button class="sec" onclick="edFlip(true)">⇅ Flip V</button></div>
+  <button class="sec" onclick="edDelete()">Delete selection (Del)</button>
+  <div class="mut" style="margin-top:6px">Arrow keys nudge the selection (or the whole image). Ctrl+Z / Ctrl+Y undo / redo. [ and ] change brush size.</div>
+  <button id="edapply" onclick="edApply()">Apply</button>
+  <button class="sec" onclick="edSaveProject()">Save to project</button>
+  <div class="row"><button class="sec" onclick="edDownload(1)">PNG</button><button class="sec" onclick="edDownload(8)">PNG 8×</button></div>
+  <div class="row"><button class="sec" onclick="edUseRef()">As reference</button><button class="sec" onclick="edAnimate()">Animate</button></div>
+  <button class="sec" onclick="edPalTools()">Palette tools…</button>
+  <button class="sec" id="edclose" onclick="edClose()">Close</button>
+ </div></div></div>
+<button id="chatfab" onclick="toggleChat()">✦ Assistant</button>
+<div id="chat" class="hide">
+ <div id="chathead"><b>✦ Assistant</b><span id="chatstat" class="mut">model not loaded</span><button class="sec" title="Settings" onclick="show('chatcfg',$('chatcfg').classList.contains('hide'))">⚙</button><button class="sec" title="Clear chat" onclick="clearChat()">⌫</button><button class="sec" onclick="toggleChat()">×</button></div>
+ <div id="chatcfg" class="hide">
+  <label>Folder to scan for llama-server and .gguf files</label>
+  <div class="row"><input id="llsearch" value="C:/AI"><button class="sec" style="width:70px;margin:0" onclick="llmSave(true)">Scan</button></div>
+  <label>llama-server path (auto-detected, edit if needed)</label><input id="llserver" placeholder="C:/AI/llama.cpp/llama-server.exe">
+  <label>Model (.gguf)</label><select id="llmodel"></select>
+  <div class="row"><div><label>GPU layers (0 = CPU, keeps VRAM free)</label><input id="llgpu" type="number" min="0" value="0"></div><div><label>Context tokens</label><input id="llctx" type="number" min="512" step="512" value="4096"></div></div>
+  <div class="row"><div><label>Unload after idle (min, 0 = never)</label><input id="llidle" type="number" min="0" value="10"></div></div>
+  <div class="row"><button class="sec" onclick="llmSave()">Save</button><button class="sec" onclick="llmLoadNow()">Load now</button><button class="sec" onclick="llmUnload()">Unload</button></div>
+ </div>
+ <div id="chatlog"></div>
+ <div id="chatin"><textarea id="chattext" placeholder="Ask for a prompt, a pose, or help with a setting…"></textarea><button id="chatsend" onclick="sendChat()">Send</button></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let mode=1,refURL=null,aSrc=null;
+const show=(id,v)=>$(id).classList.toggle('hide',!v);
+function tab(n){mode=n;[1,2,3,4,5,6,7,8,9,10].forEach(i=>$('t'+i).classList.toggle('on',i==n));
+ show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10);show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);if(n==8)dirDraw();show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&!!aSrc);show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9);if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
+ show('editor',n==2&&$('useskel').checked);redraw();
+ $('go').textContent=['','Generate','Generate poses','Pixelize','','','','','','','Generate'][n];if(n==3)$('mode').value='auto'}
+let modelKinds={c:{},l:{}};
+function tagOptions(){  // only the visible label changes: the option VALUE (the real file name) must stay untouched
+ [...$('ckpt').options].forEach(o=>{const k=modelKinds.c[o.value];
+  if(k=='broken')o.text=o.value+'  ⛔ broken file';else if(k=='sd15')o.text=o.value+'  ⚠ SD 1.5, not SDXL';else if(k=='dit')o.text=o.value+'  ⚠ Flux/DiT type, not SDXL';else if(k=='unknown')o.text=o.value+'  ? not recognised'});
+ [...$('lora').options].forEach(o=>{const k=modelKinds.l[o.value];if(k=='broken')o.text=o.value+'  ⛔ broken file';else if(k=='other')o.text=o.value+'  ⚠ not for SDXL (Flux/Qwen/video)'})}
+function checkModel(){const c=$('ckpt').value,k=modelKinds.c[c],l=$('lora').value,lk=modelKinds.l[l];$('status').className='err';
+ if(k=='broken'||k=='sd15'||k=='dit'){$('status').textContent=`"${c}" is ${k=='broken'?'a broken or incomplete file':k=='sd15'?'a Stable Diffusion 1.5 model':'a Flux / DiT-type model'}, which cannot be used here. Pick an SDXL checkpoint such as sd_xl_base_1.0. Open 🩺 Diagnostics for details.`;return false}
+ if(l&&(lk=='other'||lk=='broken')){$('status').textContent=`"${l}" is ${lk=='broken'?'a broken or incomplete file':'for another model family (Flux / Qwen / video)'}, not SDXL. Pick a different LoRA or (none).`;return false}
+ $('status').className='';return true}
+function fill(sel,items,none){const q=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');sel.innerHTML=(none?`<option value="">${none}</option>`:'')+items.map(i=>`<option value="${q(i)}">${q(i)}</option>`).join('')}
+function load(s){$('gpu').textContent=s.gpu?'GPU: '+s.gpu:'No CUDA GPU detected';$('mdir').value=s.models_dir;
+ $('gpu').className=s.models_dir_ok?'mut':'err';if(!s.models_dir_ok)$('gpu').textContent+=' - models folder not set or not found';
+ fill($('ckpt'),s.checkpoints);fill($('lora'),s.loras,'(none)');modelKinds={c:s.ckpt_kinds||{},l:s.lora_kinds||{}};tagOptions();fill($('pal'),s.palettes,'none (use color count)');fill($('tpal'),s.palettes,'none (use color count)');
+ const sd=s.checkpoints.find(c=>c.startsWith('sd_xl_base')&&(s.ckpt_kinds||{})[c]!='broken')||s.checkpoints.find(c=>(s.ckpt_kinds||{})[c]=='sdxl');if(sd)$('ckpt').value=sd;
+ const pl=s.loras.find(l=>l.startsWith('pixel-art-xl'));if(pl)$('lora').value=pl}
+async function api(url,opt){const r=await fetch(url,opt);let d;try{d=await r.json()}catch(e){throw new Error('Server error '+r.status)}
+ if(!r.ok)throw new Error(typeof d.detail=='string'?d.detail:JSON.stringify(d.detail));return d}
+async function init(){try{load(await api('/api/state'))}catch(e){$('gpu').className='err';$('gpu').textContent='Engine error: '+e.message+' (check the console window)'}}
+async function saveDir(){try{load(await api('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({models_dir:$('mdir').value})}))}catch(e){$('status').textContent='Error: '+e.message}}
+function setRef(u){refURL=u;$('refimg').src=u;$('refimg').style.display='block';$('refhint').style.display='none'}
+$('refimg').onload=()=>redraw();
+$('reffile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>setRef(r.result);r.readAsDataURL(f)};
+function useRef(u){setRef(u);markDirty();tab(2);$('status').textContent='Reference set. Pick a pose preset, adjust the skeleton, then Generate poses.'}
+
+/* ---------- skeleton editor (OpenPose-18 layout) ---------- */
+const N=0,NECK=1,RS=2,RE=3,RW=4,LS=5,LE=6,LW=7,RH=8,RK=9,RA=10,LH=11,LK=12,LA=13,REY=14,LEY=15,RER=16,LER=17;
+const LIMBS=[[1,2],[1,5],[2,3],[3,4],[5,6],[6,7],[1,8],[8,9],[9,10],[1,11],[11,12],[12,13],[1,0],[0,14],[14,16],[0,15],[15,17]];
+const COL=[[255,0,0],[255,85,0],[255,170,0],[255,255,0],[170,255,0],[85,255,0],[0,255,0],[0,255,85],[0,255,170],[0,255,255],[0,170,255],[0,85,255],[0,0,255],[85,0,255],[170,0,255],[255,0,255],[255,0,170],[255,0,85]];
+const FRONT=[[.5,.26],[.5,.33],[.43,.34],[.40,.45],[.39,.55],[.57,.34],[.60,.45],[.61,.55],[.46,.55],[.46,.70],[.46,.86],[.54,.55],[.54,.70],[.54,.86],[.48,.245],[.52,.245],[.45,.26],[.55,.26]];
+const SIDE=[[.57,.275],[.50,.335],[.485,.345],[.48,.45],[.50,.545],[.515,.345],[.52,.45],[.54,.545],[.48,.555],[.485,.70],[.48,.86],[.52,.555],[.515,.70],[.52,.86],[.54,.25],[.565,.25],[.50,.26],[.52,.265]];
+const mk=(b,o)=>{const r=b.map(p=>p.slice());for(const k in o)r[k]=o[k];return r};
+const PRESETS={
+ 'Stand (front)':FRONT,'Stand (side, facing right)':SIDE,
+ 'Walk contact (side)':mk(SIDE,{[RE]:[.53,.44],[RW]:[.575,.52],[LE]:[.50,.45],[LW]:[.455,.53],[LK]:[.575,.70],[LA]:[.62,.855],[RK]:[.44,.70],[RA]:[.385,.84]}),
+ 'Run (side)':mk(SIDE,{[N]:[.59,.275],[NECK]:[.52,.335],[RS]:[.505,.345],[LS]:[.535,.345],[RE]:[.56,.43],[RW]:[.60,.38],[LE]:[.47,.42],[LW]:[.44,.48],[RH]:[.50,.555],[LH]:[.53,.555],[LK]:[.62,.64],[LA]:[.60,.78],[RK]:[.46,.72],[RA]:[.37,.76],[REY]:[.56,.25],[LEY]:[.585,.25],[RER]:[.52,.26],[LER]:[.54,.265]}),
+ 'Jump (side)':mk(SIDE,{[N]:[.57,.20],[NECK]:[.50,.265],[RS]:[.485,.275],[LS]:[.515,.275],[RE]:[.47,.19],[RW]:[.47,.10],[LE]:[.54,.20],[LW]:[.57,.11],[RH]:[.48,.485],[LH]:[.52,.485],[RK]:[.455,.60],[RA]:[.42,.69],[LK]:[.57,.58],[LA]:[.55,.68],[REY]:[.54,.18],[LEY]:[.565,.18],[RER]:[.50,.19],[LER]:[.52,.195]}),
+ 'Attack - overhead slash (side)':mk(SIDE,{[N]:[.575,.27],[NECK]:[.51,.335],[RS]:[.495,.345],[LS]:[.525,.345],[RE]:[.56,.25],[RW]:[.62,.15],[LE]:[.58,.32],[LW]:[.63,.23],[RH]:[.49,.555],[LH]:[.53,.555],[LK]:[.60,.70],[LA]:[.62,.86],[RK]:[.43,.72],[RA]:[.36,.86],[REY]:[.55,.25],[LEY]:[.575,.25],[RER]:[.51,.26],[LER]:[.53,.265]}),
+ 'Crouch (side)':mk(SIDE,{[N]:[.58,.37],[NECK]:[.51,.44],[RS]:[.495,.45],[LS]:[.525,.45],[RE]:[.50,.55],[RW]:[.53,.62],[LE]:[.54,.55],[LW]:[.56,.63],[RH]:[.48,.65],[LH]:[.52,.65],[RK]:[.55,.74],[RA]:[.50,.86],[LK]:[.60,.745],[LA]:[.56,.86],[REY]:[.55,.35],[LEY]:[.575,.35],[RER]:[.51,.36],[LER]:[.53,.365]})};
+const SWAP=[[2,5],[3,6],[4,7],[8,11],[9,12],[10,13],[14,15],[16,17]];
+let pts=PRESETS['Stand (side, facing right)'].map(p=>p.slice()),drag=null,lastP=null,lastScale=1;
+$('preset').innerHTML=Object.keys(PRESETS).map(k=>`<option>${k}</option>`).join('');$('preset').value='Stand (side, facing right)';
+function loadPreset(k){markDirty();pts=PRESETS[k].map(p=>p.slice());$('scl').value=1;lastScale=1;redraw()}
+function mirror(){markDirty();pts=pts.map(p=>[1-p[0],p[1]]);SWAP.forEach(([a,b])=>{[pts[a],pts[b]]=[pts[b],pts[a]]});redraw()}
+function drawPose(ctx,W,stick,rad){
+ LIMBS.forEach(([a,b],i)=>{const x1=pts[a][0]*W,y1=pts[a][1]*W,x2=pts[b][0]*W,y2=pts[b][1]*W;
+  ctx.fillStyle=`rgb(${COL[i].map(v=>Math.round(v*.6))})`;ctx.beginPath();ctx.ellipse((x1+x2)/2,(y1+y2)/2,Math.max(Math.hypot(x2-x1,y2-y1)/2,1),stick,Math.atan2(y2-y1,x2-x1),0,7);ctx.fill()});
+ pts.forEach((p,i)=>{ctx.fillStyle=`rgb(${COL[i]})`;ctx.beginPath();ctx.arc(p[0]*W,p[1]*W,rad,0,7);ctx.fill()})}
+function redraw(){const cv=$('cv'),x=cv.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,512,512);
+ const im=$('refimg');if($('onion').checked&&refURL&&im.complete&&im.naturalHeight){const h=.64*512,s=h/im.naturalHeight,w=im.naturalWidth*s;
+  x.save();x.globalAlpha=.35;x.imageSmoothingEnabled=false;x.drawImage(im,256-w/2,.86*512-h,w,h);x.restore()}
+ x.strokeStyle='#222';x.beginPath();x.moveTo(0,.86*512);x.lineTo(512,.86*512);x.stroke();
+ drawPose(x,512,3,4);if(typeof drag=='number'){x.strokeStyle='#fff';x.beginPath();x.arc(pts[drag][0]*512,pts[drag][1]*512,8,0,7);x.stroke()}}
+const cpos=e=>{const r=$('cv').getBoundingClientRect();return[(e.clientX-r.left)*512/r.width,(e.clientY-r.top)*512/r.height]};
+const clamp=v=>Math.min(1,Math.max(0,v));
+$('cv').onpointerdown=e=>{const p=cpos(e);drag=null;let best=1e9;pts.forEach((q,i)=>{const d=Math.hypot(q[0]*512-p[0],q[1]*512-p[1]);if(d<best){best=d;drag=i}});
+ if(e.shiftKey){drag='all'}else if(best>18)drag=null;lastP=p;$('cv').setPointerCapture(e.pointerId);redraw()};
+$('cv').onpointermove=e=>{if(drag===null)return;const p=cpos(e);
+ if(drag==='all'){const dx=(p[0]-lastP[0])/512,dy=(p[1]-lastP[1])/512;pts=pts.map(q=>[clamp(q[0]+dx),clamp(q[1]+dy)])}else pts[drag]=[clamp(p[0]/512),clamp(p[1]/512)];
+ lastP=p;redraw()};
+$('cv').onpointerup=()=>{drag=null;redraw();markDirty()};
+$('scl').oninput=e=>{markDirty();const v=+e.target.value,f=v/lastScale,px=(pts[RA][0]+pts[LA][0])/2,py=Math.max(pts[RA][1],pts[LA][1]);
+ pts=pts.map(q=>[clamp(px+(q[0]-px)*f),clamp(py+(q[1]-py)*f)]);lastScale=v;redraw()};
+function poseBlob(){const c=document.createElement('canvas');c.width=c.height=1024;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,1024,1024);drawPose(x,1024,6,6);
+ return new Promise(r=>c.toBlob(r,'image/png'))}
+
+/* ---------- results + run ---------- */
+function render(results,target){const o=target||$('out');o.innerHTML='';results.forEach((d,i)=>{const c=document.createElement('div');c.className='card';
+ const inf=d.info,txt=`${inf.size[0]}×${inf.size[1]}`+(inf.grid?` · grid ${inf.grid}px`:'')+(inf.seed!=null?` · seed ${inf.seed}`:'')+(inf.label?` · ${inf.label}`:'');
+ c.innerHTML=`<div class="pair">${d.raw?`<div><div class="mut">Raw</div><img width="220" src="${d.raw}"></div>`:''}<div><div class="mut">${txt}</div><img class="px" src="${d.sprite}"></div></div>
+ <div class="row"><button class="sec" data-a="edit">Edit</button>${d.rig?'<button class="sec" data-a="rig">Animate (template rig)</button>':''}<button class="sec" data-a="ref">Use as reference</button><button class="sec" data-a="anim">Animate</button><button class="sec" data-a="tile">To tileset</button><button class="sec" data-a="save">Save</button><button class="sec" data-a="1">PNG</button><button class="sec" data-a="8">PNG 8×</button></div>`;
+ const im=c.querySelector('img.px');im.onload=()=>{const k=Math.max(1,Math.floor(256/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+ c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='rig'?animateWithRig(d):b.dataset.a=='edit'?openEditor(d.sprite,{label:'Update this result',apply:u=>{d.sprite=u;render(results,target)}}):b.dataset.a=='ref'?useRef(d.sprite):b.dataset.a=='anim'?setAnim(d.sprite):b.dataset.a=='tile'?tlUse(d.sprite):b.dataset.a=='save'?saveSprite(d.sprite):dl(+b.dataset.a,d.sprite,inf.seed));o.appendChild(c)})}
+/*QUEUE-RUN*/
+async function run(){if(mode<3||mode==10){if(!checkModel())return;return runQueued()}
+ const b=$('go');b.disabled=true;$('status').className='';$('status').textContent='Working…';
+ try{const pal=$('pal').value||'none',fd=new FormData(),f=$('file').files[0];if(!f)throw new Error('Choose an image first');fd.append('file',f);
+  Object.entries({mode:$('mode').value,size:$('size').value,colors:$('colors').value,palette:pal,remove_bg:$('rmbg').checked,bg_tol:$('tol').value,crisp:$('pxcrisp').checked,clean:$('pxclean').checked,outline:$('pxoutline').value}).forEach(([k,v])=>fd.append(k,v));
+  const d=await api('/api/pixelize',{method:'POST',body:fd});render(d.results);$('status').textContent='Done'}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}b.disabled=false}
+function dl(k,url,seed){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(im,0,0,c.width,c.height);
+ const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`sprite_${seed??'img'}_${k}x.png`;a.click()};im.src=url}
+/* ---------- rig animation ---------- */
+const JN=["head","neck","pelvis","l_shoulder","l_elbow","l_wrist","r_shoulder","r_elbow","r_wrist","l_hip","l_knee","l_ankle","r_hip","r_knee","r_ankle"];
+const BN=["torso","head","l_arm_u","l_arm_l","r_arm_u","r_arm_l","l_leg_u","l_leg_l","r_leg_u","r_leg_l","cape","hair","tail"];
+const BONES=[["pelvis","neck"],["neck","head"],["l_shoulder","l_elbow"],["l_elbow","l_wrist"],["r_shoulder","r_elbow"],["r_elbow","r_wrist"],["l_hip","l_knee"],["l_knee","l_ankle"],["r_hip","r_knee"],["r_knee","r_ankle"]];
+const BC=["#ff6363","#ffd666","#66d966","#50c8c8","#6699ff","#be78ff","#ff963c","#c8c878","#ff78c8","#96ffc8","#7846c8","#f0aa3c","#3cc88c"];
+let aImg=new Image(),joints=null,ovr=new Map(),partsImg=null,zoom=4,adrag=null,aframes=[],araw=[],aTimer=null,aFi=0,playing=true;
+$('bonesel').innerHTML=BN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+$('afile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>setAnim(r.result);r.readAsDataURL(f)};
+function setAnim(u,restore){aSrc=u;ovr.clear();partsImg=null;joints=null;aImg=new Image();aImg.onload=async()=>{zoom=Math.max(2,Math.floor(440/Math.max(aImg.width,aImg.height)));
+ const c=$('rig');c.width=aImg.width*zoom;c.height=aImg.height*zoom;c.style.width=c.width+'px';c.style.height=c.height+'px';
+ if(restore&&restore.joints){joints=restore.joints;(restore.ovr||[]).forEach(([x,y,b])=>ovr.set(x+','+y,b));drawRig();refreshParts()}else{tab(4);await autoPlace();markDirty()}};aImg.src=u}
+async function sprBlob(){return await (await fetch(aSrc)).blob()}
+async function autoPlace(){if(!aSrc)return;try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');const d=await api('/api/rig/autoplace',{method:'POST',body:fd});joints=d.joints;ovr.clear();drawRig();await refreshParts()}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+let pt=null;async function refreshParts(){if(!aSrc||!joints)return;clearTimeout(pt);pt=setTimeout(async()=>{try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify(joints));
+ fd.append('overrides',JSON.stringify(Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})));const d=await api('/api/rig/parts',{method:'POST',body:fd});
+ partsImg=new Image();partsImg.onload=drawRig;partsImg.src=d.overlay}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}},80)}
+function drawRig(){if(!aSrc||!aImg.width)return;const c=$('rig'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;
+ x.drawImage(aImg,0,0,c.width,c.height);
+ if($('showparts').checked&&partsImg&&partsImg.width){x.globalAlpha=.5;x.drawImage(partsImg,0,0,c.width,c.height);x.globalAlpha=1}
+ ovr.forEach((b,k)=>{const[px,py]=k.split(',');x.fillStyle=BC[b];x.globalAlpha=.9;x.fillRect(px*zoom,py*zoom,zoom,zoom);x.globalAlpha=1});
+ if(!joints)return;BONES.forEach(([a,b],i)=>{x.strokeStyle=BC[i];x.lineWidth=2;x.beginPath();x.moveTo(joints[a][0]*zoom,joints[a][1]*zoom);x.lineTo(joints[b][0]*zoom,joints[b][1]*zoom);x.stroke()});
+ x.font='10px system-ui';JN.forEach(n=>{const[jx,jy]=joints[n];x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=2;x.beginPath();x.arc(jx*zoom,jy*zoom,5,0,7);x.fill();x.stroke();x.fillStyle='#fff';x.fillText(n,jx*zoom+7,jy*zoom-5)})}
+const rpos=e=>{const r=$('rig').getBoundingClientRect();return[(e.clientX-r.left)*$('rig').width/r.width/zoom,(e.clientY-r.top)*$('rig').height/r.height/zoom]};
+function paintAt(p){const b=+$('bonesel').value,r=+$('brush').value-1,cx=Math.floor(p[0]),cy=Math.floor(p[1]);
+ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(dx*dx+dy*dy<=r*r+r&&cx+dx>=0&&cy+dy>=0&&cx+dx<aImg.width&&cy+dy<aImg.height)ovr.set((cx+dx)+','+(cy+dy),b);drawRig()}
+$('rig').onpointerdown=e=>{if(!joints)return;const p=rpos(e);$('rig').setPointerCapture(e.pointerId);
+ if($('paintmode').checked){adrag='paint';paintAt(p);return}
+ adrag=null;let best=1e9;JN.forEach(n=>{const d=Math.hypot(joints[n][0]-p[0],joints[n][1]-p[1])*zoom;if(d<best){best=d;adrag=n}});if(best>14)adrag=null};
+$('rig').onpointermove=e=>{if(!adrag)return;const p=rpos(e);if(adrag==='paint')paintAt(p);else{joints[adrag]=[Math.max(0,Math.min(aImg.width,Math.round(p[0]*2)/2)),Math.max(0,Math.min(aImg.height,Math.round(p[1]*2)/2))];drawRig()}};
+$('rig').onpointerup=()=>{if(adrag){adrag=null;refreshParts();markDirty()}};
+let cur=null,ares={};
+const loadImgs=us=>Promise.all((us||[]).map(u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=u})));
+function mkDiffs(c){c.diffs=[];if(!c.ri.length)return;
+ c.fi.forEach((im,i)=>{const w=im.width,h=im.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d',{willReadFrequently:true});
+  x.drawImage(im,0,0);const A=x.getImageData(0,0,w,h).data;x.clearRect(0,0,w,h);x.drawImage(c.ri[i],0,0);const B=x.getImageData(0,0,w,h).data;
+  const out=x.createImageData(w,h);for(let p=0;p<A.length;p+=4){if(A[p+3]==0&&B[p+3]==0)continue;
+   if(Math.abs(A[p]-B[p])+Math.abs(A[p+1]-B[p+1])+Math.abs(A[p+2]-B[p+2])+Math.abs(A[p+3]-B[p+3])>8){out.data[p]=255;out.data[p+1]=0;out.data[p+2]=255;out.data[p+3]=170}}
+  x.clearRect(0,0,w,h);x.putImageData(out,0,0);c.diffs.push(cv)})}
+async function buildCur(anim,d){const c={anim,frames:d.frames,raw:d.raw_frames||d.raw||[],accept:d.accept||d.frames.map(()=>true),fps:d.fps,size:d.size,pivot:d.pivot,key:d.key||null,info:d.refine||d.info||null};
+ c.fi=await loadImgs(c.frames);c.ri=await loadImgs(c.raw);mkDiffs(c);return c}
+function showCur(c){cur=c;const[w,h]=c.size,z=Math.max(1,Math.floor(300/Math.max(w,h))),cv=$('animprev');cv.width=w*z;cv.height=h*z;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
+ const ai=c.ri.length>0;$('rawrow').classList.toggle('hide',!ai);$('reviewrow').classList.toggle('hide',!ai);
+ renderStrip();$('previnfo').textContent=`${c.anim} · ${c.fi.length} frames · ${w}×${h} · ${c.fps} fps`+(ai?' · AI cleanup':'');startPlay(c.fps)}
+function renderStrip(){const c=cur,s=$('strip'),th=Math.max(32,Math.min(72,c.size[1])),ai=c.ri.length>0;s.innerHTML='';
+ c.frames.forEach((u,i)=>{const use=!ai||c.accept[i],cell=document.createElement('div');cell.style.cssText='text-align:center;font-size:11px';
+  cell.innerHTML=`<img src="${use?u:c.raw[i]}" height="${th}" style="cursor:pointer;${ai&&!use?'outline:2px solid #ff8a8a;':''}" title="Click to inspect this frame">`+(ai?`<label class="chk" style="justify-content:center;margin:2px 0 0"><input type="checkbox" ${c.accept[i]?'checked':''}><span>AI</span></label>`:`<div class="mut">${i+1}</div>`);
+  const im=cell.querySelector('img');im.onclick=()=>{aFi=i;playing=false;$('playbtn').textContent='Play';drawFrame()};
+  const cb=cell.querySelector('input');if(cb)cb.onchange=()=>{c.accept[i]=cb.checked;im.src=cb.checked?u:c.raw[i];im.style.outline=cb.checked?'':'2px solid #ff8a8a';markDirty();drawFrame()};
+  s.appendChild(cell)})}
+function drawFrame(){if(!cur)return;const c=cur,cv=$('animprev'),x=cv.getContext('2d'),n=c.fi.length,i=aFi%n,W=cv.width,H=cv.height;
+ const fin=c.fi.map((im,k)=>(c.ri.length&&!c.accept[k])?c.ri[k]:im);x.imageSmoothingEnabled=false;x.clearRect(0,0,W,H);
+ if($('aonion').checked&&n>1){x.globalAlpha=.28;x.drawImage(fin[(i-1+n)%n],0,0,W,H);x.globalAlpha=.14;x.drawImage(fin[(i+1)%n],0,0,W,H);x.globalAlpha=1}
+ x.drawImage($('showraw').checked&&c.ri.length?c.ri[i]:fin[i],0,0,W,H);
+ if($('showdiff').checked&&c.diffs&&c.diffs[i])x.drawImage(c.diffs[i],0,0,W,H)}
+function startPlay(fps){clearInterval(aTimer);aFi=0;aTimer=setInterval(()=>{if(cur&&playing){drawFrame();aFi=(aFi+1)%cur.fi.length}},1000/fps)}
+function togglePlay(){playing=!playing;$('playbtn').textContent=playing?'Pause':'Play'}
+function setAll(v){if(!cur)return;cur.accept.fill(v);renderStrip();drawFrame();markDirty()}
+const secObj=()=>!$('secon').checked?null:{enabled:true,flutter:+$('secflut').value,stiffness:+$('secstiff').value,damping:+$('secdamp').value,parts:{cape:{segments:+$('seg_cape').value,front:$('front_cape').checked},hair:{segments:+$('seg_hair').value,front:$('front_hair').checked},tail:{segments:+$('seg_tail').value,front:$('front_tail').checked}}};
+async function previewAnim(exp){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
+ if($('refine').checked&&!checkModel())return;
+ $('status').className='';$('status').textContent=$('refine').checked?'Rendering, then AI cleanup: about 20-60 s per frame, the first frame also loads the model. Please wait…':exp?'Rendering and exporting…':'Rendering…';
+ try{const fd=new FormData();fd.append('sprite',await sprBlob(),'s.png');fd.append('joints',JSON.stringify(joints));
+  fd.append('overrides',JSON.stringify(Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})));
+  Object.entries({anim:$('anim').value,frames:$('afr').value,fps:$('afps').value,facing:$('face').value,near:$('near').value,weapon:$('weapon').value,amp:$('amp').value,pad:$('apad').value,overlap:$('aovl').value,ss:4,export:exp,name:$('aname').value,refine:$('refine').checked,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,character:$('rchar').value,negative:$('neg').value,strength:$('rstr').value,radius:$('rrad').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,sampler:$('sampler').value,secondary:JSON.stringify(secObj()||{enabled:false})}).forEach(([k,v])=>fd.append(k,v));
+  const d=await api('/api/rig/animate',{method:'POST',body:fd});
+  const c=await buildCur($('anim').value,d);showCur(c);const lost=!d.refine&&ares[c.anim]&&ares[c.anim].edited&&!ares[c.anim].ri.length;if(lost)delete ares[c.anim];if(d.refine){ares[c.anim]=c;markDirty()}
+  const rf=d.refine?` · cleanup seed ${d.refine.seed}, radius ${d.refine.radius}px`+(d.refine.reverted?`, ${d.refine.reverted} frame(s) reverted to rig-only (AI changed too much)`:''):'';
+  $('status').textContent=(exp?'Exported to: '+d.saved_to:d.refine?'Done. Review the frames, redo any you dislike, then Export.':'Done (press Export to save sheet, atlas and GIF)')+rf}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+const CLIPS=["idle","walk","run","climb","cheer","attack","cast","block","jump","hurt","death"];
+$('xclips').innerHTML=CLIPS.map(c=>`<label class="chk" style="margin:0"><input type="checkbox" id="xc_${c}" ${['idle','walk','attack'].includes(c)?'checked':''}><span>${c}</span></label>`).join('');
+const xopts=()=>({layout:$('xlayout').value,columns:+$('xcols').value||8,padding:+$('xpad').value||0,pot:$('xpot').checked,crop:$('xcrop').checked,uniform:$('xuni').checked,
+ godot:$('xgodot').checked,godot_path:$('xgpath').value,unity:$('xunity').checked,ppu:+$('xppu').value||32,gif:$('xgif').checked,frames:$('xfrm').checked});
+function clipParams(a){stashAnim();const p=animParams[a]||{...ANIM_DEF[a]},g=k=>p[k]!==undefined?p[k]:$(k).value;
+ return{anim:a,count:+g('afr'),fps:+g('afps'),facing:g('face'),near:g('near'),weapon:g('weapon'),amp:+g('amp'),pad:+g('apad')||0,overlap:+g('aovl')||0}}
+function aiFrames(r){return{frames:r.frames.map((u,i)=>r.accept[i]?u:r.raw[i]),pivot:r.pivot}}
+async function doExport(anims){if(!aSrc||!joints){$('status').textContent='Set a source sprite first';return}
+ $('status').className='';$('status').textContent=`Exporting ${anims.length} animation(s)…`;
+ try{const d=await api('/api/rig/export_pack',{...J,body:JSON.stringify({sprite:aSrc,joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]}),name:$('aname').value||'sprite',options:xopts(),secondary:secObj()||{enabled:false},anims})});
+  $('status').textContent=`Exported ${d.frames} frames (${anims.length} animation(s)) to: ${d.dir}\nsheet ${d.sheet[0]}×${d.sheet[1]} · cell ${d.cell[0]}×${d.cell[1]} · feet pivot (${d.pivot[0]}, ${d.pivot[1]})\nSee README.txt in that folder for Godot / Unity steps.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function exportAnim(){const a=$('anim').value,p=clipParams(a);
+ if(cur&&(cur.ri.length||cur.edited)&&cur.anim==a&&$('xai').checked)Object.assign(p,aiFrames(cur));else if($('xai').checked&&ares[a]&&(ares[a].ri.length||ares[a].edited))Object.assign(p,aiFrames(ares[a]));
+ doExport([p])}
+function exportPack(){const sel=CLIPS.filter(c=>$('xc_'+c).checked);if(!sel.length){$('status').textContent='Tick at least one animation';return}
+ doExport(sel.map(a=>{const p=clipParams(a),r=ares[a];if($('xai').checked&&r&&(r.ri.length||r.edited))Object.assign(p,aiFrames(r));return p}))}
+async function redoRejected(){if(!cur||!cur.ri.length)return;if(!cur.key){$('status').textContent='This result was loaded from the project, so the AI cache is gone: press Preview again, then redo';return}
+ const idx=cur.accept.map((a,i)=>a?-1:i).filter(i=>i>=0);if(!idx.length){$('status').textContent='Untick "AI" under the frames you want redone first';return}
+ $('status').className='';$('status').textContent=`Redoing ${idx.length} frame(s) with a new seed…`;
+ try{const d=await api('/api/rig/redo',{...J,body:JSON.stringify({key:cur.key,frames:idx,seed:-1,strength:+$('rstr').value})});
+  cur.frames=d.frames;cur.fi=await loadImgs(d.frames);idx.forEach(i=>{cur.accept[i]=d.accept[i]});mkDiffs(cur);renderStrip();drawFrame();markDirty();
+  $('status').textContent=`Redone: frame ${idx.map(i=>i+1).join(', ')} (seed ${d.refine.seed})`+(d.refine.reverted?` · ${d.refine.reverted} still reverted to rig-only`:'')}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+
+/* ---------- projects ---------- */
+let curProject=null,dirty=false,animParams={},curAnim='walk';
+const ANIM_DEF={idle:{afr:6,afps:6},walk:{afr:8,afps:10},run:{afr:8,afps:14},attack:{afr:8,afps:12},jump:{afr:8,afps:10},hurt:{afr:6,afps:12},death:{afr:10,afps:10},cast:{afr:8,afps:12},climb:{afr:8,afps:8},block:{afr:6,afps:10},cheer:{afr:6,afps:8}};
+const AP=['afr','afps','amp','apad','aovl','face','near','weapon'];
+function updPStat(m){$('pstat').textContent=m||(curProject?`Project: ${curProject}${dirty?'  ● unsaved changes':'  ✓ saved'}`:'No project (type a name and press Save)')}
+function markDirty(){dirty=true;updPStat()}
+['input','change'].forEach(ev=>document.querySelector('aside').addEventListener(ev,e=>{if(e.target.id!='pname'&&e.target.id!='mdir')markDirty()}));
+function stashAnim(){const o={};AP.forEach(k=>o[k]=$(k).value);animParams[curAnim]=o}
+function animChanged(){stashAnim();curAnim=$('anim').value;const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
+function collect(){const s={};document.querySelectorAll('aside input,aside select,aside textarea').forEach(e=>{if(!e.id||e.type=='file'||e.id=='pname'||e.id=='mdir')return;s[e.id]=e.type=='checkbox'?e.checked:e.value});return s}
+function applySettings(s){for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}}
+const J={method:'POST',headers:{'Content-Type':'application/json'}};
+async function refreshProjects(){try{const d=await api('/api/projects');$('plist').innerHTML=d.projects.map(p=>`<option value="${p.name}">`).join('')}catch(e){}}
+async function saveProject(silent){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first');return}
+ if(!$('aname').value||$('aname').value=='sprite')$('aname').value=name;stashAnim();
+ const body={name,settings:collect(),rig:aSrc&&joints?{joints,overrides:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})}:null,
+  skeleton:{pts,scale:+$('scl').value,preset:$('preset').value},anim_params:animParams,tab:mode,palette:{work:PL.work,prot:[...PL.prot]},portrait:ptBase?{base:ptBase,mask:ptMask,exprs:ptRes.filter(r=>r.name!=='neutral').map(r=>({name:r.name,image:r.image}))}:null,images:{ref:refURL,anim:aSrc,tpl:TP.src,tplref:TP.ref,tile:TL.src,terra:TR.a,terrb:TR.b,terrc:TR.c,terrd:TR.d},tileset:{tiles:TL.tiles},template:{joints:TP.joints,ovr:TP.ovr},directions:{slots:DR.slots},results:Object.fromEntries(Object.entries(ares).map(([a,c])=>[a,{anim:a,frames:c.frames,raw:c.raw,accept:c.accept,fps:c.fps,size:c.size,pivot:c.pivot,info:c.info}]))};
+ try{const d=await api('/api/projects/save',{...J,body:JSON.stringify(body)});curProject=d.name;$('pname').value=d.name;dirty=false;localStorage.setItem('sf_last',d.name);
+  updPStat(silent===true?null:`Saved ${new Date().toLocaleTimeString()} · ${d.name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
+async function loadProject(){const name=$('pname').value.trim();if(!name){updPStat('Type or pick a project name first');return}
+ try{const d=await api('/api/projects/'+encodeURIComponent(name));
+  applySettings(d.settings||{});curAnim=$('anim').value;animParams=d.anim_params||{};
+  if(d.images.ref)setRef(d.images.ref);else{refURL=null;$('refimg').style.display='none';$('refhint').style.display='block'}
+  const sk=d.skeleton;if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&PRESETS[sk.preset])$('preset').value=sk.preset}
+  if(d.images.anim)setAnim(d.images.anim,{joints:d.rig&&d.rig.joints,ovr:(d.rig&&d.rig.overrides)||[]});else{aSrc=null;joints=null;ovr.clear();partsImg=null}
+  DR.slots=(d.directions&&d.directions.slots)||{};
+  TR.a=d.images.terra||null;TR.b=d.images.terrb||null;TR.c=d.images.terrc||null;TR.d=d.images.terrd||null;TR.res=null;trSlots();TL.src=d.images.tile||null;TL.tiles=(d.tileset&&d.tileset.tiles)||[];tsRender();tlShow();TP.src=d.images.tpl||null;TP.ref=d.images.tplref||null;TP.joints=(d.template&&d.template.joints)||null;TP.ovr=(d.template&&d.template.ovr)||[];tpShow();
+  PL.work=(d.palette&&d.palette.work)||[];PL.prot=new Set((d.palette&&d.palette.prot)||[]);plRender();
+  ptBase=null;ptRes=[];if(d.portrait&&d.portrait.base){ptMask=d.portrait.mask||ptMask;setBase(d.portrait.base,d.portrait.exprs||[])}else{drawPort();renderExprs()}
+  cur=null;ares={};clearInterval(aTimer);for(const[a,r]of Object.entries(d.results||{})){if(r.frames&&r.frames.length){ares[a]=await buildCur(a,r);if(!ares[a].ri.length)ares[a].edited=true}}
+  if(ares[$('anim').value])showCur(ares[$('anim').value]);
+  curProject=d.name;$('pname').value=d.name;localStorage.setItem('sf_last',d.name);tab(d.tab||1);redraw();dirty=false;updPStat(`Loaded ${d.name}`);refreshGallery()}
+ catch(e){updPStat('Load failed: '+e.message)}}
+let delT=null;async function deleteProject(){const name=$('pname').value.trim();if(!name)return;const b=$('delbtn');
+ if(b.dataset.armed!='1'){b.dataset.armed='1';b.textContent='Click again to delete';clearTimeout(delT);delT=setTimeout(()=>{b.dataset.armed='';b.textContent='Delete'},3000);return}
+ b.dataset.armed='';b.textContent='Delete';
+ try{await api('/api/projects/'+encodeURIComponent(name),{method:'DELETE'});if(curProject==name){curProject=null;localStorage.removeItem('sf_last')}updPStat(`Deleted ${name}`);refreshProjects();refreshGallery()}catch(e){updPStat('Delete failed: '+e.message)}}
+async function saveSprite(u){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first, then press Save on the sprite');return}
+ if(curProject!=name)await saveProject(true);if(curProject!=name)return;
+ try{await api(`/api/projects/${encodeURIComponent(name)}/sprites`,{...J,body:JSON.stringify({sprite:u})});updPStat(`Sprite saved to ${name}`);refreshGallery()}catch(e){updPStat('Save failed: '+e.message)}}
+async function refreshGallery(){if(!curProject){show('gallery',false);return}
+ try{const d=await api(`/api/projects/${encodeURIComponent(curProject)}/sprites`);show('gallery',true);$('galtitle').textContent=`Saved sprites · ${curProject} (${d.sprites.length})`;const g=$('gal');g.innerHTML='';
+  d.sprites.forEach(s=>{const c=document.createElement('div');c.innerHTML=`<img class="px" src="${s.data}"><div class="row"><button class="sec" data-a="r">Ref</button><button class="sec" data-a="a">Anim</button><button class="sec" data-a="e">Edit</button><button class="sec" data-a="d">×</button></div>`;
+   const im=c.querySelector('img');im.onload=()=>{const k=Math.max(1,Math.floor(96/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+   c.querySelectorAll('button').forEach(b=>b.onclick=async()=>{if(b.dataset.a=='r')useRef(s.data);else if(b.dataset.a=='a')setAnim(s.data);else if(b.dataset.a=='e')openEditor(s.data,{label:'Save over this sprite',apply:async u=>{const q=encodeURIComponent(curProject);await api(`/api/projects/${q}/sprites/${s.id}`,{method:'DELETE'});await api(`/api/projects/${q}/sprites`,{...J,body:JSON.stringify({sprite:u})});refreshGallery()}});else{await api(`/api/projects/${encodeURIComponent(curProject)}/sprites/${s.id}`,{method:'DELETE'});refreshGallery()}});g.appendChild(c)})}catch(e){}}
+setInterval(()=>{if(dirty&&curProject&&$('pname').value.trim()==curProject)saveProject(true)},20000);
+
+/* ---------- assistant ---------- */
+let chatMsgs=[],chatBusy=false;
+try{chatMsgs=JSON.parse(localStorage.getItem('sf_chat')||'[]')}catch(e){}
+const FIELDS={template:{id:'tpprompt'},portrait:{id:'ptprompt'},expression:{id:'ptcustom'},prompt:{id:'prompt'},negative:{id:'neg'},character:{id:'char',also:['rchar']},pose:{id:'pose'},anim:{id:'anim',en:true},
+ ip_strength:{id:'ips',num:[0,1]},skeleton_strength:{id:'cns',num:[0,1.5]},cleanup_strength:{id:'rstr',num:[.1,.9]}};
+function applyField(f,v){const m=FIELDS[f];if(!m)return false;const el=$(m.id);v=v.trim();if(!v)return false;
+ if(m.num){const n=parseFloat(v);if(isNaN(n))return false;v=String(Math.min(m.num[1],Math.max(m.num[0],n)))}
+ if(m.en){if(![...el.options].some(o=>o.value==v))return false;el.value=v;animChanged()}else el.value=v;
+ (m.also||[]).forEach(i=>{$(i).value=v});markDirty();return true}
+function toggleChat(){const c=$('chat');c.classList.toggle('hide');if(!c.classList.contains('hide')){renderChat();llmRefresh();$('chattext').focus()}}
+function clearChat(){chatMsgs=[];saveChat();renderChat()}
+function saveChat(){try{localStorage.setItem('sf_chat',JSON.stringify(chatMsgs.slice(-30)))}catch(e){}}
+function chatContext(){const g=id=>$(id)?$(id).value:'';
+ return `Tab: ${['','Generate','Reference pose','Pixelize','Animate','Portrait'][mode]}\nPrompt field: ${g('prompt')}\nPortrait prompt: ${g('ptprompt')}\nCharacter: ${g('char')||g('rchar')}\nPose text: ${g('pose')}\nAnimation: ${g('anim')} (${g('afr')} frames, ${g('afps')} fps)\nReference sprite set: ${refURL?'yes':'no'}; rig source set: ${aSrc?'yes':'no'}\nCheckpoint: ${g('ckpt')}; LoRA: ${g('lora')}; reference strength ${g('ips')}, skeleton strength ${g('cns')}`}
+function renderChat(){const log=$('chatlog');log.innerHTML='';
+ if(!chatMsgs.length){const d=document.createElement('div');d.className='cm assistant';d.textContent='Hi! I can write prompts, pose text and settings for you. Try: "a red-haired knight with blue armor, side view" or "how do I make the jump look better?". I propose changes as buttons; you decide what to apply and when to generate.';log.appendChild(d)}
+ chatMsgs.forEach(m=>{const d=document.createElement('div');d.className='cm '+m.role;
+  if(m.role=='user')d.textContent=m.content;
+  else{let t=m.content.replace(/<think>[\s\S]*?<\/think>/g,'').replace(/<think>[\s\S]*$/,'');const acts=[];
+   t=t.replace(/<set\s+field="([a-z_]+)">([\s\S]*?)<\/set>/g,(_,f,v)=>{acts.push([f,v]);return''}).replace(/<set[\s\S]*$/,'');
+   d.textContent=t.trim()||(chatBusy&&m===chatMsgs[chatMsgs.length-1]?'…':'');m.applied=m.applied||{};
+   acts.forEach(([f,v])=>{const k=f+'|'+v.trim(),b=document.createElement('button');b.className='sec chip';b.title=v.trim();
+    const label=()=>m.applied[k]===true?`✓ ${f} set`:m.applied[k]===false?`✗ can't set ${f}`:`Apply ${f}: ${v.trim().slice(0,80)}${v.trim().length>80?'…':''}`;
+    b.textContent=label();b.disabled=m.applied[k]!==undefined;b.onclick=()=>{m.applied[k]=applyField(f,v);b.textContent=label();b.disabled=true;saveChat()};d.appendChild(b)})}
+  log.appendChild(d)});log.scrollTop=log.scrollHeight}
+async function sendChat(){const txt=$('chattext').value.trim();if(!txt||chatBusy)return;$('chattext').value='';chatBusy=true;$('chatsend').disabled=true;
+ chatMsgs.push({role:'user',content:txt});const am={role:'assistant',content:''};chatMsgs.push(am);renderChat();
+ try{const r=await fetch('/api/llm/chat',{...J,body:JSON.stringify({messages:chatMsgs.slice(-14,-1).map(m=>({role:m.role,content:m.content})),context:chatContext()})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||('server error '+r.status))}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+   while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data:'))continue;const ev=JSON.parse(line.slice(5));
+    if(ev.token){am.content+=ev.token;renderChat()}else if(ev.status)$('chatstat').textContent=ev.status;else if(ev.error)throw new Error(ev.error)}}}
+ catch(e){am.content+=(am.content?'\n\n':'')+'⚠ '+e.message}
+ chatBusy=false;$('chatsend').disabled=false;saveChat();renderChat();llmRefresh()}
+$('chattext').addEventListener('keydown',e=>{if(e.key=='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
+function llmFill(s){const st=s.settings;if(document.activeElement.id!='llsearch')$('llsearch').value=st.search_dir;$('llserver').value=st.server||s.server||'';
+ $('llgpu').value=st.gpu_layers;$('llctx').value=st.ctx;$('llidle').value=st.idle_min;
+ $('llmodel').innerHTML=(s.models.length?'':'<option value="">(no .gguf found: Scan or fix the folder)</option>')+s.models.map(m=>`<option value="${m.path}">${m.name} · ${m.mb>=1024?(m.mb/1024).toFixed(1)+' GB':m.mb+' MB'}</option>`).join('');
+ if(st.model&&s.models.some(m=>m.path==st.model))$('llmodel').value=st.model;
+ $('chatstat').textContent=s.ready?'model loaded':s.running?'model loading…':(st.model?'model unloaded (loads on first message)':'choose a model in ⚙');
+ if(!st.model&&!s.models.length&&!s.server)$('chatstat').textContent='no llama-server / model found: open ⚙'}
+async function llmRefresh(){try{llmFill(await api('/api/llm/state'))}catch(e){$('chatstat').textContent='assistant unavailable: '+e.message}}
+async function llmSave(rescan){try{const body={gpu_layers:+$('llgpu').value||0,ctx:+$('llctx').value||4096,idle_min:+$('llidle').value||0,search_dir:$('llsearch').value};
+  if($('llserver').value.trim())body.server=$('llserver').value;if($('llmodel').value)body.model=$('llmodel').value;
+  llmFill(await api('/api/llm/config',{...J,body:JSON.stringify(body)}));$('chatstat').textContent=rescan?'scan done':'saved'}catch(e){$('chatstat').textContent='Error: '+e.message}}
+async function llmLoadNow(){await llmSave();$('chatstat').textContent='loading model…';try{await api('/api/llm/start',J);await llmRefresh()}catch(e){$('chatstat').textContent='Error: '+e.message}}
+async function llmUnload(){try{llmFill(await api('/api/llm/stop',J))}catch(e){$('chatstat').textContent='Error: '+e.message}}
+
+/* ---------- portraits ---------- */
+const PE=["happy","sad","angry","surprised","embarrassed","smug","sleepy","pain","scared","determined","laughing","serious"];
+$('ptexprs').innerHTML=PE.map(n=>`<label class="chk" style="margin:0"><input type="checkbox" id="xp_${n}" ${['happy','sad','angry','surprised'].includes(n)?'checked':''}><span>${n}</span></label>`).join('');
+let ptBase=null,ptImg=new Image(),ptMask={cx:.5,cy:.45,rx:.27,ry:.30},ptRes=[],ptDrag=null;
+const PT_PRESETS={face:{cx:.5,cy:.45,rx:.27,ry:.30},eyes:{cx:.5,cy:.38,rx:.27,ry:.12},mouth:{cx:.5,cy:.56,rx:.14,ry:.09}};
+function portPreset(v){ptMask={...PT_PRESETS[v]};drawPort();markDirty()}
+function drawPort(){const cv=$('ptcv'),x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);if(!ptBase||!ptImg.width){x.fillStyle='#15161c';x.fillRect(0,0,cv.width,cv.height);return}
+ x.imageSmoothingEnabled=false;x.drawImage(ptImg,0,0,cv.width,cv.height);const m=ptMask;x.save();x.beginPath();x.ellipse(m.cx*cv.width,m.cy*cv.height,m.rx*cv.width,m.ry*cv.height,0,0,7);
+ x.fillStyle='rgba(255,0,120,.28)';x.fill();x.strokeStyle='#ff4aa0';x.lineWidth=2;x.stroke();x.restore()}
+function setBase(u,exprs){ptBase=u;ptImg=new Image();ptImg.onload=()=>{const sc=Math.max(1,Math.floor(400/ptImg.width)),cv=$('ptcv');cv.width=cv.height=ptImg.width*sc;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
+  $('ptinfo').textContent=`Base portrait ${ptImg.width}×${ptImg.height}. Pink area = what the AI may repaint (drag to redraw).`;drawPort()};ptImg.src=u;
+ ptRes=[{name:'neutral',image:u},...(exprs||[])];renderExprs()}
+function useBase(u){setBase(u,[]);markDirty()}
+const pcpos=e=>{const r=$('ptcv').getBoundingClientRect();return[Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))]};
+$('ptcv').onpointerdown=e=>{if(!ptBase)return;ptDrag=pcpos(e);$('ptcv').setPointerCapture(e.pointerId)};
+$('ptcv').onpointermove=e=>{if(!ptDrag)return;const[x,y]=pcpos(e),[x0,y0]=ptDrag;ptMask={cx:(x0+x)/2,cy:(y0+y)/2,rx:Math.max(.03,Math.abs(x-x0)/2),ry:Math.max(.03,Math.abs(y-y0)/2)};drawPort()};
+$('ptcv').onpointerup=()=>{if(ptDrag){ptDrag=null;markDirty()}};
+function renderExprs(){const o=$('ptout');o.innerHTML='';ptRes.forEach((r,i)=>{const c=document.createElement('div'),sc=Math.max(1,Math.floor(140/Math.max(1,ptImg.width||128)));
+  c.innerHTML=`<img src="${r.image}"><div class="mut" style="margin-top:2px">${r.name}</div><div class="row"><button class="sec" data-a="b">Base</button><button class="sec" data-a="e">Edit</button><button class="sec" data-a="p">PNG</button>${r.name=='neutral'?'':'<button class="sec" data-a="x">×</button>'}</div>`;
+  const im=c.querySelector('img');im.onload=()=>{const k=Math.max(1,Math.floor(140/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+  c.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.a=='b')useBase(r.image);else if(b.dataset.a=='e')openEditor(r.image,{label:'Update this portrait',apply:u=>{r.image=u;if(r.name=='neutral'){setBase(u,ptRes.slice(1))}else renderExprs();markDirty()}});else if(b.dataset.a=='p')dl(1,r.image,r.name);else{ptRes.splice(i,1);renderExprs();markDirty()}});o.appendChild(c)})}
+function renderBases(results){const o=$('out');o.innerHTML='';results.forEach(d=>{const c=document.createElement('div');c.className='card';
+ c.innerHTML=`<div class="pair"><div><div class="mut">Raw</div><img width="200" src="${d.raw}"></div><div><div class="mut">${d.info.size[0]}×${d.info.size[1]} · seed ${d.info.seed}</div><img class="px" src="${d.sprite}"></div></div>
+ <div class="row"><button class="sec" data-a="b">Use as base</button><button class="sec" data-a="e">Edit</button><button class="sec" data-a="s">Save</button><button class="sec" data-a="p">PNG</button></div>`;
+ const im=c.querySelector('img.px');im.onload=()=>{const k=Math.max(1,Math.floor(256/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+ c.querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.a=='b'?useBase(d.sprite):b.dataset.a=='e'?openEditor(d.sprite,{label:'Update this portrait',apply:u=>{d.sprite=u;renderBases(results)}}):b.dataset.a=='s'?saveSprite(d.sprite):dl(1,d.sprite,d.info.seed));o.appendChild(c)})}
+async function portBase(){if(!checkModel())return;$('status').className='';
+ if($('ptsrc').value=='ref'&&!refURL){$('status').className='err';$('status').textContent='Set a reference sprite in the Reference tab first (or choose "Text only")';return}
+ $('status').textContent='Generating base portraits… the first run loads the model'+($('ptsrc').value=='ref'?' and the IP-Adapter':'');
+ try{const fd=new FormData();if($('ptsrc').value=='ref')fd.append('ref',await (await fetch(refURL)).blob(),'ref.png');
+  Object.entries({prompt:$('ptprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,bg:$('ptbg').value,n:$('ptn').value,size:$('ptsize').value,colors:$('ptcolors').value,transparent:$('pttrans').checked,ip_scale:$('ptips').value,crisp:$('pxcrisp').checked,clean:$('pxclean').checked,sampler:$('sampler').value}).forEach(([k,v])=>fd.append(k,v));
+  const d=await api('/api/portrait/base',{method:'POST',body:fd});renderBases(d.results);$('status').textContent='Done. Press "Use as base" on the portrait you like.'}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+async function portExpressions(){if(!checkModel())return;if(!ptBase){$('status').className='err';$('status').textContent='Choose a base portrait first ("Use as base")';return}
+ const items=PE.filter(n=>$('xp_'+n).checked).map(n=>({name:n,text:''})),cu=$('ptcustom').value.trim();
+ if(cu)items.push({name:'custom_'+(cu.toLowerCase().split(/\s+/).slice(0,2).join('_').replace(/[^a-z0-9_]/g,'')||'x'),text:cu});
+ if(!items.length){$('status').textContent='Tick at least one expression';return}
+ $('status').className='';$('status').textContent=`Generating ${items.length} expression(s)…`;
+ try{const fd=new FormData();fd.append('base',await (await fetch(ptBase)).blob(),'base.png');fd.append('mask',JSON.stringify(ptMask));fd.append('items',JSON.stringify(items));
+  Object.entries({character:$('ptprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,strength:$('ptstr').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,extra:$('ptextra').value,sampler:$('sampler').value}).forEach(([k,v])=>fd.append(k,v));
+  const r=await fetch('/api/portrait/expressions',{method:'POST',body:fd});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||('server error '+r.status))}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',n=0;
+  for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+   while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data:'))continue;const ev=JSON.parse(line.slice(5));
+    if(ev.status)$('status').textContent=ev.status;
+    else if(ev.result){n++;const k=ptRes.findIndex(x=>x.name==ev.result.name);if(k>=0)ptRes[k]={name:ev.result.name,image:ev.result.image};else ptRes.push({name:ev.result.name,image:ev.result.image});renderExprs();markDirty()}
+    else if(ev.error)throw new Error(ev.error)}}
+  $('status').textContent=`Done: ${n} expression(s). Use "Base" on any to continue from it, or export the set.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+async function portExport(){if(ptRes.length<1){$('status').textContent='Nothing to export yet';return}
+ $('status').className='';$('status').textContent='Exporting…';
+ try{const d=await api('/api/portrait/export',{...J,body:JSON.stringify({name:$('aname').value||'portrait',images:ptRes,columns:4,godot_path:$('xgpath').value,ppu:+$('xppu').value||32})});
+  $('status').textContent=`Exported ${d.frames} portraits to: ${d.dir}\nsheet ${d.sheet[0]}×${d.sheet[1]} · each ${d.cell[0]}×${d.cell[1]}. See README.txt for Godot / Unity steps.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+
+/* ---------- diagnostics ---------- */
+let diagText='';
+function toggleDiag(){const d=$('diag');d.classList.toggle('hide');if(!d.classList.contains('hide')&&!diagText)runDiag()}
+function diagRow(l,status,name,detail,fix){const r=document.createElement('div');r.className='dr';const b=document.createElement('span');b.className='b '+status;b.textContent=status.toUpperCase();
+ const t=document.createElement('div');t.className='t';t.textContent=name+(detail?': '+detail:'');if(fix&&status!='ok'){const f=document.createElement('div');f.className='f';f.textContent='→ '+fix;t.appendChild(f)}r.append(b,t);l.appendChild(r)}
+function renderDiag(d){const s=d.summary||{};$('diagsum').textContent=` ${s.ok||0} ok · ${s.warn||0} warn · ${s.fail||0} fail`;const l=$('diaglist');l.innerHTML='';let cur=null;
+ d.checks.forEach(c=>{if(c.section!==cur){cur=c.section;const h=document.createElement('div');h.className='ds';h.textContent=cur;l.appendChild(h)}diagRow(l,c.status,c.name,c.detail,c.fix)})}
+async function runDiag(){$('diagsum').textContent=' running checks…';try{const d=await api('/api/diag');diagText=d.text;renderDiag(d)}catch(e){$('diagsum').textContent=' failed: '+e.message}}
+function addTest(title,body,ok){const l=$('diaglist'),h=document.createElement('div');h.className='ds';h.textContent=title;l.appendChild(h);diagRow(l,ok?'ok':'fail',title,body,'');diagText+=`\n\n== ${title} ==\n${body}`;l.parentElement.scrollTop=l.parentElement.scrollHeight}
+async function gpuTest(){if(!checkModel()){addTest('GPU test',$('status').textContent,false);return}$('diagsum').textContent=' GPU test running: loads SDXL, can take a minute or two…';
+ try{const d=await api('/api/diag/gpu_test',{...J,body:JSON.stringify({checkpoint:$('ckpt').value,lora:$('lora').value})});
+  addTest('GPU test',`model load ${d.load_s} s · 4 steps at 512 px in ${d.run_s} s · peak VRAM ${d.peak_vram_gb} of ${d.total_vram_gb} GB`,d.peak_vram_gb<d.total_vram_gb*.95);$('diagsum').textContent=' GPU test done'}
+ catch(e){addTest('GPU test','FAILED: '+e.message,false);$('diagsum').textContent=' GPU test failed'}}
+async function llmTest(){$('diagsum').textContent=' assistant test running: loads the model…';
+ try{const d=await api('/api/diag/llm_test',J);addTest('Assistant test',`loaded in ${d.load_s} s · replied "${d.reply}" · ${d.tokens} tokens at ${d.tok_per_s} tok/s`,true);$('diagsum').textContent=' assistant test done'}
+ catch(e){addTest('Assistant test','FAILED: '+e.message,false);$('diagsum').textContent=' assistant test failed'}}
+async function copyDiag(){if(!diagText){await runDiag()}
+ try{await navigator.clipboard.writeText(diagText);$('diagsum').textContent=' report copied to clipboard'}
+ catch(e){const ta=$('diagtext');ta.value=diagText;ta.classList.remove('hide');ta.select();try{document.execCommand('copy');$('diagsum').textContent=' report copied'}catch(_){$('diagsum').textContent=' select the text below and copy it'}}}
+
+/*PXE-START*/
+const PXE={
+ mk(w,h){return{w,h,d:new Uint8ClampedArray(w*h*4)}},
+ clone(a){return{w:a.w,h:a.h,d:new Uint8ClampedArray(a.d)}},
+ inb(a,x,y){return x>=0&&y>=0&&x<a.w&&y<a.h},
+ get(a,x,y){const i=(y*a.w+x)*4;return[a.d[i],a.d[i+1],a.d[i+2],a.d[i+3]]},
+ set(a,x,y,c){if(!PXE.inb(a,x,y))return;const i=(y*a.w+x)*4;a.d[i]=c[0];a.d[i+1]=c[1];a.d[i+2]=c[2];a.d[i+3]=c[3]},
+ same(p,q){if(p[3]==0&&q[3]==0)return true;return p[0]==q[0]&&p[1]==q[1]&&p[2]==q[2]&&p[3]==q[3]},
+ line(x0,y0,x1,y1){const pts=[];let dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1,e=dx+dy;
+  for(;;){pts.push([x0,y0]);if(x0==x1&&y0==y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}return pts},
+ rect(x0,y0,x1,y1,filled){const a=Math.min(x0,x1),b=Math.max(x0,x1),c=Math.min(y0,y1),d=Math.max(y0,y1),pts=[];
+  for(let y=c;y<=d;y++)for(let x=a;x<=b;x++)if(filled||x==a||x==b||y==c||y==d)pts.push([x,y]);return pts},
+ ellipse(x0,y0,x1,y1,filled){const a=Math.min(x0,x1),b=Math.max(x0,x1),c=Math.min(y0,y1),d=Math.max(y0,y1),rx=(b-a+1)/2,ry=(d-c+1)/2,cx=a+rx,cy=c+ry,M=new Set(),pts=[];
+  for(let y=c;y<=d;y++)for(let x=a;x<=b;x++){const nx=(x+.5-cx)/rx,ny=(y+.5-cy)/ry;if(nx*nx+ny*ny<=1)M.add(x+','+y)}
+  M.forEach(k=>{const[x,y]=k.split(',').map(Number);if(filled||!(M.has((x+1)+','+y)&&M.has((x-1)+','+y)&&M.has(x+','+(y+1))&&M.has(x+','+(y-1))))pts.push([x,y])});return pts},
+ stamp(pts,size,round){if(size<=1)return pts;const o=Math.floor((size-1)/2),S=new Set(),out=[],c=(size-1)/2;
+  for(const[x,y]of pts)for(let j=0;j<size;j++)for(let i=0;i<size;i++){if(round&&size>2){const dx=i-c,dy=j-c;if(dx*dx+dy*dy>(size/2)*(size/2))continue}
+   const px=x-o+i,py=y-o+j,k=px+','+py;if(!S.has(k)){S.add(k);out.push([px,py])}}return out},
+ fill(a,x,y,c,global){if(!PXE.inb(a,x,y))return 0;const t=PXE.get(a,x,y);if(PXE.same(t,c))return 0;let n=0;
+  if(global){for(let yy=0;yy<a.h;yy++)for(let xx=0;xx<a.w;xx++)if(PXE.same(PXE.get(a,xx,yy),t)){PXE.set(a,xx,yy,c);n++}return n}
+  const st=[[x,y]];while(st.length){const[px,py]=st.pop();if(!PXE.inb(a,px,py)||!PXE.same(PXE.get(a,px,py),t))continue;PXE.set(a,px,py,c);n++;st.push([px+1,py],[px-1,py],[px,py+1],[px,py-1])}return n},
+ copy(a,x,y,w,h){const r=PXE.mk(w,h);for(let j=0;j<h;j++)for(let i=0;i<w;i++)if(PXE.inb(a,x+i,y+j))PXE.set(r,i,j,PXE.get(a,x+i,y+j));return r},
+ clear(a,x,y,w,h){for(let j=0;j<h;j++)for(let i=0;i<w;i++)PXE.set(a,x+i,y+j,[0,0,0,0])},
+ paste(a,b,x,y){for(let j=0;j<b.h;j++)for(let i=0;i<b.w;i++){const p=PXE.get(b,i,j);if(p[3]>0)PXE.set(a,x+i,y+j,p)}},
+ flip(a,x,y,w,h,vertical){const r=PXE.copy(a,x,y,w,h);for(let j=0;j<h;j++)for(let i=0;i<w;i++)PXE.set(a,x+i,y+j,PXE.get(r,vertical?i:w-1-i,vertical?h-1-j:j))},
+ shift(a,dx,dy){const r=PXE.clone(a);a.d.fill(0);for(let y=0;y<r.h;y++)for(let x=0;x<r.w;x++)PXE.set(a,x+dx,y+dy,PXE.get(r,x,y))},
+ palette(a,max){const m=new Map();for(let i=0;i<a.d.length;i+=4)if(a.d[i+3]>=128){const k=(a.d[i]<<16)|(a.d[i+1]<<8)|a.d[i+2];m.set(k,(m.get(k)||0)+1)}
+  return[...m.entries()].sort((p,q)=>q[1]-p[1]).slice(0,max).map(([k])=>[(k>>16)&255,(k>>8)&255,k&255])},
+ recolor(a,from,to){let n=0;for(let i=0;i<a.d.length;i+=4)if(a.d[i+3]>0&&a.d[i]==from[0]&&a.d[i+1]==from[1]&&a.d[i+2]==from[2]){a.d[i]=to[0];a.d[i+1]=to[1];a.d[i+2]=to[2];n++}return n},
+ used(a){const s=new Set();for(let i=0;i<a.d.length;i+=4)if(a.d[i+3]>0)s.add(a.d[i]+','+a.d[i+1]+','+a.d[i+2]);return s}
+};
+/*PXE-END*/
+
+const ED={img:null,orig:null,tool:'pencil',color:[0,0,0],pal:[],undo:[],redo:[],zoom:8,sel:null,fl:null,drag:null,opts:{},dirty:false,onion:[],hover:null,shape:null,last:null,drawing:false,start:null};
+const edcv=$('edcv'),edx=edcv.getContext('2d'),edtmp=document.createElement('canvas'),edtx=edtmp.getContext('2d',{willReadFrequently:true}),edtmp2=document.createElement('canvas');
+const hex2=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join(''),unhex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const edIsOpen=()=>!$('ped').classList.contains('hide');
+function openEditor(url,opts){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+  const id=x.getImageData(0,0,im.width,im.height);ED.img={w:im.width,h:im.height,d:new Uint8ClampedArray(id.data)};ED.orig=PXE.clone(ED.img);
+  ED.undo=[];ED.redo=[];ED.sel=null;ED.fl=null;ED.shape=null;ED.dirty=false;ED.opts=opts||{};ED.pal=PXE.palette(ED.img,64);ED.color=ED.pal[0]||[0,0,0];
+  ED.zoom=Math.max(2,Math.min(32,Math.floor(560/Math.max(im.width,im.height))));$('edzoom').value=ED.zoom;
+  ED.onion=[];(ED.opts.onion||[]).forEach(u=>{if(!u)return;const o=new Image();o.onload=()=>edDraw();o.src=u;ED.onion.push(o)});
+  $('edonionrow').classList.toggle('hide',!ED.onion.length);$('edapply').textContent=ED.opts.label||'Apply';$('edapply').classList.toggle('hide',!ED.opts.apply);
+  $('edclose').textContent='Close';$('edcompare').checked=false;show('ped',true);edTool(ED.tool);edPalette();edDraw();edStat()};im.src=url}
+function edStat(){if(!ED.img)return;const h=ED.hover,p=h&&PXE.inb(ED.img,h[0],h[1])?PXE.get(ED.img,h[0],h[1]):null;
+ $('edstat').textContent=`${ED.img.w}×${ED.img.h} px · zoom ${ED.zoom}× · tool: ${ED.tool}`+(h?` · (${h[0]}, ${h[1]})${p?(p[3]?' '+hex2(p.slice(0,3)):' transparent'):''}`:'')+(ED.dirty?' · edited':'')}
+function edTool(t){if(ED.fl)edCommitFloat();ED.tool=t;document.querySelectorAll('#pedtools button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));if(t!='select')ED.sel=null;edDraw();edStat()}
+function edPalette(){const p=$('edpal');p.innerHTML='';ED.pal.forEach(c=>{const s=document.createElement('span');s.style.background=hex2(c);s.title=hex2(c);
+ if(c.join()==ED.color.join())s.className='on';s.onclick=()=>{ED.color=c;$('edpick').value=hex2(c);if(ED.tool=='eraser'||ED.tool=='pick'||ED.tool=='select')edTool('pencil');edPalette()};p.appendChild(s)});$('edpick').value=hex2(ED.color)}
+function edAddColor(){const c=unhex($('edpick').value);if(!ED.pal.some(q=>q.join()==c.join()))ED.pal.push(c);ED.color=c;edPalette()}
+function edRecolor(){const n=unhex($('edpick').value),o=ED.color;if(n.join()==o.join())return;pushUndo();PXE.recolor(ED.img,o,n);
+ ED.pal=ED.pal.map(q=>q.join()==o.join()?n:q).filter((q,i,a)=>a.findIndex(z=>z.join()==q.join())==i);ED.color=n;edPalette();edDraw()}
+function edPrune(){const u=PXE.used(ED.img);ED.pal=ED.pal.filter(c=>u.has(c.join())||c.join()==ED.color.join());edPalette()}
+function pushUndo(){ED.undo.push(PXE.clone(ED.img));if(ED.undo.length>60)ED.undo.shift();ED.redo=[];ED.dirty=true}
+function edUndo(){if(ED.fl)edCommitFloat();if(!ED.undo.length)return;ED.redo.push(PXE.clone(ED.img));ED.img=ED.undo.pop();edPalette();edDraw();edStat()}
+function edRedo(){if(!ED.redo.length)return;ED.undo.push(PXE.clone(ED.img));ED.img=ED.redo.pop();edDraw();edStat()}
+function edSizeOpts(){return{size:+$('edbrush').value||1,round:$('edround').checked}}
+function edPlot(pts,c){const m=$('edmirror').checked;for(const[x,y]of pts){PXE.set(ED.img,x,y,c);if(m)PXE.set(ED.img,ED.img.w-1-x,y,c)}}
+function edPen(pts){const o=edSizeOpts();edPlot(PXE.stamp(pts,o.size,o.round),ED.tool=='eraser'?[0,0,0,0]:[...ED.color,255])}
+function edShapePts(x0,y0,x1,y1){const f=$('edfilled').checked,t=ED.tool,pts=t=='line'?PXE.line(x0,y0,x1,y1):t=='rect'?PXE.rect(x0,y0,x1,y1,f):PXE.ellipse(x0,y0,x1,y1,f),o=edSizeOpts();
+ return(t=='line'||!f)?PXE.stamp(pts,o.size,o.round):pts}
+function edPick(x,y){if(!PXE.inb(ED.img,x,y))return;const p=PXE.get(ED.img,x,y);if(!p[3])return;const c=p.slice(0,3);if(!ED.pal.some(q=>q.join()==c.join()))ED.pal.push(c);ED.color=c;edPalette();edTool('pencil')}
+function edCommitFloat(){if(!ED.fl)return;PXE.paste(ED.img,ED.fl.buf,ED.fl.x,ED.fl.y);ED.sel.x=ED.fl.x;ED.sel.y=ED.fl.y;ED.fl=null}
+const edpos=e=>{const r=edcv.getBoundingClientRect();return[Math.floor((e.clientX-r.left)*edcv.width/r.width/ED.zoom),Math.floor((e.clientY-r.top)*edcv.height/r.height/ED.zoom)]};
+const inSel=(x,y)=>ED.sel&&x>=ED.sel.x&&y>=ED.sel.y&&x<ED.sel.x+ED.sel.w&&y<ED.sel.y+ED.sel.h;
+edcv.onpointerdown=e=>{if(!ED.img)return;e.preventDefault();edcv.setPointerCapture(e.pointerId);const[x,y]=edpos(e),t=ED.tool;ED.start=[x,y];ED.last=[x,y];
+ if(t=='pick'){edPick(x,y);return}
+ if(t=='fill'){pushUndo();const c=[...ED.color,255],g=$('edglobal').checked;PXE.fill(ED.img,x,y,c,g);if($('edmirror').checked)PXE.fill(ED.img,ED.img.w-1-x,y,c,g);edDraw();edStat();return}
+ if(t=='pencil'||t=='eraser'){pushUndo();ED.drawing=true;edPen([[x,y]]);edDraw();return}
+ if(t=='line'||t=='rect'||t=='ellipse'){ED.drawing=true;ED.shape=edShapePts(x,y,x,y);edDraw();return}
+ if(t=='select'){if(inSel(x,y)){pushUndo();const s=ED.sel,buf=PXE.copy(ED.img,s.x,s.y,s.w,s.h);PXE.clear(ED.img,s.x,s.y,s.w,s.h);ED.fl={buf,x:s.x,y:s.y};ED.drag={mode:'move',sx:x,sy:y,ox:s.x,oy:s.y}}
+  else{ED.sel={x,y,w:1,h:1};ED.drag={mode:'new',sx:x,sy:y,moved:false}}edDraw()}};
+edcv.onpointermove=e=>{if(!ED.img)return;const[x,y]=edpos(e);ED.hover=[x,y];
+ if(ED.drawing&&(ED.tool=='pencil'||ED.tool=='eraser')){edPen(PXE.line(ED.last[0],ED.last[1],x,y));ED.last=[x,y]}
+ else if(ED.drawing){ED.shape=edShapePts(ED.start[0],ED.start[1],x,y)}
+ else if(ED.drag&&ED.drag.mode=='new'){const a=ED.drag,x0=Math.max(0,Math.min(a.sx,x)),y0=Math.max(0,Math.min(a.sy,y)),x1=Math.min(ED.img.w-1,Math.max(a.sx,x)),y1=Math.min(ED.img.h-1,Math.max(a.sy,y));
+  ED.sel={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};a.moved=a.moved||x!=a.sx||y!=a.sy}
+ else if(ED.drag&&ED.drag.mode=='move'){ED.fl.x=ED.drag.ox+(x-ED.drag.sx);ED.fl.y=ED.drag.oy+(y-ED.drag.sy)}
+ edDraw();edStat()};
+edcv.onpointerup=e=>{if(ED.drawing&&ED.shape){pushUndo();const f=$('edfilled').checked;edPlot(ED.shape,[...ED.color,255]);ED.shape=null}
+ ED.drawing=false;if(ED.drag){if(ED.drag.mode=='move')edCommitFloat();else if(!ED.drag.moved)ED.sel=null;ED.drag=null}edDraw();edStat()};
+edcv.onpointerleave=()=>{ED.hover=null;edDraw();edStat()};
+function edDraw(){if(!ED.img)return;const z=ED.zoom,{w,h}=ED.img;edcv.width=w*z;edcv.height=h*z;edx.imageSmoothingEnabled=false;
+ const src=$('edcompare').checked?ED.orig:ED.img;edtmp.width=w;edtmp.height=h;edtx.putImageData(new ImageData(new Uint8ClampedArray(src.d),w,h),0,0);
+ if($('edonion').checked)ED.onion.forEach((o,i)=>{edx.globalAlpha=i?.18:.28;edx.drawImage(o,0,0,w*z,h*z)});edx.globalAlpha=1;edx.drawImage(edtmp,0,0,w*z,h*z);
+ if(ED.fl){const b=ED.fl.buf;edtmp2.width=b.w;edtmp2.height=b.h;edtmp2.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(b.d),b.w,b.h),0,0);edx.drawImage(edtmp2,ED.fl.x*z,ED.fl.y*z,b.w*z,b.h*z)}
+ if(ED.shape){edx.fillStyle=`rgba(${ED.color[0]},${ED.color[1]},${ED.color[2]},.8)`;ED.shape.forEach(([x,y])=>{edx.fillRect(x*z,y*z,z,z);if($('edmirror').checked)edx.fillRect((w-1-x)*z,y*z,z,z)})}
+ if($('edgrid').checked&&z>=6){edx.strokeStyle='rgba(255,255,255,.13)';edx.lineWidth=1;edx.beginPath();for(let i=1;i<w;i++){edx.moveTo(i*z+.5,0);edx.lineTo(i*z+.5,h*z)}for(let j=1;j<h;j++){edx.moveTo(0,j*z+.5);edx.lineTo(w*z,j*z+.5)}edx.stroke()}
+ if($('edmirror').checked){edx.strokeStyle='rgba(255,74,160,.75)';edx.lineWidth=1;edx.beginPath();edx.moveTo(w*z/2,0);edx.lineTo(w*z/2,h*z);edx.stroke()}
+ if(ED.sel){const s=ED.fl?{x:ED.fl.x,y:ED.fl.y,w:ED.sel.w,h:ED.sel.h}:ED.sel;edx.lineWidth=1;edx.setLineDash([5,4]);edx.strokeStyle='#000';edx.strokeRect(s.x*z+.5,s.y*z+.5,s.w*z-1,s.h*z-1);edx.lineDashOffset=4.5;edx.strokeStyle='#fff';edx.strokeRect(s.x*z+.5,s.y*z+.5,s.w*z-1,s.h*z-1);edx.setLineDash([]);edx.lineDashOffset=0}
+ if(ED.hover&&PXE.inb(ED.img,ED.hover[0],ED.hover[1])&&ED.tool!='select'){edx.strokeStyle='rgba(255,255,255,.7)';edx.lineWidth=1;edx.strokeRect(ED.hover[0]*z+.5,ED.hover[1]*z+.5,z-1,z-1)}}
+function edNudge(dx,dy){if(ED.fl)edCommitFloat();pushUndo();if(ED.sel){const s=ED.sel,b=PXE.copy(ED.img,s.x,s.y,s.w,s.h);PXE.clear(ED.img,s.x,s.y,s.w,s.h);PXE.paste(ED.img,b,s.x+dx,s.y+dy);s.x+=dx;s.y+=dy}else PXE.shift(ED.img,dx,dy);edDraw();edStat()}
+function edFlip(v){if(ED.fl)edCommitFloat();pushUndo();const s=ED.sel;if(s)PXE.flip(ED.img,s.x,s.y,s.w,s.h,v);else PXE.flip(ED.img,0,0,ED.img.w,ED.img.h,v);edDraw()}
+function edDelete(){if(!ED.sel)return;if(ED.fl)edCommitFloat();pushUndo();PXE.clear(ED.img,ED.sel.x,ED.sel.y,ED.sel.w,ED.sel.h);ED.sel=null;edDraw();edStat()}
+function edToURL(){if(ED.fl)edCommitFloat();const c=document.createElement('canvas');c.width=ED.img.w;c.height=ED.img.h;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(ED.img.d),ED.img.w,ED.img.h),0,0);return c.toDataURL('image/png')}
+function edApply(){const u=edToURL();ED.opts.apply&&ED.opts.apply(u);ED.dirty=false;edClose(true)}
+function edSaveProject(){saveSprite(edToURL())}
+function edDownload(k){dl(k,edToURL(),'edited')}
+function edUseRef(){const u=edToURL();ED.dirty=false;edClose(true);useRef(u)}
+function edAnimate(){const u=edToURL();ED.dirty=false;edClose(true);setAnim(u)}
+let edCloseT=null;function edClose(force){const b=$('edclose');
+ if(!force&&ED.dirty&&b.dataset.armed!='1'){b.dataset.armed='1';b.textContent='Discard edits? Click again';clearTimeout(edCloseT);edCloseT=setTimeout(()=>{b.dataset.armed='';b.textContent='Close'},3000);return}
+ b.dataset.armed='';b.textContent='Close';ED.fl=null;ED.drag=null;ED.drawing=false;show('ped',false)}
+document.addEventListener('keydown',e=>{if(!edIsOpen()||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!='range'&&e.target.type!='checkbox')return;
+ const k=e.key.toLowerCase(),map={b:'pencil',e:'eraser',g:'fill',i:'pick',l:'line',r:'rect',o:'ellipse',m:'select'};
+ if((e.ctrlKey||e.metaKey)&&k=='z'){e.preventDefault();e.shiftKey?edRedo():edUndo();return}
+ if((e.ctrlKey||e.metaKey)&&k=='y'){e.preventDefault();edRedo();return}
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ if(map[k]){edTool(map[k]);return}
+ if(k=='['||k==']'){const s=$('edbrush');s.value=Math.max(1,Math.min(5,+s.value+(k==']'?1:-1)));return}
+ if(k=='+'||k=='='){ED.zoom=Math.min(32,ED.zoom+1);$('edzoom').value=ED.zoom;edDraw();edStat();return}
+ if(k=='-'){ED.zoom=Math.max(2,ED.zoom-1);$('edzoom').value=ED.zoom;edDraw();edStat();return}
+ if(k=='delete'||k=='backspace'){e.preventDefault();edDelete();return}
+ if(k=='escape'){if(ED.sel){if(ED.fl)edCommitFloat();ED.sel=null;edDraw()}else edClose();return}
+ const d={arrowleft:[-1,0],arrowright:[1,0],arrowup:[0,-1],arrowdown:[0,1]}[k];if(d){e.preventDefault();edNudge(d[0],d[1])}});
+// ---- where the editor is used ----
+function editSource(){if(!aSrc){$('status').textContent='Set a source sprite first';return}
+ openEditor(aSrc,{label:'Use as rig source',apply:u=>{aSrc=u;aImg=new Image();aImg.onload=()=>{drawRig();refreshParts()};aImg.src=u;markDirty()}})}
+function editFrame(){if(!cur||!cur.fi.length){$('status').textContent='Preview an animation first, then click a frame to inspect it';return}
+ const n=cur.fi.length,i=playing?(aFi-1+n)%n:aFi%n;playing=false;$('playbtn').textContent='Play';const useRaw=cur.ri.length>0&&!cur.accept[i],fin=k=>(cur.ri.length&&!cur.accept[k])?cur.raw[k]:cur.frames[k];
+ openEditor(useRaw?cur.raw[i]:cur.frames[i],{label:`Update frame ${i+1}`,onion:[fin((i-1+n)%n),fin((i+1)%n)],apply:async u=>{
+  if(useRaw){cur.raw[i]=u;cur.ri=await loadImgs(cur.raw)}else{cur.frames[i]=u;cur.fi=await loadImgs(cur.frames)}
+  cur.edited=true;ares[cur.anim]=cur;mkDiffs(cur);renderStrip();aFi=i;drawFrame();markDirty();$('status').textContent=`Frame ${i+1} updated. Export uses your edited frames (Preview again discards the edits).`}})}
+
+/* ---------- palette tools ---------- */
+const PL={src:null,work:[],prot:new Set(),lib:[],ramp:[]};
+const plKeep=(a)=>[...new Set(a)];
+function plRender(){const w=$('plsw');w.innerHTML='';PL.work.forEach(h=>{const s=document.createElement('span');s.className='sw'+(PL.prot.has(h)?' prot':'');s.style.background=h;s.title=h+(PL.counts&&PL.counts[h]?` · ${PL.counts[h]} px`:'');
+  s.onclick=e=>{if(e.shiftKey){PL.work=PL.work.filter(x=>x!=h);PL.prot.delete(h)}else PL.prot.has(h)?PL.prot.delete(h):PL.prot.add(h);plRender();markDirty()};w.appendChild(s)});
+ $('plcount').textContent=`Working palette: ${PL.work.length} colours · ${PL.prot.size} protected`;
+ const r=$('plramp');r.innerHTML='';PL.ramp.forEach(h=>{const s=document.createElement('span');s.className='sw';s.style.background=h;s.title=h+' (click to add)';s.onclick=()=>{if(!PL.work.includes(h)){PL.work.push(h);plRender();markDirty()}};r.appendChild(s)})}
+function plSetSource(u){PL.src=u;const im=$('plimg');im.onload=()=>{const k=Math.max(1,Math.floor(320/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px';im.style.display='block';$('plinfo').textContent=`${im.naturalWidth}×${im.naturalHeight} px`};im.src=u}
+$('plfile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{plSetSource(r.result);plExtract(0)};r.readAsDataURL(f)};
+function plFrom(w){const u=w=='ref'?refURL:w=='rig'?aSrc:ptBase;if(!u){$('status').className='err';$('status').textContent='That source is not set yet';return}$('status').className='';plSetSource(u);plExtract(0)}
+async function plBlob(){if(!PL.src)throw new Error('Load a sprite first (upload one, or use Reference / Rig source / Portrait)');return await (await fetch(PL.src)).blob()}
+async function plCall(fn){$('status').className='';try{await fn()}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function plExtract(n){return plCall(async()=>{const fd=new FormData();fd.append('file',await plBlob(),'s.png');fd.append('n',n);const d=await api('/api/palettes/extract',{method:'POST',body:fd});
+ PL.work=d.colors.map(c=>c.hex);PL.counts=Object.fromEntries(d.colors.map(c=>[c.hex,c.count]));PL.prot=new Set([...PL.prot].filter(h=>PL.work.includes(h)));plRender();markDirty();
+ $('status').textContent=`${d.total} colours in the image`+(n&&d.total>n?`, reduced to ${d.colors.length}`:'')})}
+function plClear(){PL.work=[];PL.prot.clear();PL.counts={};plRender();markDirty()}
+function plAdd(){const h=$('plpick').value.toLowerCase();if(!PL.work.includes(h))PL.work.push(h);plRender();markDirty()}
+function plSort(){return plCall(async()=>{if(!PL.work.length)return;const d=await api('/api/palettes/sort',{...J,body:JSON.stringify({colors:PL.work,key:$('plsortk').value})});PL.work=d.colors;plRender();markDirty()})}
+async function plLib(){try{const d=await api('/api/palettes');PL.lib=d.palettes;const cur=$('pllib').value;$('pllib').innerHTML=d.palettes.map(p=>`<option value="${p.name}">${p.name}${p.builtin?'':' (mine)'} · ${p.colors.length}</option>`).join('');if(cur&&d.palettes.some(p=>p.name==cur))$('pllib').value=cur}catch(e){}}
+function plLoadLib(){const p=PL.lib.find(x=>x.name==$('pllib').value);if(!p)return;PL.work=[...p.colors];PL.prot.clear();PL.counts={};if(!p.builtin)$('plname').value=p.name;plRender();markDirty();$('status').textContent=`Loaded "${p.name}" (${p.colors.length} colours) as the working palette`}
+async function plRefreshPixelizeList(){try{const s=await api('/api/state'),cur=$('pal').value;fill($('pal'),s.palettes,'none (use color count)');if(s.palettes.includes(cur))$('pal').value=cur;const tc=$('tpal').value;fill($('tpal'),s.palettes,'none (use color count)');if(s.palettes.includes(tc))$('tpal').value=tc}catch(e){}}
+function plSave(){return plCall(async()=>{const n=$('plname').value.trim();if(!n)throw new Error('Type a name to save the palette as');if(!PL.work.length)throw new Error('The working palette is empty');
+ const d=await api('/api/palettes/save',{...J,body:JSON.stringify({name:n,colors:PL.work})});await plLib();$('pllib').value=d.name;await plRefreshPixelizeList();$('status').textContent=`Saved palette "${d.name}". It is now in the Fixed palette list (Generate, Reference, Pixelize).`})}
+let plDelT=null;function plDeleteLib(){return plCall(async()=>{const p=PL.lib.find(x=>x.name==$('pllib').value);if(!p)return;if(p.builtin)throw new Error('Built-in palettes cannot be deleted');const b=$('pldel');
+ if(b.dataset.armed!='1'){b.dataset.armed='1';b.textContent='Click again';clearTimeout(plDelT);plDelT=setTimeout(()=>{b.dataset.armed='';b.textContent='Delete'},3000);return}
+ b.dataset.armed='';b.textContent='Delete';await api('/api/palettes/'+encodeURIComponent(p.name),{method:'DELETE'});await plLib();await plRefreshPixelizeList();$('status').textContent=`Deleted "${p.name}"`})}
+$('plimport').onchange=e=>plCall(async()=>{const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);const d=await api('/api/palettes/parse',{method:'POST',body:fd});
+ PL.work=d.colors;PL.prot.clear();PL.counts={};$('plname').value=d.name;plRender();markDirty();$('status').textContent=`Imported ${d.colors.length} colours from ${f.name}. Press Save to keep it in your library.`;e.target.value=''});
+function plExport(){return plCall(async()=>{if(!PL.work.length)throw new Error('The working palette is empty');const d=await api('/api/palettes/export',{...J,body:JSON.stringify({name:$('plname').value||'palette',colors:PL.work})});
+ $('status').textContent=`Exported ${d.files.join(', ')} to: ${d.dir}`})}
+function plShow(items){render(items.map(x=>({sprite:x.image,info:{size:x.size,label:x.label}})))}
+function plRemap(){return plCall(async()=>{if(!PL.work.length)throw new Error('The working palette is empty: press "From image" or load one from the library');const fd=new FormData();fd.append('file',await plBlob(),'s.png');
+ fd.append('palette',JSON.stringify(PL.work));fd.append('dither',$('pldither').value);fd.append('strength',$('plstr').value);const d=await api('/api/palettes/remap',{method:'POST',body:fd});
+ plShow([{image:d.image,size:d.size,label:`remap · ${PL.work.length} colours · ${$('pldither').selectedOptions[0].text.toLowerCase()}`}]);$('status').textContent=d.note||'Done. Edit, save or use the result with the buttons on the card.'})}
+function plReduce(){return plCall(async()=>{await plExtract(+$('plreduce').value||16);await plRemap()})}
+function plMerge(){return plCall(async()=>{const fd=new FormData();fd.append('file',await plBlob(),'s.png');fd.append('delta',$('plmerge').value);const d=await api('/api/palettes/merge',{method:'POST',body:fd});
+ PL.work=d.palette;PL.prot=new Set([...PL.prot].filter(h=>PL.work.includes(h)));PL.counts={};plRender();markDirty();plShow([{image:d.image,size:d.size,label:`merged to ${d.palette.length} colours`}]);$('status').textContent=`Merged similar colours: ${d.palette.length} remain`})}
+function plVariants(){return plCall(async()=>{const n=Math.max(1,Math.min(12,+$('plvn').value||5)),st=+$('plvstep').value||60,fd=new FormData();fd.append('file',await plBlob(),'s.png');
+ fd.append('shifts',JSON.stringify(Array.from({length:n},(_,i)=>st*(i+1))));fd.append('protect',JSON.stringify([...PL.prot]));fd.append('chroma',$('plchroma').value);fd.append('keep_dark',$('plkeepdark').checked);
+ const d=await api('/api/palettes/variants',{method:'POST',body:fd});plShow(d.variants.map(v=>({image:v.image,size:v.size,label:`hue +${Math.round(v.shift)}°`})));$('status').textContent=`${d.variants.length} variants made (${PL.prot.size} colour(s) protected). Use Save on a card to keep it.`})}
+function plRamp(){return plCall(async()=>{const d=await api('/api/palettes/ramp',{...J,body:JSON.stringify({color:$('plrampc').value,n:+$('plrampn').value||5})});PL.ramp=d.colors;plRender();$('status').textContent='Ramp ready: click its colours to add them to the working palette'})}
+function edPalTools(){const u=edToURL();ED.dirty=false;edClose(true);tab(6);plSetSource(u);plExtract(0)}
+
+/* ---------- sprite templates ---------- */
+const TP={src:null,ref:null,joints:null,ovr:[]};
+function tpShow(){const set=(id,info,u,label)=>{const im=$(id),inf=$(info);if(!u){im.style.display='none';inf.textContent=label+': not set';return}
+  im.onload=()=>{const k=Math.max(1,Math.floor(300/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=(id=='tpimg'?im.naturalWidth*k:Math.min(im.naturalWidth,300))+'px';im.style.display='block';
+   inf.textContent=`${label}: ${im.naturalWidth}×${im.naturalHeight} px`+(id=='tpimg'?(TP.joints?' · rig ready':' · no rig yet'):'')};im.src=u};
+ set('tpimg','tpinfo',TP.src,'Template');set('tprimg','tprinfo',TP.ref,'Reference')}
+const rd=(f,cb)=>{const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)};
+$('tpfile').onchange=e=>{const f=e.target.files[0];if(f)rd(f,u=>{TP.src=u;TP.joints=null;TP.ovr=[];tpShow();markDirty()})};
+$('tpreffile').onchange=e=>{const f=e.target.files[0];if(f)rd(f,u=>{TP.ref=u;tpShow();markDirty()})};
+function tpFrom(w){const u=w=='rig'?aSrc:refURL;if(!u){$('status').className='err';$('status').textContent='That source is not set yet';return}$('status').className='';
+ TP.src=u;TP.joints=(w=='rig'&&joints)?JSON.parse(JSON.stringify(joints)):null;TP.ovr=(w=='rig')?Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]}):[];tpShow();markDirty()}
+function tpRefFrom(){if(!refURL){$('status').className='err';$('status').textContent='The Reference tab has no sprite yet';return}TP.ref=refURL;tpShow();markDirty()}
+function tpEditTemplate(){if(!TP.src){$('status').textContent='Set a template first';return}openEditor(TP.src,{label:'Use as template',apply:u=>{TP.src=u;tpShow();markDirty()}})}
+async function tpDummy(){$('status').className='';try{const d=await api(`/api/template/dummy?height=${$('tpheight').value}&style=${$('tpstyle').value}&view=${$('tpview').value}`);
+  TP.src=d.sprite;TP.joints=d.joints;TP.ovr=d.overrides;tpShow();markDirty();$('status').textContent=`Dummy ${d.size[0]}×${d.size[1]} made, with a ready rig. Add a reference image and press Generate.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function tpRig(){if(aSrc&&TP.src&&aSrc===TP.src&&joints)return{joints:JSON.parse(JSON.stringify(joints)),ovr:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})};
+ return TP.joints?{joints:JSON.parse(JSON.stringify(TP.joints)),ovr:TP.ovr.map(o=>o.slice())}:null}
+function animateWithRig(d){setAnim(d.sprite,{joints:JSON.parse(JSON.stringify(d.rig.joints)),ovr:d.rig.ovr.map(o=>o.slice())});tab(4);$('status').textContent='Opened in Animate with the template rig: joints and painted parts carried over.'}
+async function tpGenerate(){if(!checkModel())return;$('status').className='';
+ if(!TP.src){$('status').className='err';$('status').textContent='Set a template first (upload one, or make the built-in dummy)';return}
+ $('status').textContent='Generating from the template… the first run loads the model'+(TP.ref?' and the IP-Adapter (about 3 GB, once)':'')+(TP.ref?'':' (no reference image set: the prompt alone decides the look)');
+ try{const fd=new FormData();fd.append('template',await (await fetch(TP.src)).blob(),'template.png');if(TP.ref)fd.append('ref',await (await fetch(TP.ref)).blob(),'ref.png');
+  Object.entries({prompt:$('tpprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,steps:$('steps').value,cfg:$('cfg').value,seed:$('seed').value,n:$('tpn').value,
+   freedom:$('tpfree').value,strength:$('tpstr').value,ip_scale:$('tpips').value,colors:$('tpcolors').value,palette_src:$('tppal').value,clean:$('tpclean').checked,sampler:$('sampler').value}).forEach(([k,v])=>fd.append(k,v));
+  const d=await api('/api/template/generate',{method:'POST',body:fd});const rig=tpRig();render(d.results.map(r=>({...r,rig})));
+  $('status').textContent='Done. Each result has the template\'s exact size'+(rig?', and "Animate (template rig)" opens it with the rig already set up.':'. Make a rig on the template (Animate tab) to reuse it.')}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+
+/* ---------- 4 / 8 directions ---------- */
+const DR={slots:{},frames:{},cv:{},timer:null,fi:0,seed:null};
+const DNAME={S:'South · front',SE:'South-east · ¾ front',E:'East · side',NE:'North-east · ¾ back',N:'North · back'};
+const DDUMMY={S:'front',N:'back',E:'side',SE:'diag',NE:'diag_back'};
+const dirOut=()=>$('dmode').value=='4'?['S','W','N','E']:['S','SW','W','NW','N','NE','E','SE'];
+const dirNeed=()=>$('dmode').value=='4'?['S','E','N']:['S','SE','E','NE','N'];
+const dirOrder=()=>$('dmode').value=='4'?($('dorder').value=='rpg'?'rpg4':'cw4'):'cw8';
+$('dclips').innerHTML=CLIPS.map(c=>`<label class="chk" style="margin:0"><input type="checkbox" id="dc_${c}" ${['idle','walk'].includes(c)?'checked':''}><span>${c}</span></label>`).join('');
+$('dprev').innerHTML=CLIPS.map(c=>`<option${c=='walk'?' selected':''}>${c}</option>`).join('');
+const dClone=o=>o?JSON.parse(JSON.stringify(o)):o;
+function dirDraw(){const box=$('dslots');box.innerHTML='';dirNeed().forEach(d=>{const s=DR.slots[d],c=document.createElement('div');c.className='card';c.style.width='215px';
+  c.innerHTML=`<div class="mut"><b>${d}</b> · ${DNAME[d]}</div><img class="dimg" style="display:${s?'block':'none'}"><div class="mut dst">${s?'':'empty'}</div>
+  <div class="row"><button class="sec" data-a="up">Upload</button><button class="sec" data-a="dummy">Dummy</button><button class="sec" data-a="edit">Edit</button></div>
+  <div class="row"><button class="sec" data-a="rig">Rig…</button><button class="sec" data-a="take">Take rig</button><button class="sec" data-a="regen">Regen</button></div>
+  <button class="sec" data-a="clear">Clear</button>`;
+  const im=c.querySelector('img');if(s){im.onload=()=>{const k=Math.max(1,Math.floor(180/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px';c.querySelector('.dst').textContent=`${im.naturalWidth}×${im.naturalHeight} px · ${s.joints?'rig ready':'auto rig'}`};im.src=s.src}
+  const H={up:()=>drUpload(d),dummy:()=>drDummy(d),edit:()=>drEdit(d),rig:()=>drToAnim(d),take:()=>drTake(d),regen:()=>dirGenerate(false,[d]),clear:()=>{delete DR.slots[d];dirDraw();markDirty()}};
+  c.querySelectorAll('button').forEach(b=>b.onclick=()=>H[b.dataset.a]());box.appendChild(c)})}
+function drUpload(d){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(f)rd(f,u=>{DR.slots[d]={src:u,joints:null,ovr:[]};dirDraw();markDirty()})};i.click()}
+function drDummy(d){return plCall(async()=>{const r=await api(`/api/template/dummy?height=${$('dheight').value}&style=${$('dstyle').value}&view=${DDUMMY[d]}`);DR.slots[d]={src:r.sprite,joints:r.joints,ovr:r.overrides};dirDraw();markDirty();$('status').textContent=`${d}: dummy placed, with its rig`})}
+function drEdit(d){const s=DR.slots[d];if(!s){$('status').textContent=`The ${d} view is empty`;return}openEditor(s.src,{label:'Update this view',apply:u=>{s.src=u;dirDraw();markDirty()}})}
+function drToAnim(d){const s=DR.slots[d];if(!s){$('status').textContent=`The ${d} view is empty`;return}setAnim(s.src,s.joints?{joints:dClone(s.joints),ovr:s.ovr.map(o=>o.slice())}:undefined);tab(4);$('status').textContent=`${d} view opened in Animate. Refine joints / paint cape, hair, tail, then go back to Directions and press "Take rig" on that view.`}
+function drTake(d){if(!aSrc||!joints){$('status').className='err';$('status').textContent='The Animate tab has no rigged source sprite to take';return}$('status').className='';
+  DR.slots[d]={src:aSrc,joints:dClone(joints),ovr:Array.from(ovr,([k,b])=>{const[x,y]=k.split(',');return[+x,+y,b]})};dirDraw();markDirty();$('status').textContent=`${d} view updated from the Animate tab`}
+function dirSlots(){const o={};dirNeed().forEach(d=>{const s=DR.slots[d];if(!s)throw new Error(`The ${d} view (${DNAME[d]}) is empty: generate it, upload a sprite, or press Dummy`);o[d]={sprite:s.src,joints:s.joints,overrides:s.ovr}});return o}
+function dirGenerate(onlyEmpty,only){return plCall(async()=>{if(!checkModel())return;const need=only||dirNeed().filter(d=>!onlyEmpty||!DR.slots[d]);if(!need.length){$('status').textContent='Every view already has a sprite';return}
+ $('status').textContent=`Generating ${need.length} view(s) (${need.join(', ')}) one after another: about 30-60 s each, the first also loads the model`+(TP.ref?'':'. No reference image is set in the Template tab, so the prompt alone decides the look');
+ const fd=new FormData();if(TP.ref)fd.append('ref',await (await fetch(TP.ref)).blob(),'ref.png');
+ Object.entries({dirs:JSON.stringify(need),height:$('dheight').value,style:$('dstyle').value,prompt:$('tpprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:$('lw').value,steps:$('steps').value,cfg:$('cfg').value,
+  seed:only?-1:(onlyEmpty&&DR.seed!=null?DR.seed:$('seed').value),strength:$('tpstr').value,ip_scale:$('tpips').value,freedom:$('tpfree').value,colors:$('tpcolors').value,palette_src:$('tppal').value,clean:$('tpclean').checked,sampler:$('sampler').value}).forEach(([k,v])=>fd.append(k,v));
+ const d=await api('/api/dirs/generate',{method:'POST',body:fd});if(!only)DR.seed=d.seed;d.results.forEach(r=>{DR.slots[r.dir]={src:r.sprite,joints:r.joints,ovr:r.overrides}});dirDraw();markDirty();
+ $('status').className=d.error?'err':'';$('status').textContent=`Generated ${d.results.length} view(s)`+(d.error?` · stopped: ${d.error}. Press "Generate only the empty views" to continue.`:'. Check each view, fix any with Edit / Regen, then Preview.')})}
+function dirPreview(){return plCall(async()=>{const slots=dirSlots(),clip=clipParams($('dprev').value);$('status').textContent='Rendering all directions…';
+ const d=await api('/api/dirs/render',{...J,body:JSON.stringify({slots,clip,dirs:dirOut(),secondary:secObj()||{enabled:false}})});
+ DR.frames={};for(const k of Object.keys(d.dirs))DR.frames[k]=await loadImgs(d.dirs[k].frames);
+ const w=$('dprevwrap');w.innerHTML='';DR.cv={};
+ ['NW','N','NE','W',null,'E','SW','S','SE'].forEach(p=>{const cell=document.createElement('div');
+  if(p&&DR.frames[p]){const im=DR.frames[p][0],z=Math.max(1,Math.floor(150/Math.max(im.width,im.height)));cell.className='card';cell.style.cssText='padding:6px;text-align:center';cell.innerHTML=`<div class="mut">${p}${['SW','W','NW'].includes(p)?' (mirror)':''}</div>`;
+   const cv=document.createElement('canvas');cv.width=im.width*z;cv.height=im.height*z;cv.style.cssText='image-rendering:pixelated;display:block;margin:auto';cell.appendChild(cv);DR.cv[p]=cv}w.appendChild(cell)});
+ clearInterval(DR.timer);DR.fi=0;DR.timer=setInterval(()=>{for(const p in DR.cv){const cv=DR.cv[p],fr=DR.frames[p],x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,cv.width,cv.height);x.drawImage(fr[DR.fi%fr.length],0,0,cv.width,cv.height)}DR.fi++},1000/d.fps);
+ $('status').textContent=`Previewing ${$('dprev').value} in ${Object.keys(DR.frames).length} directions at ${d.fps} fps`})}
+function dirExport(){return plCall(async()=>{const slots=dirSlots(),sel=CLIPS.filter(c=>$('dc_'+c).checked);if(!sel.length)throw new Error('Tick at least one animation');
+ $('status').textContent=`Exporting ${sel.length} animation(s) in ${dirOut().length} directions…`;
+ const d=await api('/api/dirs/export',{...J,body:JSON.stringify({slots,clips:sel.map(clipParams),dirs:dirOut(),order:dirOrder(),name:$('aname').value||'character',options:xopts(),secondary:secObj()||{enabled:false}})});
+ $('status').textContent=`Exported ${d.animations} animations (${d.directions.join(' ')}) to: ${d.dir}\nsheet ${d.sheet[0]}×${d.sheet[1]} · cell ${d.cell[0]}×${d.cell[1]} · see directions.json and README.txt`})}
+
+/*QUEUE*/
+/* ---------- generation queue + history ---------- */
+const QS={jobs:[],paused:false,timer:null,sel:new Set(),page:0,seen:new Set(),ht:null};
+const qEsc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const qTime=t=>t?new Date(t*1000).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+const KL={tile:'Tile',prop:'Prop',icon:'Icon',ui:'UI'};
+const qTitle=j=>(j.kind=='reference'?'Pose · ':KL[j.sub]?KL[j.sub]+' · ':'')+(j.prompt||'(no prompt)');
+const hTab=j=>j.kind=='reference'?2:TILE_KINDS.includes((j.params||{}).kind)?10:1,H_TABNAME={1:'Generate',2:'Reference pose',10:'Tiles & props'};
+function qStatusText(j,ahead){
+ if(j.status=='queued')return ahead>0?`Queued · ${ahead} job${ahead>1?'s':''} ahead`:'Queued · next';
+ if(j.status=='running'){const p=j.progress;return p?`Generating… image ${Math.min(p[0]+1,p[1])} of ${p[1]}`:'Generating… (the first run loads the model: a minute or more)'}
+ return j.status}
+function qDiff(list){const keys=new Set();list.forEach(j=>Object.keys(j.params||{}).forEach(k=>keys.add(k)));
+ return[...keys].filter(k=>new Set(list.map(j=>JSON.stringify((j.params||{})[k]))).size>1)}
+const qBlobURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+function genParams(){return{prompt:$('prompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,bg:$('bg').value,n:+$('n1').value,
+ mode:$('mode').value,size:+$('size').value,colors:+$('colors').value,palette:$('pal').value||'none',remove_bg:$('rmbg').checked,bg_tol:+$('tol').value,remove_shadow:$('shadow').checked,crisp:$('pxcrisp').checked,clean:$('pxclean').checked,outline:$('pxoutline').value,sampler:$('sampler').value}}
+function refParams(){return{checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,bg:$('bg').value,negative:$('neg').value,
+ pose:$('pose').value,character:$('char').value,ip_scale:+$('ips').value,n:+$('n').value,colors:+$('colors').value,lock_palette:$('lockpal').checked,match_size:$('matchsz').checked,bg_tol:+$('tol').value,cn_scale:+$('cns').value,canvas:+$('canvas').value,gen_size:+$('gsize').value,
+ remove_shadow:$('shadow').checked,crisp:$('pxcrisp').checked,clean:$('pxclean').checked,outline:$('pxoutline').value,sampler:$('sampler').value}}
+async function qEnqueue(){const ui=collect();
+ if(mode==10)return api('/api/queue/add',{...J,body:JSON.stringify({kind:'generate',params:tileParams(),ui})});
+ if(mode==1)return api('/api/queue/add',{...J,body:JSON.stringify({kind:'generate',params:genParams(),ui})});
+ if(!refURL)throw new Error('Set a reference sprite first');
+ ui.__skel={pts,scale:+$('scl').value,preset:$('preset').value};
+ const images={ref:refURL};if($('useskel').checked)images.pose=await qBlobURL(await poseBlob());
+ return api('/api/queue/add',{...J,body:JSON.stringify({kind:'reference',params:refParams(),ui,images})})}
+async function qRefresh(){const q=await api('/api/queue');QS.jobs=q.jobs;QS.paused=q.paused;
+ const now=new Set(q.jobs.map(j=>j.id)),finished=[...QS.seen].some(id=>!now.has(id));QS.seen=now;qStrip();
+ if(mode==9){qRenderList();if(finished)hLoad(true).catch(()=>{})}return q}
+function qStrip(){const n=QS.jobs.length,run=QS.jobs.some(j=>j.status=='running'),w=n-(run?1:0);
+ $('qstrip').textContent=n?`Queue: ${run?'1 running':'nothing running'}${w?` · ${w} waiting`:''}${QS.paused?' · paused':''}  (click to open)`:(QS.paused?'Queue paused (click to open)':'');
+ $('t9').textContent=n?`Queue (${n})`:'Queue';$('qpause').textContent=QS.paused?'Resume':'Pause'}
+function qPoll(){clearTimeout(QS.timer);QS.timer=setTimeout(async()=>{try{await qRefresh()}catch(e){}qPoll()},QS.jobs.length||mode==9?1500:6000)}
+function qRenderList(){const l=$('qlist');$('qinfo').textContent=QS.jobs.length?'':'Nothing waiting. Use "＋ Add to queue" on the Generate / Reference pose tab.';
+ l.innerHTML=QS.jobs.map((j,i)=>`<div class="dr"><span class="b ${j.status=='running'?'warn':'info'}">${j.status=='running'?'RUN':'WAIT'}</span><div class="t">${qEsc(qTitle(j))}<br><small class="mut">${qEsc(qStatusText(j,i-(QS.jobs[0]&&QS.jobs[0].status=='running'?1:0)))} · ${qTime(j.created)}</small></div><button class="sec" style="width:80px;margin:0" data-c="${j.id}">${j.status=='running'?'Discard':'Cancel'}</button></div>`).join('');
+ l.querySelectorAll('button').forEach(b=>b.onclick=async()=>{try{await api('/api/jobs/'+b.dataset.c+'/cancel',J);await qRefresh()}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}})}
+async function qPause(){try{await api('/api/queue/pause',{...J,body:JSON.stringify({paused:!QS.paused})});await qRefresh()}catch(e){$('status').textContent='Error: '+e.message}}
+async function qCancelAll(){try{const d=await api('/api/queue/cancel_all',J);$('status').className='';$('status').textContent=`Cancelled ${d.cancelled} waiting job(s)`;await qRefresh();hLoad(true)}catch(e){$('status').textContent='Error: '+e.message}}
+async function qFollow(id,hint){  // wait for one job and show its result exactly like a direct run
+ for(;;){const q=await qRefresh(),i=q.jobs.findIndex(x=>x.id==id);
+  if(i<0)break;const j=q.jobs[i];$('status').className='';$('status').textContent=j.status=='running'&&!j.progress&&hint?hint:qStatusText(j,i-(q.jobs[0].status=='running'?1:0));
+  await new Promise(r=>setTimeout(r,1000))}
+ const j=await api('/api/jobs/'+id);
+ if(j.status=='done'){render(j.results);const cn=j.results[0]&&j.results[0].info.controlnet;$('status').className='';$('status').textContent='Done'+(cn?' · ControlNet: '+cn:'')+' · saved in the Queue tab history'}
+ else if(j.status=='error')throw new Error(j.error);
+ else{$('status').className='';$('status').textContent=`Job ${j.status}${j.error?': '+j.error:''}`}}
+async function runQueued(){const b=$('go');b.disabled=true;$('status').className='';
+ const skel=mode==2&&$('useskel').checked;
+ try{const j=await qEnqueue();qPoll();await qFollow(j.id,skel?'Generating with skeleton… first run downloads the IP-Adapter (~3 GB) and OpenPose ControlNet (~2.5 GB) unless already cached; with the skeleton each image takes 1-3 minutes on 8 GB (weights stream from RAM).':'Generating… first run loads the model (a minute or more)')}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}b.disabled=false}
+async function queueAdd(){if((mode>2&&mode!=10)||!checkModel())return;
+ try{const j=await qEnqueue();$('status').className='';$('status').textContent=`Added to the queue (${QS.jobs.length+1} in line). Keep working: finished jobs appear in the Queue tab.`;qPoll();await qRefresh()}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+/* two-click buttons (confirm() is unreliable in the desktop window) */
+function armed(btn,label,fn){if(btn.dataset.armed!='1'){btn.dataset.armed='1';btn.dataset.old=btn.textContent;btn.textContent='Click again to '+label;setTimeout(()=>{if(btn.dataset.armed=='1'){btn.dataset.armed='';btn.textContent=btn.dataset.old}},3000);return}
+ btn.dataset.armed='';btn.textContent=btn.dataset.old;fn()}
+/* history */
+function hDebounce(){clearTimeout(QS.ht);QS.ht=setTimeout(()=>hLoad(true),300)}
+async function hLoad(reset){if(reset){QS.page=0;$('hgrid').innerHTML=''}
+ const qs=new URLSearchParams({limit:24,offset:QS.page*24,q:$('hq').value,kind:$('hkind').value,fav:$('hfav').checked});
+ const d=await api('/api/history?'+qs);d.jobs.forEach(hCard);QS.page++;$('hmore').classList.toggle('hide',QS.page*24>=d.total);$('hcount').textContent=`· ${d.total} job${d.total==1?'':'s'}`}
+const H_ICON={done:'✔',error:'✖',cancelled:'⊘',interrupted:'⚠'};
+function hCard(j){const c=document.createElement('div');c.className='hc'+(j.fav?' fav':'');
+ const seeds=(j.seeds||[]).filter(s=>s!=null);
+ c.innerHTML=(j.thumb?`<img src="${j.thumb}">`:`<div class="hph" title="${qEsc(j.error||j.status)}">${H_ICON[j.status]||'?'}</div>`)+`<div>${j.fav?'★ ':''}${H_ICON[j.status]||''} ${j.n_results||0} img${seeds.length?' · seed '+seeds[0]:''}</div><div class="hp" title="${qEsc(qTitle(j))}">${qEsc(qTitle(j))}</div><div class="mut">${qTime(j.created)}</div><label class="chk"><input type="checkbox" ${QS.sel.has(j.id)?'checked':''}><span>compare</span></label>`;
+ const im=c.querySelector('img');if(im)im.onload=()=>{const k=Math.max(1,Math.floor(110/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+ c.querySelector('img,.hph').onclick=()=>hOpen(j.id);
+ c.querySelector('input').onchange=e=>{e.target.checked?QS.sel.add(j.id):QS.sel.delete(j.id)};$('hgrid').appendChild(c)}
+function hParamRows(p){return Object.entries(p||{}).map(([k,v])=>`<tr><td class="mut">${qEsc(k)}</td><td>${qEsc(typeof v=='object'?JSON.stringify(v):v)}</td></tr>`).join('')}
+async function hOpen(id){try{const j=await api('/api/jobs/'+id),d=$('hdetail'),seeds=j.results.map(r=>r.info&&r.info.seed).filter(s=>s!=null);
+ d.innerHTML=`<div class="card" style="max-width:none"><div class="row" style="align-items:center"><b style="flex:none;max-width:none">${qEsc(qTitle({kind:j.kind,sub:j.params.kind,prompt:(j.params.prompt||j.params.character||j.params.pose||'').slice(0,80)}))}</b><span class="mut" style="flex:2">${qTime(j.created)} · ${j.status}${seeds.length?' · seeds '+seeds.join(', '):''}${j.started&&j.finished?` · ${Math.round(j.finished-j.started)} s`:''}${j.source?' · from '+qEsc(j.source.slice(9,15)):''}</span><button class="sec" data-a="x" style="margin:0;max-width:40px">✕</button></div>
+ ${j.error?`<div class="err" style="margin-top:6px">${qEsc(j.error)}</div>`:''}
+ <div class="row" style="margin-top:8px"><button class="sec" data-a="use">Use these settings</button><button class="sec" data-a="show">Show in ${H_TABNAME[hTab(j)]}</button><button class="sec" data-a="rerun">Re-run (same seed)</button><button class="sec" data-a="fork">Fork (new seed)</button><button class="sec" data-a="fav">${j.fav?'★ Unfavourite':'☆ Favourite'}</button><button class="sec" data-a="del">Delete</button></div>
+ <input id="hnote" placeholder="note (searchable)" value="${qEsc(j.note)}" style="margin-top:8px">
+ <details><summary class="mut">Settings used</summary><table>${hParamRows(j.params)}</table></details>
+ ${Object.keys(j.images||{}).length?`<div class="mut">Inputs:</div><div class="row" style="justify-content:flex-start;gap:12px">${Object.entries(j.images).map(([k,u])=>`<div style="flex:none"><div class="mut">${k=='ref'?'reference':'skeleton'}</div><img class="px dimg" style="max-height:120px;${k=='pose'?'image-rendering:auto':''}" src="${u}"></div>`).join('')}</div>`:''}
+ <div class="grid" id="hres" style="margin-top:8px"></div></div>`;
+ if(j.results.length)render(j.results,$('hres'));
+ d.querySelectorAll('button[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;try{
+  if(a=='x')d.innerHTML='';
+  else if(a=='use')hUse(j);
+  else if(a=='show'){render(j.results);tab(hTab(j));$('status').className='';$('status').textContent='Shown from history'}
+  else if(a=='rerun'||a=='fork'){await api(`/api/jobs/${id}/rerun`,{...J,body:JSON.stringify({new_seed:a=='fork'})});$('status').textContent=a=='fork'?'Forked: queued with a new seed':'Queued again with the same seed';qPoll();await qRefresh()}
+  else if(a=='fav'){await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({fav:!j.fav})});hLoad(true);hOpen(id)}
+  else if(a=='del')armed(b,'delete',async()=>{await api('/api/jobs/'+id,{method:'DELETE'});QS.sel.delete(id);d.innerHTML='';hLoad(true)})
+ }catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}});
+ $('hnote').onchange=async e=>{try{await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({note:e.target.value})})}catch(x){}};
+ d.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function hUse(j){applySettings(j.ui||{});const im=j.images||{};
+ if(j.kind=='reference'){if(im.ref)setRef(im.ref);$('useskel').checked=!!im.pose;const sk=(j.ui||{}).__skel;
+  if(sk&&sk.pts&&sk.pts.length==18){pts=sk.pts.map(p=>p.slice());$('scl').value=sk.scale||1;lastScale=sk.scale||1;if(sk.preset&&PRESETS[sk.preset])$('preset').value=sk.preset}}
+ markDirty();tab(hTab(j));$('status').className='';$('status').textContent='Settings loaded from history. Change anything you like and press Generate.'}
+async function hCompare(){const ids=[...QS.sel].slice(0,4);if(ids.length<2){$('status').className='err';$('status').textContent='Tick "compare" on 2-4 history cards first';return}
+ try{const list=await Promise.all(ids.map(i=>api('/api/jobs/'+i))),diff=qDiff(list);$('status').className='';$('status').textContent=diff.length?`${diff.length} setting(s) differ: ${diff.join(', ')}`:'Identical settings';
+  const d=$('hdetail');d.innerHTML='<div class="card" style="max-width:none"><div class="row" style="align-items:center"><b>Compare</b><button class="sec" data-a="x" style="margin:0;max-width:40px">✕</button></div><div class="grid" id="hcols" style="margin-top:8px"></div></div>';
+  d.querySelector('button').onclick=()=>d.innerHTML='';
+  list.forEach(j=>{const c=document.createElement('div');c.className='hcol';
+   c.innerHTML=`<div class="mut">${qEsc(qTitle({kind:j.kind,sub:j.params.kind,prompt:(j.params.prompt||j.params.character||j.params.pose||'').slice(0,40)}))} · ${qTime(j.created)}</div>${j.results.map(r=>`<img class="px dimg" style="width:auto;max-width:200px" src="${r.sprite}">`).join('')||`<div class="err">${qEsc(j.error||j.status)}</div>`}<table>${diff.map(k=>`<tr><td class="mut">${qEsc(k)}</td><td>${qEsc(typeof(j.params||{})[k]=='object'?JSON.stringify(j.params[k]):(j.params||{})[k])}</td></tr>`).join('')}</table>`;
+   c.querySelectorAll('img').forEach(im=>im.onload=()=>{const k=Math.max(1,Math.floor(200/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'});$('hcols').appendChild(c)});
+  d.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function hClear(){armed($('hclear'),'clear',async()=>{try{const d=await api('/api/history/clear',{...J,body:JSON.stringify({keep_favs:true})});$('status').className='';$('status').textContent=`Deleted ${d.deleted} history entries (favourites kept)`;$('hdetail').innerHTML='';QS.sel.clear();hLoad(true)}catch(e){$('status').textContent='Error: '+e.message}})}
+/*END QUEUE*/
+/*TILES*/
+/* ---------- tiles and props ---------- */
+const TL={src:null,tiles:[]};
+const TILE_KINDS=['tile','prop','icon','ui'];
+function tileParams(){const k=$('tkind').value;return{prompt:$('tprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,bg:$('bg').value,
+ n:+$('tn').value,mode:'fixed',size:+$('tsize').value,colors:+$('tcolors').value,palette:$('tpal').value||'none',remove_bg:true,bg_tol:+$('tol').value,remove_shadow:$('shadow').checked,crisp:true,clean:true,
+ outline:k=='tile'?'none':$('toutline').value,sampler:$('sampler').value,kind:k,seamless:$('tseam').checked}}
+const TL_EX={tile:['mossy cobblestone ground','32'],prop:['wooden barrel with iron bands','48'],icon:['red health potion in a glass bottle','32'],ui:['ornate wooden button frame','48']};
+function tlKindChanged(){const k=$('tkind').value,cur=$('tprompt').value.trim();  // only replace an empty prompt or one of the examples, never your own text
+ if(!cur||Object.values(TL_EX).some(e=>e[0]==cur)){$('tprompt').value=TL_EX[k][0];$('tsize').value=TL_EX[k][1]}
+ show('tseamrow',k=='tile');show('toutrow',k!='tile')}
+const tlBlob=async()=>{if(!TL.src)throw new Error('Put a tile on the workbench first (generate, then press "To tileset" on a result, or choose an image)');return await(await fetch(TL.src)).blob()};
+function tlUse(u){TL.src=u;tab(10);tlShow();markDirty();$('status').className='';$('status').textContent='Tile on the workbench. Check the seams in the preview, then "Add to tileset".'}
+$('tlfile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{TL.src=r.result;tlShow();markDirty()};r.readAsDataURL(f)};
+function tlShow(){const c=$('tlprev'),x=c.getContext('2d');if(!TL.src){c.width=c.height=0;$('tlinfo').textContent='(empty)';return}
+ const im=new Image();im.onload=()=>{const rep=+$('tlrep').value||3,k=Math.max(1,Math.floor(+$('tlzoom').value||Math.max(1,Math.floor(360/(im.width*rep)))));
+  c.width=im.width*rep*k;c.height=im.height*rep*k;c.style.width=c.width+'px';c.style.height=c.height+'px';x.imageSmoothingEnabled=false;
+  for(let i=0;i<rep;i++)for(let j=0;j<rep;j++)x.drawImage(im,i*im.width*k,j*im.height*k,im.width*k,im.height*k);
+  $('tlinfo').textContent=`${im.width}×${im.height} px · shown ${rep}×${rep} at ${k}×`};im.src=TL.src}
+async function tlCall(path,extra){const fd=new FormData();fd.append('file',await tlBlob(),'t.png');Object.entries(extra||{}).forEach(([k,v])=>fd.append(k,v));return await api(path,{method:'POST',body:fd})}
+async function tlOffset(){try{const d=await tlCall('/api/tiles/offset');TL.src=d.sprite;tlShow();markDirty();$('status').className='';$('status').textContent='Shifted by half with wrap-around: the old edges are now in the middle. Press again to shift back. Use Edit to paint over any visible join.'}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+async function tlSeamless(){try{const d=await tlCall('/api/tiles/seamless');TL.src=d.sprite;tlShow();markDirty();$('status').className='';$('status').textContent=`Made seamless without new colours. Seam score ${d.info.seam_before} → ${d.info.seam} (about 1 = invisible).`}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function tlEdit(){if(!TL.src){$('status').textContent='Put a tile on the workbench first';return}openEditor(TL.src,{label:'Update the workbench tile',apply:u=>{TL.src=u;tlShow();markDirty()}})}
+function tlAdd(){if(!TL.src){$('status').className='err';$('status').textContent='Put a tile on the workbench first';return}
+ TL.tiles.push({name:($('tlname').value||'').trim()||`tile_${String(TL.tiles.length).padStart(2,'0')}`,image:TL.src});$('tlname').value='';tsRender();markDirty()}
+function tsRender(){const l=$('tslist');$('tscount').textContent=TL.tiles.length?`Tileset: ${TL.tiles.length} tile${TL.tiles.length==1?'':'s'}`:'Tileset: empty. Generate tiles or props, send them to the workbench, and press "Add to tileset".';l.innerHTML='';
+ TL.tiles.forEach((t,i)=>{const c=document.createElement('div');c.className='hc';c.innerHTML=`<img class="px" src="${t.image}"><input value="${qEsc(t.name)}" style="padding:2px;font-size:11px"><div class="row"><button class="sec" data-a="l" style="padding:2px;margin:3px 0 0">‹</button><button class="sec" data-a="r" style="padding:2px;margin:3px 0 0">›</button><button class="sec" data-a="x" style="padding:2px;margin:3px 0 0">×</button></div><label class="chk" style="margin-top:3px"><input type="checkbox" ${t.solid?'checked':''}><span>solid</span></label>`;
+  const im=c.querySelector('img');im.onload=()=>{const k=Math.max(1,Math.floor(96/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};
+  im.onclick=()=>{TL.src=t.image;tlShow()};c.querySelectorAll('input')[0].onchange=e=>{t.name=e.target.value;markDirty()};c.querySelectorAll('input')[1].onchange=e=>tsSolid(i,e.target.checked);
+  c.querySelectorAll('button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a=='x')TL.tiles.splice(i,1);else if(a=='l'&&i>0)[TL.tiles[i-1],TL.tiles[i]]=[TL.tiles[i],TL.tiles[i-1]];else if(a=='r'&&i<TL.tiles.length-1)[TL.tiles[i+1],TL.tiles[i]]=[TL.tiles[i],TL.tiles[i+1]];tsRender();markDirty()});
+  l.appendChild(c)})}
+async function tsMap(){const T=TL.tiles;if(!T.length){$('status').textContent='Add tiles to the tileset first';return}
+ const ims=await Promise.all(T.map(t=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.src=t.image})));
+ if(new Set(ims.map(i=>i.width+'x'+i.height)).size>1){$('status').textContent='The map preview needs equal-sized tiles';return}
+ const tw=ims[0].width,th=ims[0].height,cols=14,rows=8,k=Math.max(1,Math.floor(720/(cols*tw))),c=$('tsmap'),x=c.getContext('2d');c.width=cols*tw*k;c.height=rows*th*k;x.imageSmoothingEnabled=false;
+ for(let r=0;r<rows;r++)for(let q=0;q<cols;q++)x.drawImage(ims[Math.floor(Math.random()*ims.length)],q*tw*k,r*th*k,tw*k,th*k);$('status').className='';$('status').textContent='Random map from your tileset: press again for another. Visible joins mean a tile is not seamless.'}
+async function tsExport(){try{if(!TL.tiles.length)throw new Error('Add at least one tile to the tileset first');
+ const d=await api('/api/tiles/export',{...J,body:JSON.stringify({name:$('tsname').value||'tileset',tiles:TL.tiles,columns:+$('tcols').value||8,spacing:+$('tspace').value||0,margin:+$('tmargin').value||0,godot:$('tsgodot').checked,godot_path:$('xgpath').value,tiled:$('tstiled').checked})});
+ $('status').className='';$('status').textContent=`Exported ${d.count} ${d.mode=='tileset'?'tiles as a '+d.columns+'×'+d.rows+' tileset':'sprites as a packed atlas'} (${d.sheet[0]}×${d.sheet[1]}) to: ${d.dir}\n${d.files.join(', ')}`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+/*END TILES*/
+/*TERRAIN*/
+/* ---------- autotile / terrain sets (blob47, edge16, corner16, multi) ---------- */
+const TR={a:null,b:null,c:null,d:null,res:null,imgs:null};
+const TR_SLOTS=['a','b','c','d'];
+const TR_OFF={1:[0,-1],2:[1,-1],4:[1,0],8:[1,1],16:[0,1],32:[-1,1],64:[-1,0],128:[-1,-1]};   // N NE E SE S SW W NW (clockwise from north)
+const trCorner=()=>['corner16','multi'].includes($('atype').value);
+function trBits(g,x,y){let m=0;for(const[b,[dx,dy]]of Object.entries(TR_OFF)){const xx=x+dx,yy=y+dy;if(yy>=0&&yy<g.length&&xx>=0&&xx<g[0].length&&g[yy][xx])m|=+b}return m}
+function crIndex(c,N){let i=0;for(const v of c)i=i*N+v;return i}                 // ((nw*N+ne)*N+se)*N+sw, same as the engine
+function trBlur(v,w,h){return v.map((row,y)=>row.map((_,x)=>{let s=0,c=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const yy=y+dy,xx=x+dx;if(yy>=0&&yy<h&&xx>=0&&xx<w){s+=v[yy][xx];c++}}return s/c}))}
+function trMakeGrid(w,h){let v=Array.from({length:h},()=>Array.from({length:w},()=>Math.random()));v=trBlur(trBlur(v,w,h),w,h);
+ const med=v.flat().sort((a,b)=>a-b)[Math.floor(w*h/2)];return v.map(r=>r.map(q=>q>med?1:0))}
+function trCornerGrid(w,h,N){  // terrain label at every corner point of a w x h map, in blobs
+ const f=Array.from({length:N},()=>trBlur(trBlur(Array.from({length:h+1},()=>Array.from({length:w+1},()=>Math.random())),w+1,h+1),w+1,h+1));
+ return Array.from({length:h+1},(_,y)=>Array.from({length:w+1},(_,x)=>{let b=0;for(let k=1;k<N;k++)if(f[k][y][x]>f[b][y][x])b=k;return b}))}
+function trNames(){const n=($('atterr').value||'').split(',').map(s=>s.trim());return[0,1,2,3].map(i=>n[i]||'Terrain '+'ABCD'[i])}
+function trBody(){const rd=$('around').value,nm=trNames();return{a:TR.a,b:TR.b,c:TR.c,d:TR.d,kind:$('atype').value,inset:+$('ainset').value||0,round:rd===''?-1:+rd,rim:$('arim').value,base:$('abase').value,ground:$('atground').checked,
+ name:$('atname').value||'terrain',terrain_name:nm[0],names:nm,columns:+$('tcols').value||8,godot:$('tsgodot').checked,godot_path:$('xgpath').value,tiled:$('tstiled').checked}}
+function trSlots(){TR_SLOTS.forEach(w=>{const im=$('tr'+w);im.src=TR[w]||'';im.style.display=TR[w]?'inline-block':'none'});$('trnone').style.display=TR.a?'none':'block';
+ show('trslotc',$('atype').value=='multi');show('trslotd',$('atype').value=='multi');
+ $('trbhint').textContent={blob47:'optional (transparent without it)',edge16:'optional (transparent without it)',corner16:'optional (transparent without it)',multi:'needed'}[$('atype').value]||''}
+function trSet(w){if(!TL.src){$('status').className='err';$('status').textContent='Put a tile on the workbench first (generate seamless tiles, then press "To tileset" on a result)';return}
+ TR[w]=TL.src;TR.res=null;trSlots();markDirty();$('status').className='';$('status').textContent='Terrain '+w.toUpperCase()+' set'+(w=='a'?' (the one that gets the borders, e.g. grass)':'')}
+function trClear(){TR.b=TR.c=TR.d=null;TR.res=null;trSlots();markDirty()}
+async function trGenerate(){try{if(!TR.a)throw new Error('Set terrain A first (workbench tile > "Use workbench tile as A")');
+ if($('atype').value=='multi'&&!(TR.b&&TR.c))throw new Error('A multi-terrain set needs terrains A, B and C (D is optional)');
+ const d=await api('/api/terrain/generate',{...J,body:JSON.stringify(trBody())});TR.res=d;TR.imgs=null;const g=$('trgrid');g.innerHTML='';
+ const cell=(src,label)=>{const c=document.createElement('div');c.className='tc';c.innerHTML=`<img class="px" src="${src}"><div class="mut">${label}</div>`;
+  const im=c.querySelector('img');im.onload=()=>{const k=Math.max(1,Math.floor(56/Math.max(im.naturalWidth,im.naturalHeight)));im.style.width=im.naturalWidth*k+'px'};g.appendChild(c)};
+ d.tiles.forEach(t=>cell(t.image,t.corners?`#${t.index} · ${t.corners.join('')}`:`#${t.index} · ${t.mask}`));if(d.ground)cell(d.ground,'ground');
+ $('trinfo').textContent=`${d.tiles.length} tiles · ${d.tile_size}px · `+(d.corners||d.kind=='corner16'||d.kind=='multi'?`${d.n} terrains, softness ${d.round}px`:`border inset ${d.inset}px, rounding ${d.round}px`)+` · rim ${d.rim}`+(d.kind=='blob47'||d.kind=='edge16'?` · ${d.base=='bake'?'ground baked in':'transparent outside'}`:'');
+ $('status').className='';$('status').textContent='Set generated. "Autotile map preview" paints a random map with it: every join should look continuous.'}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+async function trMap(){try{if(!TR.res)await trGenerate();const d=TR.res;if(!d)return;
+ if(!TR.imgs){const load=u=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.src=u});TR.imgs={t:await Promise.all(d.tiles.map(t=>load(t.image))),g:d.ground?await load(d.ground):null}}
+ const n=d.tile_size,W=16,H=10,k=Math.max(1,Math.floor(640/(W*n))),c=$('trmap'),x=c.getContext('2d');c.width=W*n*k;c.height=H*n*k;x.imageSmoothingEnabled=false;
+ x.fillStyle='#2a2c36';x.fillRect(0,0,c.width,c.height);
+ if(d.kind=='corner16'||d.kind=='multi'){const L=trCornerGrid(W,H,d.n);for(let y=0;y<H;y++)for(let q=0;q<W;q++){const im=TR.imgs.t[crIndex([L[y][q],L[y][q+1],L[y+1][q+1],L[y+1][q]],d.n)];if(im)x.drawImage(im,q*n*k,y*n*k,n*k,n*k)}}
+ else{const grid=trMakeGrid(W,H);for(let y=0;y<H;y++)for(let q=0;q<W;q++){const im=grid[y][q]?TR.imgs.t[d.lookup[trBits(grid,q,y)]]:TR.imgs.g;if(im)x.drawImage(im,q*n*k,y*n*k,n*k,n*k)}}
+ $('status').className='';$('status').textContent='Random map built from the set. Press again for another.'}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+async function trExport(){try{if(!TR.a)throw new Error('Set terrain A first');if($('atype').value=='multi'&&!(TR.b&&TR.c))throw new Error('A multi-terrain set needs terrains A, B and C (D is optional)');
+ const d=await api('/api/terrain/export',{...J,body:JSON.stringify(trBody())});
+ $('status').className='';$('status').textContent=`Exported ${d.count} ${d.kind} tiles${d.ground?' + ground':''} (${d.sheet[0]}×${d.sheet[1]}) to: ${d.dir}\n${d.files.join(', ')}`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+/*END TERRAIN*/
+/*TILEFX*/
+/* ---------- tile follow-ups: solid flags, AI seam repair, animated tiles ---------- */
+function tsSolid(i,v){if(TL.tiles[i]){TL.tiles[i].solid=!!v;markDirty()}}
+async function tlRepair(){const b=$('tlrepair');try{if(!TL.src)throw new Error('Put a tile on the workbench first');if(!checkModel())return;
+ b.disabled=true;$('status').className='';$('status').textContent='Repairing the seams with the AI: only the middle cross is redrawn (first run loads the inpaint model, up to a minute or more)…';
+ const d=await api('/api/tiles/repair',{...J,body:JSON.stringify({tile:TL.src,prompt:$('tprompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,steps:+$('steps').value,cfg:+$('cfg').value,
+  seed:+$('seed').value,bg:$('bg').value,strength:+$('rfstr').value||0.55,band:(+$('rfband').value||16)/100,sampler:$('sampler').value})});
+ TL.src=d.sprite;tlShow();markDirty();$('status').textContent=`Seams repaired by the AI (seed ${d.info.seed}). Seam score ${d.info.seam_before} → ${d.info.seam}. Not happy? Press again (new seed), or Offset ½ and Edit.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}b.disabled=false}
+const AN={frames:[],ms:120,timer:null,i:0};
+function anStop(){clearInterval(AN.timer);AN.timer=null}
+function anBody(){return{tile:TL.src,mode:$('anmode').value,frames:+$('anframes').value||8,direction:$('andir').value,amount:+$('anamt').value||0,density:0.25,seed:1,name:$('anname').value||'animated_tile',ms:+$('anms').value||120,
+ godot:$('tsgodot').checked,godot_path:$('xgpath').value,tiled:$('tstiled').checked}}
+async function anMake(){try{if(!TL.src)throw new Error('Put a tile on the workbench first');
+ const d=await api('/api/tiles/animate',{...J,body:JSON.stringify(anBody())});AN.ms=d.ms;
+ AN.frames=await Promise.all(d.frames.map(u=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.src=u})));anPlay();
+ $('status').className='';$('status').textContent=`${AN.frames.length} frames, ${d.ms} ms each: looping below. Seamless tiles loop without a jump; "Export animated tile" writes the strip, a GIF and Godot / Tiled files.`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+function anPlay(){anStop();const f=AN.frames;if(!f.length)return;const c=$('anprev'),x=c.getContext('2d'),w=f[0].width,h=f[0].height,k=Math.max(1,Math.floor(192/Math.max(w,h)));
+ c.width=w*k*2;c.height=h*k*2;x.imageSmoothingEnabled=false;AN.i=0;
+ const draw=()=>{const im=f[AN.i%f.length];for(let a=0;a<2;a++)for(let b=0;b<2;b++)x.drawImage(im,a*w*k,b*h*k,w*k,h*k);AN.i++};draw();AN.timer=setInterval(draw,AN.ms)}
+async function anExport(){try{if(!TL.src)throw new Error('Put a tile on the workbench first');
+ const d=await api('/api/tiles/export_anim',{...J,body:JSON.stringify(anBody())});
+ $('status').className='';$('status').textContent=`Exported ${d.frames} frames (${d.sheet[0]}×${d.sheet[1]} strip, ${d.ms} ms) to: ${d.dir}\n${d.files.join(', ')}`}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
+/*END TILEFX*/
+tab(1);qPoll();init().then(()=>{refreshProjects();const last=localStorage.getItem('sf_last');if(last){$('pname').value=last;loadProject()}})
+</script></body></html>
