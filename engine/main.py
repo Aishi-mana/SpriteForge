@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character
+from . import styles, inbetween, model_families as mf, character, modular
 
 
 def _art_style(value):
@@ -974,6 +974,27 @@ def character_variation(b: CharacterVariation):
                               reference_method=lr.route(ckpt) or "sdxl_ip_adapter",lock_mode="reference_guidance")
         return result
     except ValueError as e: raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/render")
+def modular_render(body: dict = Body(...)):
+    try:return {"sprite":modular.png_uri(modular.render(body))}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/validate")
+def modular_validate(body: dict = Body(...)):
+    try:return modular.validate(body)[0]
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/export")
+def modular_export(body: dict = Body(...)):
+    try:
+        data=modular.bundle(body)
+        return StreamingResponse(io.BytesIO(data),media_type="application/zip",
+                                 headers={"Content-Disposition":'attachment; filename="character_layers.zip"'})
+    except ValueError as e:raise HTTPException(400,str(e))
 
 
 # ---------------- diagnostics ----------------
