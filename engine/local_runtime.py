@@ -4,6 +4,8 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 QWEN="Qwen-Rapid-AIO-SFW-v23.safetensors"
+QWEN_ALT="Qwen-Rapid-AIO-NSFW-v23.safetensors"
+QWEN_CHECKPOINTS=(QWEN,QWEN_ALT)
 NETA="NetaYumev35_pretrained_all_in_one.safetensors"
 ROOT=Path(__file__).resolve().parent.parent
 
@@ -22,7 +24,7 @@ def qwen_files(models,checkpoint=None):
 def route(path):
     p=Path(path)
     if p.name==NETA and p.is_file():return "neta"
-    if p.name==QWEN and p.is_file():return "qwen"
+    if p.name in QWEN_CHECKPOINTS and p.is_file():return "qwen"
     return None
 
 def readiness(path):

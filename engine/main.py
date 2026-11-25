@@ -57,8 +57,10 @@ def scan(sub):
     names=[p.name for p in d.glob("*.safetensors") if p.is_file()]
     if sub=="checkpoints":
         names += [p.name for p in d.iterdir() if p.is_dir() and (p/"model_index.json").is_file()]
-        q=d.parent/"diffusion_models"/"Qwen-Rapid-AIO-SFW-v23.safetensors"
-        if q.is_file() and q.name not in names:names.append(q.name)
+        from .local_runtime import QWEN_CHECKPOINTS
+        for name in QWEN_CHECKPOINTS:
+            q=d.parent/"diffusion_models"/name
+            if q.is_file() and q.name not in names:names.append(q.name)
     return sorted(names)
 
 
@@ -99,7 +101,8 @@ def set_cfg(c: Cfg):
 
 def _checkpoint_path(md,name):
     p=md/"checkpoints"/name
-    if not p.exists() and name=="Qwen-Rapid-AIO-SFW-v23.safetensors":p=md/"diffusion_models"/name
+    from .local_runtime import QWEN_CHECKPOINTS
+    if not p.exists() and name in QWEN_CHECKPOINTS:p=md/"diffusion_models"/name
     return p
 
 

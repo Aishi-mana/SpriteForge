@@ -172,8 +172,9 @@ def check_models(models_dir):
     from . import model_families as mf
     ck = sorted(p for p in (md / "checkpoints").iterdir() if (p.is_file() and p.suffix==".safetensors") or (p.is_dir() and (p/"model_index.json").is_file())) if (md / "checkpoints").exists() else []
     from . import local_runtime as lr
-    qwen=md/"diffusion_models"/lr.QWEN
-    if qwen.is_file() and not any(p.name==qwen.name for p in ck):ck.append(qwen)
+    for name in lr.QWEN_CHECKPOINTS:
+        qwen=md/"diffusion_models"/name
+        if qwen.is_file() and not any(p.name==qwen.name for p in ck):ck.append(qwen)
     lo = sorted((md / "loras").glob("*.safetensors")) if (md / "loras").exists() else []
     sdxl, rows, supported = [], [], []
     for p in ck:

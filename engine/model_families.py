@@ -26,7 +26,8 @@ def identify(path,lora=False):
     d=diag.inspect_file(p,lora)
     if d["status"]!="ok": return "broken"
     if p.name=="NetaYumev35_pretrained_all_in_one.safetensors" and not lora:return "lumina2"
-    if p.name=="Qwen-Rapid-AIO-SFW-v23.safetensors" and not lora:return "qwen"
+    from .local_runtime import QWEN_CHECKPOINTS
+    if p.name in QWEN_CHECKPOINTS and not lora:return "qwen"
     h=header(p)
     meta=h.pop("__metadata__",{}) or {}
     ks=" ".join(h.keys()).lower()
