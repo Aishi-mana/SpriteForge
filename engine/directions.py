@@ -67,7 +67,7 @@ def render_directions(slots, clips, dirs, secondary=None, ss=4):
                 s = slots[src]
                 cache[key] = rig.render(s["sprite"], s["joints"], s.get("ovr") or [], c["anim"], c["count"], "right", NEAR[src],
                                         c.get("weapon", "r"), c.get("amp", 1.0), c.get("pad", 0), c.get("overlap", 1), ss,
-                                        secondary=_sec_for(secondary, src), view=VIEW[src])
+                                        secondary=_sec_for(secondary, src), view=VIEW[src], softness=c.get("softness",0))
             frames, meta = cache[key]
             out[(c["anim"], d)] = mirror(frames, meta) if d in MIRROR else (frames, meta)
     return out

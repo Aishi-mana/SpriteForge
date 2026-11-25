@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
-from . import pixelize as px
+from . import pixelize as px, softmesh
 
 JOINTS = ["head", "neck", "pelvis", "l_shoulder", "l_elbow", "l_wrist", "r_shoulder", "r_elbow", "r_wrist",
           "l_hip", "l_knee", "l_ankle", "r_hip", "r_knee", "r_ankle"]
@@ -349,10 +349,13 @@ def _custom_pose(keys, t, rest, pad, ss):
 
 
 def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None):
+           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
     hd = is_hd(sprite)
+    softness = float(softness)
+    if not math.isfinite(softness) or not 0 <= softness <= 100:
+        raise ValueError("Joint softness must be 0-100")
     keys_custom = custom_keys(keyframes) if anim == "custom" else None
     if hd:
         if max(W0, H0) > 1024:
@@ -385,14 +388,29 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         l[pad:pad + H0, pad:pad + W0][m] = arr[m]
         return Image.fromarray(l, "RGBA") if hd else Image.fromarray(l, "RGBA").resize((CW * ss, CH * ss), Image.NEAREST)
 
-    layers = {}
+    layers, masks, meshes, mesh_children = {}, {}, {}, set()
     for i in range(len(BONES)):
         m = lab == i
         if overlap > 0 and m.any():  # overlap only near the bone's pivot, where rotation opens gaps
             jx, jy = joints[BONES[i][1]]
             near_pivot = (gx + .5 - jx) ** 2 + (gy + .5 - jy) ** 2 <= rad ** 2
             m = m | (ndi.binary_dilation(m, iterations=overlap) & opaque & ~secmask & near_pivot)
-        layers[("b", i)] = layer(m)
+        masks[i] = m
+    if softness:
+        if CW * CH * ss * ss > 16_000_000:
+            raise ValueError("Soft mesh canvas exceeds memory budget; reduce padding or size")
+        radius = max(1., max(W0,H0)*.14*softness/100)
+        for side in ("l","r"):
+            for limb in ("arm","leg"):
+                a,b = (BONE_IDX[f"{side}_{limb}_{part}"] for part in ("u","l"))
+                mesh = softmesh.prepare(arr,lab==a,lab==b,masks[a]|masks[b],radius,hd)
+                if mesh is not None:
+                    meshes[("b",a)] = (("b",b),mesh)
+                    mesh_children.add(("b",b))
+    for i,m in masks.items():
+        key = ("b",i)
+        if key not in meshes and key not in mesh_children:
+            layers[key] = layer(m)
     for pt in parts:
         for i in range(pt["nseg"]):
             m = pt["seg"] == i
@@ -450,6 +468,11 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         jframes.append(jp)
         canvas = Image.new("RGBA", (CW * ss, CH * ss), (0, 0, 0, 0))
         for key in order:
+            if key in meshes:
+                child,mesh = meshes[key]
+                tl = softmesh.deform(mesh,mats[key],mats[child],pad,ss,canvas.size,hd)
+                canvas = Image.alpha_composite(canvas,tl)
+                continue
             if key not in layers:
                 continue
             inv = np.linalg.inv(mats[key])
@@ -458,7 +481,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
     ank = ((joints["l_ankle"][0] + joints["r_ankle"][0]) / 2 + pad, max(joints["l_ankle"][1], joints["r_ankle"][1]) + pad)
     return out, {"size": (CW, CH), "pad": pad, "pivot": [round(ank[0], 1), round(ank[1], 1)], "joints": jframes,
-                 "secondary": [pt["name"] for pt in parts], "render_mode": "hd" if hd else "pixel"}
+                 "secondary": [pt["name"] for pt in parts], "render_mode": "hd" if hd else "pixel", "softness": softness}
 
 
 def _downsample(img, ss, keys, cols, use_pal):

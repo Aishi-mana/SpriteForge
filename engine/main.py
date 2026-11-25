@@ -312,7 +312,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
                 refine: bool = Form(False), checkpoint: str = Form(""), lora: str = Form(""),
                 lora_weight: float = Form(1.0), character: str = Form(""), negative: str = Form(""),
                 strength: float = Form(0.45), steps: int = Form(22), cfg: float = Form(7.0), seed: int = Form(-1),
-                radius: float = Form(0), sampler: str = Form("euler_a"), secondary: str = Form(""), keyframes: str = Form("[]")):
+                radius: float = Form(0), sampler: str = Form("euler_a"), secondary: str = Form(""), keyframes: str = Form("[]"), softness: float = Form(0.0)):
     if anim not in rig.CLIPS and anim != "custom":
         raise HTTPException(400, f"unknown animation: {anim}")
     frames, fps = max(1, min(frames, 32)), max(1, min(fps, 60))
@@ -326,7 +326,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         raise HTTPException(400, str(e))
     sec = _secondary(secondary)
     args = (anim, frames, facing, near, weapon, amp, max(0, min(pad, 200)), max(0, min(overlap, 3)), max(1, min(ss, 6)))
-    params = [args, checkpoint, lora, lora_weight, character, negative, strength, steps, cfg, seed, radius, jn, ov, sampler, sec, keys]
+    params = [args, checkpoint, lora, lora_weight, character, negative, strength, steps, cfg, seed, radius, jn, ov, sampler, sec, keys, softness]
     key = hashlib.sha1(sp.tobytes() + json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
     info = {}
     if refine and key in _RCACHE:  # e.g. same settings again: don't pay for the AI pass twice
@@ -334,7 +334,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         raw, imgs, meta, info = e["raw"], e["imgs"], e["meta"], e["info"]
     else:
         try:
-            raw, meta = rig.render(sp, jn, ov, *args, secondary=sec, keyframes=keys)
+            raw, meta = rig.render(sp, jn, ov, *args, secondary=sec, keyframes=keys, softness=softness)
         except ValueError as e:
             raise HTTPException(400, str(e))
         imgs = raw
@@ -495,6 +495,7 @@ def rig_export_frames(b: ExportBody):
 
 class PackAnim(BaseModel):
     anim: str
+    softness: float = 0
     keyframes: Optional[List[dict]] = None
     count: int = 8
     fps: int = 10
@@ -556,7 +557,7 @@ def rig_export_pack(b: PackBody):
                 raise HTTPException(400, 'HD pack exceeds pixel budget; export fewer clips or frames')
             try:
                 frames, meta = rig.render(sp, jn, b.overrides, a.anim, count, a.facing, a.near, a.weapon,
-                                          a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary), keyframes=a.keyframes)
+                                          a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary), keyframes=a.keyframes, softness=a.softness)
             except ValueError as e:
                 raise HTTPException(400, str(e))
             pivot = tuple(meta["pivot"])
@@ -755,11 +756,12 @@ def _dir_clip(c):
     if c.anim not in rig.CLIPS:
         raise HTTPException(400, f"unknown animation: {c.anim}")
     return {"anim": c.anim, "count": max(1, min(c.count, 32)), "fps": max(1, min(c.fps, 60)), "amp": max(.3, min(c.amp, 2.0)),
-            "pad": max(0, min(c.pad, 200)), "overlap": max(0, min(c.overlap, 3)), "weapon": c.weapon if c.weapon in ("l", "r") else "r"}
+            "softness": max(0, min(c.softness, 100)), "pad": max(0, min(c.pad, 200)), "overlap": max(0, min(c.overlap, 3)), "weapon": c.weapon if c.weapon in ("l", "r") else "r"}
 
 
 class DirClip(BaseModel):
     anim: str
+    softness: float = 0
     count: int = 8
     fps: int = 10
     amp: float = 1.0
