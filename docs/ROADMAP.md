@@ -14,7 +14,7 @@
 - **Auto-tune rig weights** from AI cleanup results (not done: mapping cleaned pixels back to sprite pixels is unreliable).
 
 ## Known limits
-- Only **SDXL**. Flux / HiDream / Qwen files are detected and blocked. No SD 1.5 path.
+- Phase 28: architecture-aware text generation routes (experimental): SDXL, SD1.5, Lumina 2, FLUX.1, SD3 and Qwen-Image with supported layouts. SDXL remains required for image conditioning/inpaint. See PHASE28. Tile/terrain work deferred in favor of character improvements.
 - 8 GB VRAM: skeleton (ControlNet) mode uses sequential offload (1-3 min per image); video models are out of scope.
 - The AI cannot keep a character identical across poses; the **rig** is the consistent path. Reference/skeleton is for exploring.
 - Rig motion is rigid cut-outs: the walk/run/attack clips are generic; side views look best. Front/back walks are a step-and-bob. Three-quarter views are approximations.

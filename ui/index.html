@@ -140,8 +140,8 @@ img.px{image-rendering:pixelated}
 </div>
 
 <div id="p-gen"><label>Negative (added to defaults)</label><input id="neg">
-<label>Checkpoint (SDXL)</label><select id="ckpt"></select>
-<label>LoRA</label><select id="lora"></select>
+<label>Checkpoint / model</label><select id="ckpt" onchange="modelChanged()"></select><div id="modeldetail" class="mut"></div>
+<label>LoRA compatibility with selected checkpoint</label><select id="lora" onchange="tagOptions()"></select><div id="loradetail" class="mut"></div>
 <div class="row"><div><label>LoRA weight</label><input id="lw" type="number" step=".1" value="1"></div><div><label>Seed (-1 random)</label><input id="seed" type="number" value="-1"></div></div>
 <div class="row"><div><label>Steps</label><input id="steps" type="number" value="25"></div><div><label>CFG</label><input id="cfg" type="number" step=".5" value="7"></div></div>
 <label>Background to generate on</label><select id="bg"><option>white</option><option>light gray</option><option>green</option><option>magenta</option></select>
@@ -428,20 +428,30 @@ function tab(n){mode=n;[1,2,3,4,5,6,7,8,9,10].forEach(i=>$('t'+i).classList.togg
  show('editor',n==2&&$('useskel').checked);redraw();
  $('go').textContent=['','Generate','Generate poses','Pixelize','','','','','','','Generate'][n];if(n==3)$('mode').value='auto'}
 let modelKinds={c:{},l:{}};
-function tagOptions(){  // only the visible label changes: the option VALUE (the real file name) must stay untouched
- [...$('ckpt').options].forEach(o=>{const k=modelKinds.c[o.value];
-  if(k=='broken')o.text=o.value+'  ⛔ broken file';else if(k=='sd15')o.text=o.value+'  ⚠ SD 1.5, not SDXL';else if(k=='dit')o.text=o.value+'  ⚠ Flux/DiT type, not SDXL';else if(k=='unknown')o.text=o.value+'  ? not recognised'});
- [...$('lora').options].forEach(o=>{const k=modelKinds.l[o.value];if(k=='broken')o.text=o.value+'  ⛔ broken file';else if(k=='other')o.text=o.value+'  ⚠ not for SDXL (Flux/Qwen/video)'})}
-function checkModel(){const c=$('ckpt').value,k=modelKinds.c[c],l=$('lora').value,lk=modelKinds.l[l];$('status').className='err';
- if(k=='broken'||k=='sd15'||k=='dit'){$('status').textContent=`"${c}" is ${k=='broken'?'a broken or incomplete file':k=='sd15'?'a Stable Diffusion 1.5 model':'a Flux / DiT-type model'}, which cannot be used here. Pick an SDXL checkpoint such as sd_xl_base_1.0. Open 🩺 Diagnostics for details.`;return false}
- if(l&&(lk=='other'||lk=='broken')){$('status').textContent=`"${l}" is ${lk=='broken'?'a broken or incomplete file':'for another model family (Flux / Qwen / video)'}, not SDXL. Pick a different LoRA or (none).`;return false}
+/*MODEL-COMPAT-START*/
+function modelInfo(name){return (modelKinds.info||{})[name]||{family:modelKinds.c[name]||'unknown',label:modelKinds.c[name]||'Unknown',supported:['sdxl','sd15','unknown'].includes(modelKinds.c[name]),reference:['sdxl','unknown'].includes(modelKinds.c[name]),detail:'Check model format',flow:false}}
+function loraStatus(name,family){const k=modelKinds.l[name]||'unknown';if(k==='broken'||family==='broken')return 'incompatible';if(k===family&&['sdxl','sd15','lumina2','flux','sd3','qwen'].includes(k))return 'match';if(k==='unknown'||family==='unknown'||(k==='other'&&['lumina2','flux','sd3','qwen'].includes(family)))return 'unknown';return 'incompatible'}
+function tagOptions(){const m=modelInfo($('ckpt').value);
+ for(const o of $('ckpt').options){const i=modelInfo(o.value);o.text=o.value+' · '+i.label+(i.supported?'':' (setup required / unsupported)')}
+ let matched=0,unknown=0;
+ for(const o of $('lora').options){if(!o.value){o.text='(none)';o.disabled=false;continue}const s=loraStatus(o.value,m.family);o.disabled=s==='incompatible';o.text=o.value+' · '+(s==='match'?'Family match':s==='unknown'?'Unverified':'Incompatible')+' ['+(modelKinds.l[o.value]||'unknown')+']';if(s==='match')matched++;if(s==='unknown')unknown++}
+ const d=$('modeldetail');if(d)d.textContent=m.label+' — '+m.detail+(m.flow?' · native flow sampler':'');
+ const l=$('loradetail');if(l)l.textContent=matched+' family matches · '+unknown+' unverified. Family match is not a guarantee of exact adapter compatibility.';
+}
+function modelChanged(){tagOptions();if($('lora').value&&loraStatus($('lora').value,modelInfo($('ckpt').value).family)==='incompatible')$('lora').value='';tagOptions();markDirty()}
+function checkModel(){const c=$('ckpt').value,m=modelInfo(c),l=$('lora').value;$('status').className='err';
+ if(!c||!m.supported){$('status').textContent=m.detail||'Select a supported checkpoint';return false}
+ const needsSDXL=typeof mode!=='undefined'&&mode!==1&&mode!==10;
+ if(needsSDXL&&!m.reference){$('status').textContent=m.label+' supports text-to-image only for now. Select SDXL for this reference, template or inpaint operation.';return false}
+ if(l&&loraStatus(l,m.family)==='incompatible'){$('status').textContent='LoRA is incompatible with '+m.label+'. Choose a matching adapter or (none).';return false}
  $('status').className='';return true}
+/*MODEL-COMPAT-END*/
 function fill(sel,items,none){const q=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');sel.innerHTML=(none?`<option value="">${none}</option>`:'')+items.map(i=>`<option value="${q(i)}">${q(i)}</option>`).join('')}
 function load(s){$('gpu').textContent=s.gpu?'GPU: '+s.gpu:'No CUDA GPU detected';$('mdir').value=s.models_dir;
  $('gpu').className=s.models_dir_ok?'mut':'err';if(!s.models_dir_ok)$('gpu').textContent+=' - models folder not set or not found';
- fill($('ckpt'),s.checkpoints);fill($('lora'),s.loras,'(none)');modelKinds={c:s.ckpt_kinds||{},l:s.lora_kinds||{}};tagOptions();fill($('pal'),s.palettes,'none (use color count)');fill($('tpal'),s.palettes,'none (use color count)');
+ fill($('ckpt'),s.checkpoints);fill($('lora'),s.loras,'(none)');modelKinds={c:s.ckpt_kinds||{},l:s.lora_families||s.lora_kinds||{},info:s.model_info||{}};tagOptions();fill($('pal'),s.palettes,'none (use color count)');fill($('tpal'),s.palettes,'none (use color count)');
  const sd=s.checkpoints.find(c=>c.startsWith('sd_xl_base')&&(s.ckpt_kinds||{})[c]!='broken')||s.checkpoints.find(c=>(s.ckpt_kinds||{})[c]=='sdxl');if(sd)$('ckpt').value=sd;
- const pl=s.loras.find(l=>l.startsWith('pixel-art-xl'));if(pl)$('lora').value=pl}
+ const pl=s.loras.find(l=>l.startsWith('pixel-art-xl')&&loraStatus(l,modelInfo($('ckpt').value).family)==='match');if(pl)$('lora').value=pl;tagOptions()}
 async function api(url,opt){const r=await fetch(url,opt);let d;try{d=await r.json()}catch(e){throw new Error('Server error '+r.status)}
  if(!r.ok)throw new Error(typeof d.detail=='string'?d.detail:JSON.stringify(d.detail));return d}
 async function init(){try{load(await api('/api/state'))}catch(e){$('gpu').className='err';$('gpu').textContent='Engine error: '+e.message+' (check the console window)'}}
@@ -651,7 +661,7 @@ function markDirty(){dirty=true;updPStat()}
 function stashAnim(){const o={};AP.forEach(k=>o[k]=$(k).value);animParams[curAnim]=o}
 function animChanged(){stashAnim();curAnim=$('anim').value;show('customkeys',curAnim==='custom');show('endpointpanel',curAnim==='reference');show('softjointpanel',curAnim!=='reference');if(mode===4){show('rigcard',!!aSrc||curAnim==='reference');show('p-gen',curAnim==='reference')}if(curAnim==='custom'&&joints&&!customRest)customRest=keyClone(joints);if(curAnim!=='custom'&&customRest)keyRest();const o=animParams[curAnim]||ANIM_DEF[curAnim]||{};$('asoft').value=o.asoft??0;for(const k in o)$(k).value=o[k];if(ares[curAnim])showCur(ares[curAnim]);markDirty()}
 function collect(){const s={};document.querySelectorAll('aside input,aside select,aside textarea').forEach(e=>{if(!e.id||e.type=='file'||e.id=='pname'||e.id=='mdir')return;s[e.id]=e.type=='checkbox'?e.checked:e.value});return s}
-function applySettings(s){$('artstyle').value=s.artstyle||'pixel';for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}}
+function applySettings(s){$('artstyle').value=s.artstyle||'pixel';for(const id in s){const e=$(id);if(!e)continue;if(e.type=='checkbox')e.checked=!!s[id];else{if(e.tagName=='SELECT'&&![...e.options].some(o=>o.value==s[id]))continue;e.value=s[id]}}tagOptions();if($('lora').value&&loraStatus($('lora').value,modelInfo($('ckpt').value).family)==='incompatible')$('lora').value='';tagOptions()}
 const J={method:'POST',headers:{'Content-Type':'application/json'}};
 async function refreshProjects(){try{const d=await api('/api/projects');$('plist').innerHTML=d.projects.map(p=>`<option value="${p.name}">`).join('')}catch(e){}}
 async function saveProject(silent){const name=$('pname').value.trim();if(!name){updPStat('Type a project name first');return}

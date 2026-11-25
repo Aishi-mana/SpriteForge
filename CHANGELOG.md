@@ -267,3 +267,6 @@ Locked first and final image frames, independent SDXL in-betweens or quick cross
 
 ## Phase 27 — soft joint deformation
 Optional CPU two-bone mesh skinning for elbows and knees; per-clip softness, preview/export and directional integration, rigid fallback, pixel/HD sampling, regression tests. Phase 25/26 retained.
+
+## Phase 28 — character model compatibility
+Architecture-aware text generation and checkpoint-specific LoRA compatibility labels. Local Diffusers folders and experimental Lumina single-file transformer route. Existing SDXL reference/inpaint retained. GPU validation pending.
