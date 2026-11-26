@@ -316,3 +316,6 @@ Optional custom-rig weighted mesh, automatic nearest-four binding, normalized ma
 
 ## Phase 42 — Advanced animation timeline
 Custom rig frame-indexed bone rotation tracks, linear/ease/step interpolation, capture/duplicate/delete, scrub/playback and onion skins, reused weighted binding, fixed-cell spritesheet export and project/preset persistence. Existing manual pose preserved. CPU CI pending.
+
+## Phase 43 — Inverse kinematics and foot locking
+Two-bone analytic IK, adjustable bend/strength limits, draggable targets and residual preview, target keyframes and fixed contact ranges, shared rigid/weighted pose and timeline rendering, saved constraints. Existing manual and modular rigs retained. CPU validation pending.
