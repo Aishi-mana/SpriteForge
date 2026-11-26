@@ -44,7 +44,7 @@ for sz in (16, 24, 48, 64):
     s_, _ = T.tile_post(texture(512, 3), sz, 16); ok(s_.size == (sz, sz), f"tile size {sz} (also non-divisors of the render size)")
 
 # fake SDXL (positional signature of gen.generate)
-tmp = tmpdir(); M.ROOT = tmp; M.CFG_PATH = tmp / "config.json"; md = tmp / "m"; (md / "checkpoints").mkdir(parents=True); (md / "loras").mkdir(); (md / "checkpoints" / "sd_xl_base_1.0.safetensors").write_bytes(b"x")
+tmp = tmpdir(); M.ROOT = tmp; M.CFG_PATH = tmp / "config.json"; md = tmp / "m"; (md / "checkpoints").mkdir(parents=True); (md / "loras").mkdir(); mock_sdxl_checkpoint(md / "checkpoints" / "sd_xl_base_1.0.safetensors")
 M.CFG_PATH.write_text(json.dumps({"models_dir": str(md)})); calls = []
 def fake_generate(*a, **k):
     calls.append(a); kind = a[17]

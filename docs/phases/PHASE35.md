@@ -1,0 +1,12 @@
+# Phase 35 — Independent animated layer export
+
+In Modular, configure a rig, layer attachments and motion settings, and choose a standard animation. Open Independent animated layer export, choose shared columns, optionally include hidden non-body alternatives (default on), and optionally save individual PNG frames. Click Export synchronized layer sheets. Export runs the same body pose and independent attachment transforms (rigid, soft mesh and spring) in one render pass. Each layer is captured separately before cross-layer compositing. The visible body is required; hidden body alternatives and zero-opacity layers are excluded. No recipe edits or model inference occur.
+
+Each export writes a unique folder under exports/ containing:
+- layers/layer_XX.png: transparent untrimmed sheets with identical cell size, sheet size, and frame rectangles.
+- manifest.json: clip name, FPS, loop status, frame indices/rectangles, common feet pivot in pixels and normalized coordinates, top-left origin, straight alpha, sampling, rig orientation and amplitude, source layer index, ID, name, category, attachment, motion settings, default visibility and z-order.
+- assembled.png: default visible layers composited in manifest order. This reconstructs exactly by straight-alpha compositing those PNG sheets.
+- README.txt: runtime usage.
+- frames/layer_XX/NNN.png when individual frames are enabled.
+
+At runtime, use the same frame index for every active layer and draw each at character position minus the shared pivot. Sort by z, toggle alternative visibility or category, and use nearest filtering for pixel assets. Transparent frames still occupy cells. Stable IDs are based on the source recipe index, not the name; keep layer order stable across exports. Export one clip at a time with matching recipe, orientation and explicit positive padding to keep cells the same size across clips; automatic padding is clip dependent. The standard flattened export remains unchanged. The manifest is engine-neutral, not a ready-to-run Godot/Unity equipment system or a skeletal runtime format. Pixel layer export uses nearest downsampling to avoid cross-layer palette bleed, so edge pixels may differ from standard preview. The assembled sheet is the authoritative exported composite. Existing clipping and coarse z-order limitations apply. Sheet allocation capped at 32 million aggregate pixels including assembled sheet and 16,384 pixels per axis; existing rig surface budgets also apply. Regression tests added; live engine/browser verification pending.

@@ -19,7 +19,7 @@ def validate_profile(profile):
         out[name]=[float(v) for v in p]
     return {"body_key":key,"joints":out}
 
-def prepare(recipe):
+def prepare(recipe,include_hidden=False):
     clean,images=modular.validate(recipe)
     visible=[i for i,l in enumerate(clean["layers"]) if l["visible"] and l["opacity"]]
     bodies=[i for i in visible if clean["layers"][i]["category"]=="body"]
@@ -36,15 +36,19 @@ def prepare(recipe):
     joints=profile["joints"] if valid else rig.autoplace(body)
     for xy in joints.values():
         if xy[0]>body.width or xy[1]>body.height:raise ValueError("Joint outside body canvas")
-    attachments=[(single(i),clean["layers"][i]["attachment"],i<idx,clean["layers"][i]["motion"]) for i in visible if i!=idx]
+    indices=[i for i,l in enumerate(clean["layers"]) if i!=idx and l["category"]!="body" and l["opacity"] and (l["visible"] or include_hidden)]
+    # Hidden alternatives render at their saved transform without changing the recipe.
+    order=modular.layer_order(clean["layers"],indices,idx)
+    behind=set(order[:order.index(idx)])
+    attachments=[(modular.composite({**clean,"layers":[{**clean["layers"][i],"visible":True}]},[images[i]]),clean["layers"][i]["attachment"],i in behind,clean["layers"][i]["motion"],clean["layers"][i].get("occlusion",{}).get("bones",[])) for i in indices]
     return clean,body,key,joints,valid,attachments
 
 def describe(recipe):
     clean,body,key,joints,valid,attachments=prepare(recipe)
     return {"body":modular.png_uri(body),"body_key":key,"joints":joints,"saved_rig":valid,"bones":list(modular.ATTACHMENTS)}
 
-def render(recipe,anim,count=8,facing="right",near="r",weapon="r",amp=1.,pad=0,overlap=1,softness=0):
-    clean,body,key,joints,valid,attachments=prepare(recipe)
+def render(recipe,anim,count=8,facing="right",near="r",weapon="r",amp=1.,pad=0,overlap=1,softness=0,layer_sink=None,include_hidden=False):
+    clean,body,key,joints,valid,attachments=prepare(recipe,include_hidden)
     if anim not in rig.CLIPS:raise ValueError("Select a standard rig animation")
     if facing not in ("left","right") or near not in ("l","r","both") or weapon not in ("l","r"):raise ValueError("Invalid rig orientation")
     count=modular.integer(count,1,32,"frame count")
@@ -55,10 +59,11 @@ def render(recipe,anim,count=8,facing="right",near="r",weapon="r",amp=1.,pad=0,o
     pixels=(body.width+2*margin)*(body.height+2*margin)
     if pixels*count>32_000_000:raise ValueError("Modular clip exceeds frame memory budget; lower size, frames or padding")
     # Each auto-partitioned layer may allocate up to ten surfaces; cap aggregate supersampled work.
-    parts=sum(len(rig.BONES) if bone=="auto" else motion["segments"] if motion["mode"]=="spring" else 1 for _,bone,_,motion in attachments)
+    parts=sum(1 if motion["mode"]=="weighted" else len(rig.BONES) if bone=="auto" else motion["segments"] if motion["mode"]=="spring" else 1 for _,bone,_,motion,_ in attachments)
+    occluders={b for _,_,behind,_,bones in attachments if not behind for b in bones}
     ss=2 if clean["pixel"] else 1
-    if pixels*ss*ss*(parts+len(rig.BONES))>32_000_000:raise ValueError("Too many visible bone layers for this canvas; hide alternatives or reduce size")
-    if any(m["mode"]!="rigid" for _,_,_,m in attachments) and pixels*ss*ss>8_000_000:
+    if pixels*ss*ss*(parts+len(rig.BONES)+len(occluders))>32_000_000:raise ValueError("Too many visible bone layers for this canvas; hide alternatives or reduce size")
+    if any(m["mode"]!="rigid" for _,_,_,m,_ in attachments) and pixels*ss*ss>8_000_000:
         raise ValueError("Deformable modular canvas exceeds memory budget; reduce size or padding")
     return rig.render(body,joints,[],anim,count,facing,near,weapon,amp,pad,overlap,ss,
-                      softness=softness,attachments=attachments,force_hd=not clean["pixel"])
+                      softness=softness,attachments=attachments,force_hd=not clean["pixel"],layer_sink=layer_sink)

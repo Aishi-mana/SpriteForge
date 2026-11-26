@@ -136,7 +136,7 @@ for bad_tile in (Image.new("RGBA", (16, 24), (1, 1, 1, 255)), Image.new("RGBA", 
     raises2(lambda: T.repair_seams(bad_tile, good_inpaint, "x", "", "ck", "", 1.0, "ld"), f"tile {bad_tile.size}")
 
 # ================= endpoints =================
-tmp2 = tmpdir(); M.ROOT = tmp2; M.CFG_PATH = tmp2 / "config.json"; md = tmp2 / "m"; (md / "checkpoints").mkdir(parents=True); (md / "loras").mkdir(); (md / "checkpoints" / "sd_xl_base_1.0.safetensors").write_bytes(b"x")
+tmp2 = tmpdir(); M.ROOT = tmp2; M.CFG_PATH = tmp2 / "config.json"; md = tmp2 / "m"; (md / "checkpoints").mkdir(parents=True); (md / "loras").mkdir(); mock_sdxl_checkpoint(md / "checkpoints" / "sd_xl_base_1.0.safetensors")
 M.CFG_PATH.write_text(json.dumps({"models_dir": str(md)})); CK = "sd_xl_base_1.0.safetensors"
 r = M.terrain_generate(M.TerrainBody(a=data_url(A16), b=data_url(B16), kind="corner16")); ok(len(r["tiles"]) == 16 and r["tiles"][11]["corners"] == [1, 0, 1, 1] and r["lookup"] == [] and r["n"] == 2 and from_url(r["tiles"][0]["image"]).size == (16, 16), "corner16 endpoint")
 r = M.terrain_generate(M.TerrainBody(a=data_url(A16), b=data_url(B16), c=data_url(C16), d=data_url(D16) if False else None, kind="multi")); ok(len(r["tiles"]) == 81 and r["n"] == 3, "multi endpoint with 3 terrains")
