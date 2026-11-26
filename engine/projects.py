@@ -191,7 +191,7 @@ def _save(root, name, data):
     clean_recipe=modular.validate(recipe)[0] if recipe is not None else None
     d = _dir(root, name)
     images = data.get("images") or {}
-    keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig", "characterart")
+    keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig", "characterart", "charactersprite")
     # Reject malformed input before replacing any image from an existing project.
     staged={key:_decode_png(images[key]) for key in keys if images.get(key)}
     d.mkdir(parents=True, exist_ok=True)
@@ -223,7 +223,7 @@ def load(root, name):
     doc["results"] = _load_results(d)
     doc["portrait"] = _load_portrait(d)
     doc["tileset"] = _load_tileset(d)
-    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig", "characterart")}
+    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig", "characterart", "charactersprite")}
     return doc
 
 
