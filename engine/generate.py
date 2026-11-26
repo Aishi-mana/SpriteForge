@@ -26,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "character_art":
+        return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", close-up, headshot, waist-up, feet out of frame, character sheet, multiple views"
     if kind == "modular_asset":
         return "person, mannequin, face, skin, hands, body, scenery, cast shadow, text, watermark, cropped item, duplicate items, blurry"
     if kind == "sprite" and art_style != "pixel":
