@@ -54,4 +54,27 @@ ok(projects._dir(root, "../../etc").parent.name == "projects", "path traversal i
 try: projects.save(root, "x", {"images": {"ref": "data:image/png;base64,AAAA"}}); ok(False, "bad image")
 except Exception: ok(True, "a corrupt image is rejected, never written")
 ok(projects.list_projects(root)[0]["name"] == "My Knight", "listing works"); projects.delete(root, "My Knight"); ok(projects.list_projects(root) == [], "delete works")
+import io, zipfile
+root = tmpdir()
+projects.save(root, "Original", doc)
+projects.add_sprite(root, "Original", img)
+raw = projects.bundle(root, "Original")
+projects.restore_bundle(root, "Restored", raw)
+projects.duplicate(root, "Original", "Copy")
+for name in ("Restored", "Copy"):
+    data = projects.load(root, name)
+    ok(data["name"] == name and data["settings"] == doc["settings"] and len(data["results"]["walk"]["frames"]) == 2 and len(projects.list_sprites(root, name)) == 1, "bundle round trip preserves project data and gallery")
+try:
+    projects.duplicate(root, "Original", "Copy")
+    ok(False, "existing destination rejected")
+except projects.ProjectError:
+    ok(True, "existing destination rejected")
+bad = io.BytesIO()
+with zipfile.ZipFile(bad, "w") as z:
+    z.writestr("../escape.json", "{}")
+try:
+    projects.restore_bundle(root, "Bad", bad.getvalue())
+    ok(False, "traversal rejected")
+except projects.ProjectError:
+    ok(not (root / "projects" / "Bad").exists(), "traversal rejected without publishing partial project")
 done("test_export_projects")
