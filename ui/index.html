@@ -975,6 +975,12 @@ function alpha61Protect(mask,w,h,x,y,radius,value){
   for(let xx=Math.max(0,x-radius);xx<=Math.min(w-1,x+radius);xx++)
    if((xx-x)**2+(yy-y)**2<=radius**2)mask[yy*w+xx]=value;
 }
+function alpha61HistoryTrim(history,limit=32000000){
+ let bytes=history.reduce((n,h)=>n+h.frame.data.byteLength+h.mask.byteLength+2*h.preview.length,0);
+ while(history.length>1&&(history.length>8||bytes>limit)){
+  const h=history.shift();bytes-=h.frame.data.byteLength+h.mask.byteLength+2*h.preview.length;
+ }
+}
 function alpha61Open(result,refresh,returnOnClose=false){
  const dlg=document.createElement('dialog');dlg.style.cssText='max-width:90vw;max-height:90vh;overflow:auto;background:#191e29;color:#eee;border:1px solid #64748b;border-radius:10px;padding:16px';
  dlg.innerHTML='<h3>Alpha cleanup</h3><div class="mut">Choose the original background color. Magic eraser removes connected exterior background without feathering; Smart removes flat pockets; Manual removes only clicked regions. Preview before applying.</div><label>Background</label><select data-x="bg"><option>white</option><option>light gray</option><option>green</option><option>magenta</option><option>auto</option></select><label>Mode</label><select data-x="mode"><option value="magic">Magic background eraser</option><option value="shadow">Ground shadow removal</option><option value="smart" selected>Smart pockets</option><option value="edge">Outer edges</option><option value="all">All matching regions (aggressive)</option><option value="manual">Manual pocket selection</option></select><label>Tolerance</label><input data-x="tol" type="number" min="1" max="100" value="30"><label><input data-x="soft" type="checkbox" checked> Soft edges</label><label>Shadow sensitivity (shadow mode only)</label><input data-x="shadow" type="number" min="0" max="100" value="50"><label>Edge refinement (current preview)</label><label>Halo strength</label><input data-x="halo" type="number" min="0" max="100" value="50"><label>Alpha cutoff (0–254)</label><input data-x="cutoff" type="number" min="0" max="254" value="12"><label><input data-x="hard" type="checkbox" checked> Preserve hard pixel colors</label><button data-x="refine">Refine current preview</button><label>Manual tool</label><select data-x="tool"><option value="none">None / automatic preview</option><option value="wand">Magic wand (connected color)</option><option value="smart">Smart eraser (sampled color)</option><option value="erase">Eraser brush</option><option value="restore">Restore original brush</option><option value="protect">Paint protection</option><option value="unprotect">Remove protection</option></select><label>Brush radius (source pixels)</label><input data-x="radius" type="number" min="1" max="64" value="4"><button data-x="back">Undo manual stroke</button><button data-x="clearprotect">Clear protection</button><label><input data-x="showprotect" type="checkbox" checked> Show protected pixels (cyan)</label><div style="position:relative;display:table"><canvas data-x="canvas" class="px" style="display:block;max-width:65vw;max-height:48vh;object-fit:contain;cursor:crosshair;touch-action:none;image-rendering:pixelated"></canvas><canvas data-x="overlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated"></canvas></div><div data-x="status" class="mut"></div><div class="row"><button data-x="preview">Preview</button><button data-x="undo">Reset preview</button><button data-x="apply">Apply</button><button data-x="close">Cancel</button></div>';
@@ -982,23 +988,26 @@ function alpha61Open(result,refresh,returnOnClose=false){
  const q=k=>dlg.querySelector('[data-x="'+k+'"]'),original=result.sprite;
  const canvas=q('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
  const overlay=q('overlay'),oc=overlay.getContext('2d');
- let locked=null;
+ let locked=null,overlayFrame=null,maskFrame=null,redraw=0;
+ const maskCanvas=document.createElement('canvas'),maskCtx=maskCanvas.getContext('2d');
  let source=null,preview=original,busy=true,points=[],history=[],drag=null,closed=false;
  function load(src){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Cannot load cleanup image'));im.src=src})}
- function paint(im){canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;ctx.drawImage(im,0,0)}
- function showMask(){if(!locked)return;overlay.width=canvas.width;overlay.height=canvas.height;const frame=oc.createImageData(canvas.width,canvas.height);if(q('showprotect').checked)for(let i=0;i<locked.length;i++)if(locked[i]){frame.data[i*4]=0;frame.data[i*4+1]=220;frame.data[i*4+2]=255;frame.data[i*4+3]=110}oc.putImageData(frame,0,0)}
- function maskPNG(){if(!locked||!locked.some(v=>v))return null;const m=document.createElement('canvas');m.width=canvas.width;m.height=canvas.height;const mc=m.getContext('2d'),f=mc.createImageData(m.width,m.height);for(let i=0;i<locked.length;i++){const v=locked[i]?255:0;f.data.set([v,v,v,255],i*4)}mc.putImageData(f,0,0);return m.toDataURL('image/png')}
+ function paint(im){if(Math.max(im.naturalWidth,im.naturalHeight)>1024||!im.naturalWidth||!im.naturalHeight)throw Error('Alpha cleanup supports images up to 1024 px per side');canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;ctx.drawImage(im,0,0)}
+ function showMask(){if(!locked)return;if(!overlayFrame){overlay.width=canvas.width;overlay.height=canvas.height;overlayFrame=oc.createImageData(canvas.width,canvas.height)}const frame=overlayFrame;frame.data.fill(0);if(q('showprotect').checked)for(let i=0;i<locked.length;i++)if(locked[i]){frame.data[i*4]=0;frame.data[i*4+1]=220;frame.data[i*4+2]=255;frame.data[i*4+3]=110}oc.putImageData(frame,0,0)}
+ function maskPNG(){if(!locked||!locked.some(v=>v))return null;if(!maskFrame){maskCanvas.width=canvas.width;maskCanvas.height=canvas.height;maskFrame=maskCtx.createImageData(canvas.width,canvas.height)}const f=maskFrame;for(let i=0;i<locked.length;i++){const v=locked[i]?255:0,j=i*4;f.data[j]=f.data[j+1]=f.data[j+2]=v;f.data[j+3]=255}maskCtx.putImageData(f,0,0);return maskCanvas.toDataURL('image/png')}
  function lock(v){busy=v;for(const k of ['apply','preview','undo','back','mode','bg','tol','soft','shadow','tool','radius','halo','cutoff','hard','refine','clearprotect','showprotect'])q(k).disabled=v}
- function snapshot(){history.push({frame:ctx.getImageData(0,0,canvas.width,canvas.height),mask:locked.slice(),preview});if(history.length>8)history.shift()}
+ function snapshot(){history.push({frame:ctx.getImageData(0,0,canvas.width,canvas.height),mask:locked.slice(),preview});alpha61HistoryTrim(history)}
+ function flushStroke(){if(redraw){cancelAnimationFrame(redraw);redraw=0}if(!drag)return;if(drag.tool==='protect'||drag.tool==='unprotect')showMask();else ctx.putImageData(drag.frame,0,0)}
+ function scheduleStroke(){if(!redraw)redraw=requestAnimationFrame(()=>{redraw=0;flushStroke()})}
  function sync(){preview=canvas.toDataURL('image/png')}
  function point(e){const r=canvas.getBoundingClientRect();return [Math.max(0,Math.min(canvas.width-1,Math.floor((e.clientX-r.left)*canvas.width/r.width))),Math.max(0,Math.min(canvas.height-1,Math.floor((e.clientY-r.top)*canvas.height/r.height)))]}
  q('bg').value=['white','light gray','green','magenta'].includes($('bg')?.value)?$('bg').value:'white';q('soft').checked=result.info?.pipeline==='hd';
  async function init(){lock(true);try{const im=await load(original);if(closed)return;paint(im);source=ctx.getImageData(0,0,canvas.width,canvas.height);locked=new Uint8Array(canvas.width*canvas.height);showMask();lock(false)}catch(e){q('status').textContent=e.message}}
  async function run(refining=false){refining=refining===true;if(busy||drag||!source)return;lock(true);q('status').textContent='Cleaning…';try{
-  const d=await api('/api/alpha/cleanup',{...J,body:JSON.stringify({image:refining?preview:original,mode:refining?'refine':q('mode').value,background:q('bg').value,tolerance:+q('tol').value,soft:q('soft').checked,shadow_strength:+q('shadow').value,edge_strength:+q('halo').value,alpha_cutoff:+q('cutoff').value,hard_edges:q('hard').checked,protection:maskPNG(),points:!refining&&q('mode').value==='manual'?points:[]})});
+  const started=performance.now();const d=await api('/api/alpha/cleanup',{...J,body:JSON.stringify({image:refining?preview:original,mode:refining?'refine':q('mode').value,background:q('bg').value,tolerance:+q('tol').value,soft:q('soft').checked,shadow_strength:+q('shadow').value,edge_strength:+q('halo').value,alpha_cutoff:+q('cutoff').value,hard_edges:q('hard').checked,protection:maskPNG(),points:!refining&&q('mode').value==='manual'?points:[]})});
   const im=await load(d.sprite);if(closed)return;if(im.naturalWidth!==canvas.width||im.naturalHeight!==canvas.height)throw Error('Cleanup changed canvas size');
   snapshot();ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(im,0,0);preview=d.sprite;
-  q('status').textContent=d.info.note||d.info.removed+' pixels removed · '+d.info.pockets+' pockets'+(d.info.shadow_removed!==undefined?' · '+d.info.shadow_removed+' shadow pixels':'')+(d.info.decontaminated!==undefined?' · '+d.info.decontaminated+' halo pixels corrected':'')+(d.info.protected!==undefined?' · '+d.info.protected+' protected pixels':'')
+  q('status').textContent=(d.info.note||d.info.removed+' pixels removed · '+d.info.pockets+' pockets'+(d.info.shadow_removed!==undefined?' · '+d.info.shadow_removed+' shadow pixels':'')+(d.info.decontaminated!==undefined?' · '+d.info.decontaminated+' halo pixels corrected':'')+(d.info.protected!==undefined?' · '+d.info.protected+' protected pixels':''))+' · '+Math.round(performance.now()-started)+' ms'
  }catch(e){q('status').textContent=e.message}finally{if(!closed)lock(false)}}
  function dab(x,y){if(drag.tool==='protect'||drag.tool==='unprotect'){alpha61Protect(locked,canvas.width,canvas.height,x,y,drag.radius,drag.tool==='protect'?1:0);return}alpha61Stroke(drag.frame.data,source.data,canvas.width,canvas.height,drag.tool,x,y,drag.radius,drag.tol,drag.seed,locked)}
  canvas.onpointerdown=e=>{
@@ -1008,10 +1017,10 @@ function alpha61Open(result,refresh,returnOnClose=false){
   const frame=ctx.getImageData(0,0,canvas.width,canvas.height),tol=Math.max(1,Math.min(100,+q('tol').value||30));
   if(tool==='wand'){alpha61Wand(frame.data,canvas.width,canvas.height,x,y,tol,locked);ctx.putImageData(frame,0,0);sync();q('status').textContent='Manual wand applied to preview.';return}
   drag={id:e.pointerId,frame,tool,x,y,tol,radius:Math.max(1,Math.min(64,Math.round(+q('radius').value||4))),seed:frame.data.slice((y*canvas.width+x)*4,(y*canvas.width+x)*4+4)};
-  canvas.setPointerCapture(e.pointerId);dab(x,y);ctx.putImageData(frame,0,0);showMask();
+  canvas.setPointerCapture(e.pointerId);dab(x,y);scheduleStroke();
  };
- canvas.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;const [x,y]=point(e),dx=x-drag.x,dy=y-drag.y,n=Math.max(1,Math.ceil(Math.hypot(dx,dy)));for(let i=1;i<=n;i++)dab(Math.round(drag.x+dx*i/n),Math.round(drag.y+dy*i/n));drag.x=x;drag.y=y;ctx.putImageData(drag.frame,0,0);showMask()};
- function finish(e){if(!drag||e.pointerId!==drag.id)return;const maskOnly=drag.tool==='protect'||drag.tool==='unprotect';drag=null;if(!maskOnly)sync();q('status').textContent='Manual stroke applied to preview.'}
+ canvas.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;const [x,y]=point(e),dx=x-drag.x,dy=y-drag.y,n=Math.max(1,Math.ceil(Math.hypot(dx,dy)));for(let i=1;i<=n;i++)dab(Math.round(drag.x+dx*i/n),Math.round(drag.y+dy*i/n));drag.x=x;drag.y=y;scheduleStroke()};
+ function finish(e){if(!drag||e.pointerId!==drag.id)return;flushStroke();const maskOnly=drag.tool==='protect'||drag.tool==='unprotect';drag=null;if(!maskOnly)sync();q('status').textContent='Manual stroke applied to preview.'}
  canvas.onpointerup=finish;canvas.onpointercancel=finish;canvas.onlostpointercapture=finish;
  q('showprotect').onchange=showMask;
  q('clearprotect').onclick=()=>{if(busy||drag||!locked)return;snapshot();locked.fill(0);showMask()};
@@ -1020,7 +1029,7 @@ function alpha61Open(result,refresh,returnOnClose=false){
  q('back').onclick=()=>{if(busy||drag||!history.length)return;const h=history.pop();ctx.putImageData(h.frame,0,0);locked=h.mask;preview=h.preview;showMask();q('status').textContent='Previous preview restored.'};
  q('undo').onclick=()=>{if(busy||drag||!source)return;points=[];history=[];locked.fill(0);showMask();ctx.putImageData(source,0,0);preview=original;q('status').textContent='Original restored.'};
  q('apply').onclick=()=>{if(busy||drag||!source)return;if(!ctx.getImageData(0,0,canvas.width,canvas.height).data.some((v,i)=>i%4===3&&v>0)){q('status').textContent='Preview is fully transparent; restore or undo before applying.';return}if(result.sprite!==original){q('status').textContent='Source changed; reopen cleanup.';return}ie61Commit(result,{sprite:preview,info:{}},'Alpha cleanup');dlg.close();if(!returnOnClose)refresh()};
- q('close').onclick=()=>dlg.close();dlg.addEventListener('close',()=>{closed=true;dlg.remove();if(returnOnClose)refresh()});document.body.appendChild(dlg);dlg.showModal();init()
+ q('close').onclick=()=>dlg.close();dlg.addEventListener('close',()=>{closed=true;if(redraw)cancelAnimationFrame(redraw);drag=null;history=[];dlg.remove();if(returnOnClose)refresh()});document.body.appendChild(dlg);dlg.showModal();init()
 
 }
 /*ALPHA61-END*/
