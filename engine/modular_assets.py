@@ -191,8 +191,13 @@ def extract_edit(body,edited,guide,tolerance=30):
         raise ValueError("Edited body and guide must share the reference canvas")
     src=np.asarray(body.convert("RGBA"))
     dst=np.asarray(edited.convert("RGBA"))
-    delta=np.max(np.abs(src.astype(np.int16)-dst.astype(np.int16)),axis=2)
-    changed=(dst[:,:,3]>=32)&((src[:,:,3]<32)|(delta>tolerance))
+    # Keep peak working storage bounded: compare one channel at a time.
+    if not 1<=tolerance<=100:
+        raise ValueError("Invalid extraction tolerance")
+    changed=src[:,:,3]<32
+    for k in range(4):
+        changed |= np.abs(src[:,:,k].astype(np.int16)-dst[:,:,k].astype(np.int16))>tolerance
+    changed &= dst[:,:,3]>=32
     if not changed.any():
         raise ValueError("No changed asset pixels found; retry the edit")
     out=np.zeros_like(dst)
@@ -293,20 +298,35 @@ def specialized_guide(body,category,profile="auto",hand="right"):
 
 
 def review_candidate(recipe,layer,replace_category=True,guide=None):
-    clean,images,body,_=reference(recipe,"body")
     if not isinstance(layer,dict) or layer.get("category") not in REGIONS:
         raise ValueError("Candidate must be a detachable asset")
-    combined,decoded=modular.validate({**clean,"layers":clean["layers"]+[layer]})
+    if not isinstance(recipe,dict) or not isinstance(recipe.get("layers"),list):
+        raise ValueError("Invalid modular recipe")
+    # Validate/decode the complete recipe only once.
+    combined,decoded=modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
     candidate=combined["layers"][-1]
     source=decoded[-1]
+    clean={**combined,"layers":combined["layers"][:-1]}
+    images=decoded[:-1]
+    body=modular.composite({**clean,"layers":[{**l,"visible":l["visible"] and l["category"]=="body"} for l in clean["layers"]]},images)
+    if not body.getchannel("A").getbbox():
+        raise ValueError("Add a visible body base before reviewing an asset")
     if not source.getchannel("A").getbbox():
         raise ValueError("Candidate has no visible pixels")
     # Render the transformed layer alone, using the same compositor as acceptance.
     placed=modular.composite({**clean,"layers":[candidate]},[source])
     if not placed.getchannel("A").getbbox():
         raise ValueError("Candidate is completely outside the canvas or invisible")
+    bounds=source.getchannel("A").getbbox()
+    scale=candidate["scale"]/100
+    # Conservative bounds warning: interpolation may alter edge coverage.
+    l,t,r,b=bounds
+    if candidate["flip"]:
+        l,r=source.width-r,source.width-l
+    x,y=candidate["x"],candidate["y"]
+    clipping=x+l*scale<0 or y+t*scale<0 or x+r*scale>placed.width or y+b*scale>placed.height
     info={"size":list(source.size),"placed_bounds":list(placed.getchannel("A").getbbox()),
-          "review_required":True}
+          "clipping_warning":bool(clipping),"review_required":True}
     if guide is not None:
         if guide.size!=body.size:
             raise ValueError("Placement mask must match recipe canvas")

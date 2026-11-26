@@ -1017,6 +1017,8 @@ def modular_generate_asset(b: ModularAsset):
     from . import local_runtime as lr
     ckpt,lora_dir=_paths(b.checkpoint)
     try:
+        if not 0<=b.ip_scale<=1 or not 0<=b.lora_weight<=2 or not -1<=b.seed<2**31 or not 1<=b.bg_tol<=100:
+            raise ValueError("Invalid modular generation settings")
         model=mf.describe(ckpt)
         from . import instruction_edit
         backend=instruction_edit.capability(model)
@@ -1025,12 +1027,16 @@ def modular_generate_asset(b: ModularAsset):
         if not b.extraction and not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
         spec=modular_assets.asset_profile(b.category,b.profile,b.hand)
         modular_assets.prompt(b.category,b.description,b.view)
-        description=b.description.strip()+("; "+spec["description"] if spec["description"] else "")
+        description=b.description.strip()
+        if spec["description"]:
+            description=description[:1200-len(spec["description"])-2]+"; "+spec["description"]
         prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
         recipe,images,ref,bb=modular_assets.reference(b.recipe,"body" if b.fixed_canvas else b.source)
         if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
+        if b.fixed_canvas and sum(im.width*im.height for im in images)+recipe["width"]*recipe["height"]>modular.MAX_SOURCE_PIXELS:
+            raise ValueError("Not enough source pixel budget for a registered layer")
         art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
         guide=None
         if b.fixed_canvas:
@@ -1073,7 +1079,12 @@ def modular_generate_asset(b: ModularAsset):
         info.update(category=b.category,checkpoint=b.checkpoint,reference_method=backend if b.extraction else (lr.route(ckpt) or "sdxl_ip_adapter"))
         return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info,"placement_mask":modular.png_uri(guide) if guide is not None else None}
     except ValueError as e:raise HTTPException(400,str(e))
-    except RuntimeError as e:raise HTTPException(409,str(e))
+    except RuntimeError as e:
+        if "out of memory" in str(e).lower():
+            raise HTTPException(503,"Modular generation ran out of memory. Reduce generation resolution to 640 and retry.")
+        if "Another instruction edit" in str(e):
+            raise HTTPException(409,str(e))
+        raise HTTPException(500,str(e))
 
 
 class ModularCandidateReview(BaseModel):

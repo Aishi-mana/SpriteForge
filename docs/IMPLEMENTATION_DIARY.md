@@ -652,3 +652,20 @@ Use the following template for each future change (replace placeholders with act
 
 - `engine/modular_assets.py` adds validated non-destructive candidate review, transformed placement metrics and registered export (`9b8af0418657`); API endpoint (`2c168ea8d0cb`); Modular UI cleanup, manual transforms, reset, preview and export (`e07c574b540c`, `acda8336e988`); CPU regressions (`405dddede84a`).
 - Decisions: explicit review before accepting, reuse existing Alpha Cleanup, numeric transforms, no recipe mutation during review. Partial clipping and browser alpha rounding remain possible. CI and hardware acceptance pending; stacked on 61M-E. [Phase notes](phases/PHASE61MF.md). Next 61M-G. Windows packaging remains on hold.
+
+### 2026-11-26T22:20:53Z — 61M-D integration
+
+- PR #72 passed CPU validation run 45903481248 and merged at `c0abab5e357a`.
+
+### 2026-11-26T22:21:01Z — 61M-E integration
+
+- PR #73 passed CPU validation run 45903693075 and merged at `4fd7393bac35`.
+
+### 2026-11-26T22:21:10Z — 61M-F integration
+
+- PR #74 passed CPU validation run 45903911050 and merged at `99a04d0480f7`.
+
+### 2026-11-27 (Manila) — Phase 61M-G: stabilization
+
+- `engine/modular_assets.py` reduces extraction temporary arrays, avoids duplicate validation and adds conservative clipping warning (`168e42f312aa`); API preflight and error handling (`a7dd075f3d0c`); UI freshness checks, image release and review timing (`55e0e34a7310`); regression tests (`7fe38d0eeddd`).
+- No measured speedup or GPU/desktop acceptance. Heuristic fit and nonsemantic extraction limitations remain. CPU CI pending. [Phase notes](phases/PHASE61MG.md); manual checklist updated. Phase 62 packaging remains on hold.
