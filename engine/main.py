@@ -1524,8 +1524,39 @@ class CharacterArtParams(GenParams):
     reference: Optional[str] = None
     reference_strength: float = 0.65
     art_style: str = "anime"
-    gen_size: int = 768
+    gen_size: int = 640
     remove_bg: bool = False
+
+
+def _character_reference(data, ckpt=None, bg="white"):
+    """Bound decoding before allocating pixels; preserve native worker reference composition."""
+    from . import local_runtime as lr
+    if not isinstance(data,str) or len(data)>8_000_000 or not data.startswith("data:image/png;base64,"):
+        raise HTTPException(400,"Expected a PNG reference under 8 MB encoded")
+    try:
+        raw=base64.b64decode(data.split(",",1)[1],validate=True)
+        with Image.open(io.BytesIO(raw)) as im:
+            if im.format!="PNG" or max(im.size)>1024 or min(im.size)<1:
+                raise ValueError("Reference must be PNG, at most 1024 px per side")
+            ref=im.convert("RGBA")
+        if not ref.getchannel("A").getbbox():
+            raise ValueError("Reference has no visible foreground")
+    except Exception as e:
+        raise HTTPException(400,"Invalid character reference: "+str(e))
+    if ckpt is None or lr.route(ckpt):
+        return ref
+    return gen.prep_reference(ref,bg)
+
+
+def _character_budget(p):
+    if not 1<=p.n<=3 or p.gen_size not in (640,768,896,1024):
+        raise HTTPException(400,"Choose 1–3 variations and a supported generation size")
+    if not 1<=p.steps<=100 or not 0<=p.cfg<=30 or not 0<=p.reference_strength<=1 or not 0<=p.bg_tol<=255:
+        raise HTTPException(400,"Invalid character generation settings")
+    if not 16<=p.size<=256 or not 4<=p.colors<=64 or not 256<=p.hd_size<=1024:
+        raise HTTPException(400,"Invalid character output size or color count")
+    if len(p.prompt)>4000 or len(p.negative)>4000:
+        raise HTTPException(400,"Character prompt is too long")
 
 
 def _identity_prompt(p):
@@ -1544,20 +1575,11 @@ CHARACTER_VIEWS = {"front": "front view, facing viewer", "side": "side profile, 
 def character_artwork(p: CharacterArtParams):
     if p.view not in CHARACTER_VIEWS or not p.prompt.strip():
         raise HTTPException(400, "Choose a valid view and describe the character")
-    if not 1 <= p.n <= 3 or p.gen_size not in (640, 768, 896, 1024):
-        raise HTTPException(400, "Choose 1–3 variations and a supported generation size")
+    _character_budget(p)
     ckpt, lora_dir = _paths(p.checkpoint)
     art_style = _art_style(p.art_style)
     gen.set_sampler(p.sampler)
-    ip = None
-    if p.reference:
-        try:
-            ref = _dec_img(p.reference)
-            if max(ref.size) > 1024:
-                raise ValueError("Reference exceeds 1024 px")
-            ip = gen.prep_reference(ref, p.bg)
-        except Exception as e:
-            raise HTTPException(400, "Invalid master reference: " + str(e))
+    ip = _character_reference(p.reference,ckpt,p.bg) if p.reference else None
     if art_style == "pixel":
         post = lambda raw: px.pixelize(raw, "canvas", max(64,min(p.size,256)), max(4,min(p.colors,64)), "none", p.remove_bg, p.bg_tol, remove_shadow=False)
     else:
@@ -1579,15 +1601,12 @@ def character_sprite(p: CharacterSpriteParams):
     from . import character_sprite as cs, local_runtime as lr
     if not p.reference or p.conversion not in ("ai","direct") or p.view not in CHARACTER_VIEWS:
         raise HTTPException(400,"Choose a master, conversion mode and view")
-    if not 1 <= p.n <= 3 or p.gen_size not in (640,768,896,1024):
-        raise HTTPException(400,"Invalid sprite generation budget")
+    _character_budget(p)
     style = _art_style(p.art_style)
     if not 16 <= p.size <= 256 or not 4 <= p.colors <= 64 or not 256 <= p.hd_size <= 1024:
         raise HTTPException(400,"Invalid sprite size or color count")
     try:
-        ref = _dec_img(p.reference)
-        if max(ref.size)>1024:
-            raise ValueError("Master exceeds 1024 px")
+        ref = _character_reference(p.reference)
         pal = cs.palette_from_art(ref,p.colors,p.bg_tol) if style=="pixel" and p.lock_master_palette else None
         def post(raw):
             return cs.finish(raw,style,p.size if style=="pixel" else p.hd_size,p.colors,pal,p.bg_tol)
@@ -1595,6 +1614,8 @@ def character_sprite(p: CharacterSpriteParams):
             im,info=post(ref)
             info.update(seed=None,art_style=style)
             return {"results":[{"raw":b64(ref),"sprite":b64(im),"info":info}]}
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(400,str(e))
     except Exception:
@@ -1620,9 +1641,17 @@ def _portrait_aspect(img, aspect, transparent=True, bg="white"):
     w,h = img.size
     # Preserve the complete composition; pad rather than clip limbs.
     unit = max((w+x-1)//x, (h+y-1)//y)
+    if unit*max(x,y)>1024:
+        unit=1024//max(x,y)
+        img=img.copy()
+        img.thumbnail((unit*x,unit*y),Image.Resampling.LANCZOS)
+        w,h=img.size
     target = (unit*x,unit*y)
     out = Image.new("RGBA",target,(0,0,0,0) if transparent else (*gen.BG_RGB.get(bg,(255,255,255)),255))
-    out.paste(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
+    if transparent:
+        out.paste(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
+    else:
+        out.alpha_composite(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
     return out
 
 
@@ -1631,19 +1660,11 @@ def framed_portrait(p: FramedPortraitParams):
     kind = "portrait_" + p.framing
     if kind not in gen.PORTRAIT_FRAMINGS or p.aspect not in ("1:1","3:4","2:3") or not p.prompt.strip():
         raise HTTPException(400,"Choose valid framing, aspect and character description")
-    if not 1 <= p.n <= 3 or p.gen_size not in (640,768,896,1024):
-        raise HTTPException(400,"Choose 1–3 variations and a supported generation size")
+    _character_budget(p)
     ckpt,lora_dir = _paths(p.checkpoint)
     art_style = _art_style(p.art_style)
     gen.set_sampler(p.sampler)
-    ip = None
-    if p.reference:
-        try:
-            ref = _dec_img(p.reference)
-            if max(ref.size)>1024: raise ValueError("Reference exceeds 1024 px")
-            ip = gen.prep_reference(ref,p.bg)
-        except Exception as e:
-            raise HTTPException(400,"Invalid reference: "+str(e))
+    ip = _character_reference(p.reference,ckpt,p.bg) if p.reference else None
     def post(raw):
         if art_style == "pixel":
             im,info = px.pixelize(raw,"canvas",max(64,min(p.size,256)),max(4,min(p.colors,64)),"none",p.remove_bg,p.bg_tol,remove_shadow=False)
