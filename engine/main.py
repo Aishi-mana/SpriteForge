@@ -198,13 +198,29 @@ def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_i
     return {"results": results}
 
 
-def _do_generate(p):
-    ckpt, lora_dir = _paths(p.checkpoint)
-    gen.set_sampler(p.sampler)
+def _generate_prompt_kind(p):
     kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
     art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
     if p.body_base and kind == "sprite":
         kind = "body_base"
+    return kind,art_style
+
+
+@app.post("/api/generate/prompt_preview")
+def generate_prompt_preview(p: GenParams):
+    """CPU-only preview of the text submitted to the runtime, without loading models."""
+    kind,art_style=_generate_prompt_kind(p)
+    positive,negative=gen.prompt_pair(p.prompt,p.negative,p.bg,kind,art_style)
+    return {"positive":positive,"negative":negative,"user_prompt":p.prompt,
+            "user_negative":p.negative,"default_negative":gen.negative_for(kind,art_style),
+            "style_text":styles.PRESETS[art_style],"art_style":art_style,"kind":kind,
+            "checkpoint":p.checkpoint,"lora":p.lora,"lora_weight":p.lora_weight,"background":p.bg}
+
+
+def _do_generate(p):
+    ckpt, lora_dir = _paths(p.checkpoint)
+    gen.set_sampler(p.sampler)
+    kind,art_style=_generate_prompt_kind(p)
     if art_style != "pixel":
         post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol, gen.BG_RGB.get(p.bg))
     elif kind == "tile":
