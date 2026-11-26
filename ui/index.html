@@ -21,7 +21,7 @@ button.sec{background:#2a2d3a;color:var(--fg);margin-top:6px}button:disabled{opa
 img.px{image-rendering:pixelated}
 .card img,#refimg{display:block;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/16px 16px}
 #refimg{margin-top:8px;max-height:140px;image-rendering:pixelated;display:none}
-#status{margin:10px 0;color:var(--mut);white-space:pre-wrap}.hide{display:none}
+#status{margin:10px 0;color:var(--mut);white-space:pre-wrap}.hide{display:none!important}
 .err{color:#ff8a8a}
 #editor{max-width:none;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
 #cv{width:512px;height:512px;background:#000;border-radius:6px;touch-action:none;cursor:crosshair}
@@ -83,17 +83,45 @@ img.px{image-rendering:pixelated}
 .hc .chk{margin-top:4px}#hgrid{gap:10px;margin-top:10px}#hdetail{margin-top:14px}.hcol{width:220px}.hcol table{font-size:12px;width:100%;border-collapse:collapse}.hcol td{padding:2px 4px;border-bottom:1px solid var(--line);word-break:break-word}
 #qstrip{cursor:pointer;margin-top:6px}#hdetail details{margin:8px 0}#hdetail table{font-size:12px}#hdetail td{padding:1px 8px 1px 0;vertical-align:top;word-break:break-word}
 .tc{background:#161821;border:1px solid var(--line);border-radius:4px;padding:3px;font-size:10px;text-align:center}.tc img{image-rendering:pixelated;display:block;margin:0 auto}
+/* Phase 50 desktop workspace */
+:root{--bg:#101218;--panel:#191d27;--line:#303747;--fg:#e8edf6;--mut:#a0aabd;--acc:#90aaff;color-scheme:dark}
+body{font-size:14px;line-height:1.45;min-height:0}
+aside{width:clamp(290px,24vw,370px);padding:16px;scrollbar-width:thin}
+main{min-width:0;padding:24px;scrollbar-width:thin}
+h1{font-size:19px;letter-spacing:-.035em}
+label{font-weight:600;margin-top:12px}
+input,select,textarea,button{min-width:0;border-radius:7px;padding:8px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:not(:disabled):hover{filter:brightness(1.12)}
+.tabs{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0;border-bottom:1px solid var(--line);padding-bottom:14px}
+.navgroup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.navlabel{grid-column:1/-1;color:var(--mut);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+.tabs button{min-height:32px;text-align:left;padding:6px 9px;font-size:12px;background:transparent;border-color:transparent}
+.tabs button.on{background:#303f66;color:#e9efff;border-color:#627cb8}
+.tabs button:not(.on):hover{background:#272e3d}
+.sf-fold{border:1px solid var(--line);border-radius:8px;margin-top:10px;padding:9px 10px}
+.sf-fold summary{cursor:pointer;font-weight:600;font-size:12px;color:var(--fg)}
+#gpu{font-size:12px;margin-top:6px;overflow-wrap:anywhere}
+.sf-workhead{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px}
+.sf-workhead h2{font-size:25px;letter-spacing:-.035em;margin:0 0 4px}
+.sf-workhead p{margin:0;color:var(--mut);max-width:720px}
+main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
+#editor{align-items:flex-start}
+#cv{width:min(512px,100%);height:auto;aspect-ratio:1}
+#editor .ctl{flex:1 1 260px;max-width:360px}
+#status:not(:empty){padding:10px;border:1px solid var(--line);border-radius:8px;overflow-wrap:anywhere}
+@media(max-width:760px){body{height:auto;min-height:100vh;flex-direction:column}aside{width:100%;max-height:55vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:14px}.navgroup{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style></head><body>
 <aside>
-<h1>SpriteForge <small>phase 48</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
+<h1>SpriteForge <small>phase 50</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
 <div class="mut" id="gpu">loading…</div>
-<label>Models folder (contains checkpoints/ and loras/)</label>
+<details class="sf-fold"><summary>Model setup</summary><label>Models folder (contains checkpoints/ and loras/)</label>
 <div class="row"><input id="mdir" placeholder="C:/.../ComfyUI-Shared/models"><button class="sec" style="width:70px;margin:0" onclick="saveDir()">Set</button></div>
-<label>Project (saves settings, reference, rig, paint, skeleton, sprites)</label>
+<button class="sec" onclick="init()">Refresh models / connection</button></details><details class="sf-fold" open><summary>Project</summary><label>Project name</label>
 <input id="pname" list="plist" placeholder="character / project name"><datalist id="plist"></datalist>
 <div class="row"><button class="sec" onclick="saveProject()">Save</button><button class="sec" onclick="loadProject()">Load</button><button class="sec" id="delbtn" onclick="deleteProject()">Delete</button></div>
-<div class="mut" id="pstat">No project (type a name and press Save)</div>
-<div class="tabs"><button id="t1" class="on" onclick="tab(1)">Generate</button><button id="t2" onclick="tab(2)">Reference pose</button><button id="t3" onclick="tab(3)">Pixelize</button><button id="t4" onclick="tab(4)">Animate</button><button id="t5" onclick="tab(5)">Portrait</button><button id="t6" onclick="tab(6)">Palette</button><button id="t7" onclick="tab(7)">Template</button><button id="t8" onclick="tab(8)">Directions</button><button id="t9" onclick="tab(9)">Queue</button><button id="t10" onclick="tab(10)">Tiles &amp; props</button><button id="t11" onclick="tab(11)">Modular</button><button id="t12" onclick="tab(12)">Library</button><button id="t13" onclick="tab(13)">Custom rig</button><button id="t14" onclick="tab(14)">Scenes</button><button id="t15" onclick="tab(15)">Production</button></div>
+<div class="mut" id="pstat">No project (type a name and press Save)</div></details>
+<nav class="tabs" aria-label="Workspaces"><div class="navgroup"><div class="navlabel">Create</div><button id="t1" class="on" onclick="tab(1)">Generate</button><button id="t2" onclick="tab(2)">Reference pose</button><button id="t5" onclick="tab(5)">Portrait</button><button id="t7" onclick="tab(7)">Template</button><button id="t8" onclick="tab(8)">Directions</button><button id="t10" onclick="tab(10)">Tiles &amp; props</button></div><div class="navgroup"><div class="navlabel">Edit & animate</div><button id="t3" onclick="tab(3)">Pixelize</button><button id="t6" onclick="tab(6)">Palette</button><button id="t4" onclick="tab(4)">Animate</button><button id="t11" onclick="tab(11)">Modular</button><button id="t13" onclick="tab(13)">Custom rig</button><button id="t14" onclick="tab(14)">Scenes</button></div><div class="navgroup"><div class="navlabel">Manage</div><button id="t12" onclick="tab(12)">Library</button><button id="t9" onclick="tab(9)">Queue</button><button id="t15" onclick="tab(15)">Production</button></div></nav>
 
 <div id="p-style"><label>Art style</label><select id="artstyle" onchange="styleChanged()"><option value="pixel">Retro pixel art</option><option value="anime">Modern anime</option><option value="rpg_chibi">RPG chibi</option><option value="super_chibi">Super chibi</option><option value="soft_chibi">Soft chibi</option><option value="premium_chibi">Premium chibi</option><option value="custom">Custom illustration</option></select><div id="hdsettings" class="hide"><label>HD output (long side)</label><select id="hdsize"><option>256</option><option>512</option><option selected>768</option><option>1024</option></select><label>Generate resolution (Generate tab)</label><select id="hdgen"><option>640</option><option>768</option><option selected>1024</option></select><div class="mut">Full colour; no palette reduction. Select an anime checkpoint and optional matching LoRA. Reference uses its own generation size; HD animation uses smooth rigid-bone rendering; AI cleanup is pixel-only.</div></div></div>
 <div id="p-prompt"><label>Prompt</label><textarea id="prompt">knight with blue armor and red cape, holding a sword, standing</textarea></div>
@@ -366,6 +394,7 @@ img.px{image-rendering:pixelated}
 <div id="status"></div>
 </aside>
 <main>
+<header class="sf-workhead"><h2 id="workspaceTitle">Generate</h2><p id="workspaceHint">Create a new sprite using your prompt and model settings.</p></header>
 <div class="card hide" id="editor">
  <canvas id="cv" width="512" height="512"></canvas>
  <div class="ctl">
@@ -669,7 +698,7 @@ img.px{image-rendering:pixelated}
 const $=id=>document.getElementById(id);let mode=1,refURL=null,aSrc=null;
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
 function styleChanged(){const hd=$('artstyle').value!='pixel';show('hdsettings',hd);if(hd&&/pixel.art/i.test($('lora').value))$('lora').value='';markDirty()}
-function tab(n){mode=n;[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(i=>$('t'+i).classList.toggle('on',i==n));
+function tab(n){mode=n;const titles=['','Generate','Reference pose','Pixelize','Animate','Portrait','Palette','Template','Directions','Queue','Tiles & props','Modular','Library','Custom rig','Scenes','Production'];const hints=['','Create a new sprite using your prompt and model settings.','Use a reference sprite and optional pose skeleton.','Convert images into crisp pixel art.','Rig, preview and export character motion.','Create portraits and expressions.','Manage and remap sprite colors.','Build a character from a template.','Create directional character views.','Monitor jobs and generation history.','Create tiles, props and terrain sets.','Assemble and edit layered character parts.','Browse saved assets and character models.','Edit skeletons, weights and animation timelines.','Compose animated characters and visual effects.','Produce and export characters in batches.'];$('workspaceTitle').textContent=titles[n];$('workspaceHint').textContent=hints[n];[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(i=>$('t'+i).classList.toggle('on',i==n));
  show('p-style',n==1||n==2||n==8||n==11);show('hdsettings',$('artstyle').value!='pixel');show('p-prompt',n==1);show('p-ref',n==2);show('p-gen',n<3||n==5||n==7||n==8||n==10||n==11||(n==4&&$('anim').value==='reference'));show('p-tile',n==10);show('tilecard',n==10);show('terraincard',n==10);show('animcard',n==10);if(n!=10)anStop();else if(AN.frames.length)anPlay();if(n==10){tlShow();tsRender();trSlots()}show('p-dir',n==8);show('dircard',n==8);show('appearancecard',n==8&&$('dworkflow').value==='character');if(n==8){show('didentity',$('dworkflow').value==='character');show('dtemplate',$('dworkflow').value!=='character');appearanceChanged();dirDraw()}show('p-tpl',n==7);show('tpcard',n==7);show('p-port',n==5);show('portcard',n==5);show('p-pal',n==6);show('palcard',n==6);if(n==6)plLib();show('p-upl',n==3);show('p-px',n==1||n==3);show('p-n1',n==1);show('p-anim',n==4);show('rigcard',n==4&&(!!aSrc||$('anim').value==='reference'));show('go',n<4||n==10);show('qadd',n<3||n==10);show('qcard',n==9);show('out',n!=9&&n!=11&&n!=12&&n!=13&&n!=14&&n!=15);show('p-production',n==15);show('bpCard',n==15);if(n==15)bpOpen();else bpClose();show('p-scenes',n==14);show('scnCard',n==14);if(n==14){scnRefresh();scnProjects()}else scnStop();show('p-customrig',n==13);show('customrigcard',n==13);if(n==13)csRefresh(false);else if(typeof CT!=='undefined'){ctStop();clearTimeout(CI.timer);CI.ticket++;}show('p-library',n==12);show('librarycard',n==12);if(n==12){libRefresh();libModels()}show('p-modular',n==11);show('modularcard',n==11);if(n==11)mdRefresh(false);else if(typeof MR!=='undefined')mrStop();if(n==9){qRefresh().catch(()=>{});hLoad(true).catch(()=>{})}
  show('editor',n==2&&$('useskel').checked);redraw();
  $('go').textContent=['','Generate','Generate poses','Pixelize','','','','','','','Generate','','','','',''][n];if(n==3)$('mode').value='auto'}
@@ -702,7 +731,7 @@ function load(s){$('gpu').textContent=s.gpu?'GPU: '+s.gpu:'No CUDA GPU detected'
  const pl=s.loras.find(l=>l.startsWith('pixel-art-xl')&&loraStatus(l,modelInfo($('ckpt').value).family)==='match');if(pl)$('lora').value=pl;if(modelInfo($('ckpt').value).backend)modelChanged();else tagOptions()}
 async function api(url,opt){const r=await fetch(url,opt);let d;try{d=await r.json()}catch(e){throw new Error('Server error '+r.status)}
  if(!r.ok)throw new Error(typeof d.detail=='string'?d.detail:JSON.stringify(d.detail));return d}
-async function init(){try{load(await api('/api/state'))}catch(e){$('gpu').className='err';$('gpu').textContent='Engine error: '+e.message+' (check the console window)'}}
+async function init(){const g=$('gpu');g.className='mut';g.textContent='Connecting to local engine…';try{load(await api('/api/state',{signal:AbortSignal.timeout(45000)}));if(!$('ckpt').options.length){g.className='err';g.textContent+=' · No checkpoints found. Open Model setup to configure the folder.'}}catch(e){g.className='err';g.textContent='Engine connection failed: '+e.message+' · Open Model setup to retry or Diagnostics for details.'}}
 async function saveDir(){try{load(await api('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({models_dir:$('mdir').value})}))}catch(e){$('status').textContent='Error: '+e.message}}
 function setRef(u){refURL=u;$('refimg').src=u;$('refimg').style.display='block';$('refhint').style.display='none'}
 $('refimg').onload=()=>redraw();
