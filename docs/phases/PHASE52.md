@@ -1,0 +1,5 @@
+# Phase 52 — AI character editing and asset extraction (initial)
+
+Open the pixel editor on a sprite, choose Select, drag a rectangle over the desired region, and expand AI character edit & extraction. Describe a local change, choose strength and pixel sampling, then generate a candidate using the selected SDXL checkpoint and compatible LoRA. Review and explicitly accept the candidate; undo restores the previous image. The source is not changed by generation, and stale candidates cannot apply to edited sources. The backend locks alpha, copies only masked visible pixels, and limits masks to 55% of canvas. Fixed 768 inference size, 20 steps, CFG 5, seed 0. This does not extend silhouettes or guarantee identity. Native Qwen/NetaYume are not supported for masked edits.
+
+Download selected asset PNG crops the rectangle, retaining transparency. This is manual rectangular extraction, not semantic segmentation, automatic background removal or garment fitting. Actual GPU inference and visual quality require hardware verification.

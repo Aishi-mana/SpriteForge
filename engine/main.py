@@ -1143,6 +1143,43 @@ def custom_cleanup_frame(body: dict=Body(...)):
     except RuntimeError as e:raise HTTPException(500,"Cleanup failed: "+str(e))
 
 
+@app.post("/api/character/edit_region")
+def character_edit_region(body: dict=Body(...)):
+    """Non-destructive rectangular edit using the existing SDXL masked pipeline."""
+    try:
+        from .custom_skeleton import number
+        frame=custom_cleanup.decode_frame(body.get("image"))
+        w,h=frame.size
+        region=body.get("region")
+        if not isinstance(region,list) or len(region)!=4:raise ValueError("Select a rectangular region")
+        x=modular.integer(region[0],0,w-1,"selection x")
+        y=modular.integer(region[1],0,h-1,"selection y")
+        rw=modular.integer(region[2],1,w-x,"selection width")
+        rh=modular.integer(region[3],1,h-y,"selection height")
+        mask=np.zeros((h,w),dtype=bool)
+        mask[y:y+rh,x:x+rw]=True
+        mask &= np.asarray(frame)[...,3]>0
+        if not mask.any() or mask.mean()>.55:raise ValueError("Select visible pixels covering at most 55% of the canvas")
+        ckpt,lora_dir=_paths(body.get("checkpoint"))
+        model=mf.describe(ckpt)
+        if model["family"]!="sdxl" or model.get("backend"):raise ValueError("Select a verified SDXL inpainting checkpoint")
+        lora=body.get("lora","")
+        if not isinstance(lora,str):raise ValueError("Invalid LoRA")
+        mf.check_lora(ckpt,lora_dir,lora)
+        prompt=body.get("prompt","")
+        if not isinstance(prompt,str) or not prompt.strip() or len(prompt)>1800:raise ValueError("Enter a local edit description")
+        strength=number(body.get("strength",.45),.15,.75,"edit strength")
+        seed=modular.integer(body.get("seed",0),0,2**31-1,"edit seed")
+        pixel=body.get("pixel",True)
+        if not isinstance(pixel,bool):raise ValueError("Invalid pixel mode")
+        style="pixel" if pixel else "custom"
+        gen.set_sampler("euler_a")
+        out,info=custom_cleanup.cleanup(frame,mask,{"alpha_lock":True,"palette_lock":False},gen.inpaint,ckpt,lora,number(body.get("lora_weight",1),0,2,"LoRA weight"),lora_dir,"preserve character identity, pose and surrounding details; "+prompt,"",strength,20,5,seed,768,pixel,style)
+        return {"sprite":b64(out),"info":info}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(500,"Character edit failed: "+str(e))
+
+
 @app.post("/api/scenes/actor")
 def scene_actor(body: dict=Body(...)):
     try:return scenes.from_timeline(body)

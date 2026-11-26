@@ -113,7 +113,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 @media(max-width:760px){body{height:auto;min-height:100vh;flex-direction:column}aside{width:100%;max-height:55vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:14px}.navgroup{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style></head><body>
 <aside>
-<h1>SpriteForge <small>phase 51</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
+<h1>SpriteForge <small>phase 52</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
 <div class="mut" id="gpu">loading…</div>
 <details class="sf-fold"><summary>Model setup</summary><label>Models folder (contains checkpoints/ and loras/)</label>
 <div class="row"><input id="mdir" placeholder="C:/.../ComfyUI-Shared/models"><button class="sec" style="width:70px;margin:0" onclick="saveDir()">Set</button></div>
@@ -678,6 +678,16 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
   <div class="row"><button class="sec" onclick="edShade(-20)">Darken</button><button class="sec" onclick="edShade(20)">Lighten</button></div>
   <button class="sec" onclick="edOutline()">Outline transparent edges</button>
   <button class="sec" onclick="edDelete()">Delete selection (Del)</button>
+  <details class="sf-fold"><summary>AI character edit &amp; extraction</summary>
+  <div class="mut">Select a region of the character. SDXL edits visible pixels only; review before applying.</div>
+  <label>Change description</label><textarea id="edAiPrompt" placeholder="e.g. replace blue armor with gold armor"></textarea>
+  <label>Strength</label><input id="edAiStrength" type="number" min=".15" max=".75" step=".05" value=".45">
+  <div class="chk"><input id="edAiPixel" type="checkbox" checked><span>Pixel sampling</span></div>
+  <button class="sec" id="edAiRun" onclick="edAiEdit()">Generate selected-region candidate</button>
+  <img id="edAiPreview" style="display:none;max-width:100%;image-rendering:pixelated" alt="AI edit candidate">
+  <button class="sec" id="edAiAccept" disabled onclick="edAiAccept()">Accept candidate</button>
+  <button class="sec" onclick="edExtract()">Download selected asset PNG</button>
+  <div class="mut" id="edAiStatus" role="status"></div></details>
   <div class="mut" style="margin-top:6px">Arrow keys nudge the selection (or the whole image). Ctrl+Z / Ctrl+Y undo / redo. [ and ] change brush size.</div>
   <button id="edapply" onclick="edApply()">Apply</button>
   <button class="sec" onclick="edSaveProject()">Save to project</button>
@@ -1148,7 +1158,7 @@ const hex2=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join(''),unhex=h=>[1,
 const edIsOpen=()=>!$('ped').classList.contains('hide');
 function openEditor(url,opts){const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
   const id=x.getImageData(0,0,im.width,im.height);ED.img={w:im.width,h:im.height,d:new Uint8ClampedArray(id.data)};ED.orig=PXE.clone(ED.img);
-  ED.undo=[];ED.redo=[];ED.sel=null;ED.fl=null;ED.shape=null;ED.dirty=false;ED.opts=opts||{};ED.pal=PXE.palette(ED.img,64);ED.color=ED.pal[0]||[0,0,0];
+  edAiReset();ED.undo=[];ED.redo=[];ED.sel=null;ED.fl=null;ED.shape=null;ED.dirty=false;ED.opts=opts||{};ED.pal=PXE.palette(ED.img,64);ED.color=ED.pal[0]||[0,0,0];
   ED.zoom=Math.max(2,Math.min(32,Math.floor(560/Math.max(im.width,im.height))));$('edzoom').value=ED.zoom;
   ED.onion=[];(ED.opts.onion||[]).forEach(u=>{if(!u)return;const o=new Image();o.onload=()=>edDraw();o.src=u;ED.onion.push(o)});
   $('edonionrow').classList.toggle('hide',!ED.onion.length);$('edapply').textContent=ED.opts.label||'Apply';$('edapply').classList.toggle('hide',!ED.opts.apply);
@@ -1211,6 +1221,11 @@ function edRotate(){if(!ED.img)return;if(ED.fl)edCommitFloat();const s=edRegion(
 function edShade(delta){if(!ED.img)return;if(ED.fl)edCommitFloat();pushUndo();PXE.shade(ED.img,edRegion(),delta);edDraw();edStat()}
 function edOutline(){if(!ED.img)return;if(ED.fl)edCommitFloat();pushUndo();PXE.outline(ED.img,edRegion(),[...ED.color,255]);edDraw();edStat()}
 function edDelete(){if(!ED.sel)return;if(ED.fl)edCommitFloat();pushUndo();PXE.clear(ED.img,ED.sel.x,ED.sel.y,ED.sel.w,ED.sel.h);ED.sel=null;edDraw();edStat()}
+let edAiCandidate=null,edAiEpoch=0;
+function edAiReset(){edAiEpoch++;edAiCandidate=null;$('edAiPreview').style.display='none';$('edAiPreview').removeAttribute('src');$('edAiAccept').disabled=true;$('edAiStatus').textContent='';$('edAiRun').disabled=false}
+function edExtract(){if(!ED.img||!ED.sel){$('edAiStatus').textContent='Select a rectangular asset first.';return}if(ED.fl)edCommitFloat();const s=ED.sel,b=PXE.copy(ED.img,s.x,s.y,s.w,s.h),c=document.createElement('canvas');c.width=b.w;c.height=b.h;c.getContext('2d').putImageData(new ImageData(b.d,b.w,b.h),0,0);dl(1,c.toDataURL('image/png'),'selected_asset')}
+async function edAiEdit(){if(!ED.img||!ED.sel){$('edAiStatus').textContent='Select a rectangular region first.';return}const p=$('edAiPrompt').value.trim();if(!p){$('edAiStatus').textContent='Describe the desired change.';return}if(ED.fl)edCommitFloat();edAiReset();const epoch=edAiEpoch,source=edToURL(),s={...ED.sel};$('edAiRun').disabled=true;$('edAiStatus').textContent='Generating candidate with selected SDXL model…';try{const d=await api('/api/character/edit_region',{...J,body:JSON.stringify({image:source,region:[s.x,s.y,s.w,s.h],checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,prompt:p,strength:+$('edAiStrength').value,pixel:$('edAiPixel').checked,seed:0})});if(epoch!==edAiEpoch||!edIsOpen())return;edAiCandidate={source,sprite:d.sprite};$('edAiPreview').src=d.sprite;$('edAiPreview').style.display='block';$('edAiAccept').disabled=false;$('edAiStatus').textContent='Candidate ready. Accept to apply; undo remains available.'}catch(e){if(epoch===edAiEpoch)$('edAiStatus').textContent='Error: '+e.message}finally{if(epoch===edAiEpoch)$('edAiRun').disabled=false}}
+function edAiAccept(){const a=edAiCandidate;if(!a||edToURL()!==a.source){edAiReset();$('edAiStatus').textContent='Source changed; generate a new candidate.';return}const epoch=edAiEpoch,im=new Image();im.onload=()=>{if(epoch!==edAiEpoch||!edIsOpen()||edToURL()!==a.source)return;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const ctx=c.getContext('2d');ctx.drawImage(im,0,0);pushUndo();ED.img={w:im.width,h:im.height,d:new Uint8ClampedArray(ctx.getImageData(0,0,im.width,im.height).data)};ED.pal=PXE.palette(ED.img,64);edPalette();edDraw();edStat();edAiReset();$('edAiStatus').textContent='Candidate applied.'};im.src=a.sprite}
 function edToURL(){if(ED.fl)edCommitFloat();const c=document.createElement('canvas');c.width=ED.img.w;c.height=ED.img.h;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(ED.img.d),ED.img.w,ED.img.h),0,0);return c.toDataURL('image/png')}
 function edApply(){const u=edToURL();ED.opts.apply&&ED.opts.apply(u);ED.dirty=false;edClose(true)}
 function edSaveProject(){saveSprite(edToURL())}
@@ -1219,7 +1234,7 @@ function edUseRef(){const u=edToURL();ED.dirty=false;edClose(true);useRef(u)}
 function edAnimate(){const u=edToURL();ED.dirty=false;edClose(true);setAnim(u)}
 let edCloseT=null;function edClose(force){const b=$('edclose');
  if(!force&&ED.dirty&&b.dataset.armed!='1'){b.dataset.armed='1';b.textContent='Discard edits? Click again';clearTimeout(edCloseT);edCloseT=setTimeout(()=>{b.dataset.armed='';b.textContent='Close'},3000);return}
- b.dataset.armed='';b.textContent='Close';ED.fl=null;ED.drag=null;ED.drawing=false;show('ped',false)}
+ b.dataset.armed='';b.textContent='Close';ED.fl=null;ED.drag=null;ED.drawing=false;edAiReset();show('ped',false)}
 document.addEventListener('keydown',e=>{if(!edIsOpen()||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!='range'&&e.target.type!='checkbox')return;
  const k=e.key.toLowerCase(),map={b:'pencil',e:'eraser',g:'fill',i:'pick',l:'line',r:'rect',o:'ellipse',m:'select'};
  if((e.ctrlKey||e.metaKey)&&k=='z'){e.preventDefault();e.shiftKey?edRedo():edUndo();return}

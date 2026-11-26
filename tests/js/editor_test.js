@@ -7,7 +7,7 @@ class ImageData { constructor(d, w, h) { this.data = d; this.width = w; this.hei
 class Image { set src(u) { const p = FAKE[u]; this.width = p.w; this.height = p.h; this.data = p.d; setTimeout(() => this.onload && this.onload(), 0) } }
 function mkEl(id) { const el = { id, dataset: {}, style: {}, value: '', checked: false, textContent: '', innerHTML: '', width: 300, height: 150, children: [],
   classList: { _s: new Set(['hide']), toggle(c, f) { f ? this._s.add(c) : this._s.delete(c) }, contains(c) { return this._s.has(c) }, add(c) { this._s.add(c) }, remove(c) { this._s.delete(c) } },
-  appendChild(c) { this.children.push(c) }, setPointerCapture() {}, getBoundingClientRect() { return { left: 0, top: 0, width: this.width, height: this.height } },
+  appendChild(c) { this.children.push(c) }, removeAttribute(k) { delete this[k] }, setPointerCapture() {}, getBoundingClientRect() { return { left: 0, top: 0, width: this.width, height: this.height } },
   getContext() { const e = this; return { buf: null, imageSmoothingEnabled: false, globalAlpha: 1, lineDashOffset: 0, clearRect() {}, fillRect() {}, strokeRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, setLineDash() {},
     drawImage(img) { if (img && img.data && arguments.length == 3) { this.buf = new Uint8ClampedArray(img.data) } }, getImageData(x, y, w, h) { return { data: new Uint8ClampedArray(this.buf || new Uint8ClampedArray(w * h * 4)), width: w, height: h } },
     putImageData(id) { this.buf = new Uint8ClampedArray(id.data) }, createImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4), width: w, height: h } } } } }; return el }
