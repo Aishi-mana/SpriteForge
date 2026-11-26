@@ -590,3 +590,16 @@ Use the following template for each future change (replace placeholders with act
 
 - `ui/index.html`: direct cleanup entry points for approved assets and generated artwork/sprite candidates, staged review and revision history, source-change guard (`034d2479b7e6`); explicit same-size modular layer replacement preserving settings and validating size/budget (`1f69a0dab954`). Existing project and source guards retained. Tests extended (`95a3a75f6eb2`).
 - Composite output remains flattened; replacement is explicit and rig weights must be reviewed. Canvas rounding and desktop acceptance remain outstanding. [Phase notes](phases/PHASE61LF.md). CI pending, stacked on 61L-E. Next 61L-G. Phase 61M queued; Phase 62 on hold.
+
+### 2026-11-26T19:52:17Z — 61L-E integration
+
+- PR #66 passed CPU validation run 45885757512 and merged at `20d28ff2821d`.
+
+### 2026-11-26T19:52:27Z — 61L-F integration
+
+- PR #67 passed CPU validation run 45886106091 and merged at `4035422dc642`.
+
+### 2026-11-27 (Manila) — Phase 61L-G: integration and resource safeguards
+
+- Engine component lookup and reduced redundant buffers, accurate protected halo count (`08ce3b1ab921`); API validates mask dimensions early and guards empty output (`f33459bdf68c`). UI reuses buffers, bounds history and canvas size, coalesces brush redraws and reports preview duration (`9b0daf09e614`).
+- Pipeline/max-canvas and JS history regressions added (`07dc75fb5d07`, `007b800f045a`). CI pending. No measured performance improvements or desktop verification; browser partial-alpha RGB rounding remains. [Phase notes](phases/PHASE61LG.md); manual checklist expanded. Next 61M after validation and merge. Phase 62 on hold.
