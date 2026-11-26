@@ -179,7 +179,8 @@ def save(root, name, data):
 
 
 def _save(root, name, data):
-    from . import modular, custom_skeleton, custom_cleanup, scenes
+    from . import modular, custom_skeleton, custom_cleanup, scenes, character_identity
+    identity = character_identity.validate(data.get('character_identity'))
     scene=data.get('scene')
     clean_scene=scenes.validate(scene)[0] if scene is not None else None
     clean_cleanup=custom_cleanup.validate_saved(data.get('custom_cleanup'))
@@ -204,7 +205,7 @@ def _save(root, name, data):
     _save_portrait(d, data.get("portrait"))
     _save_tileset(d, data.get("tileset"))
     doc = {"version": 1, "name": d.name, "saved_at": time.time(),
-           "settings": data.get("settings", {}), "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_clips": clean_clips, "custom_cleanup": clean_cleanup, "scene": clean_scene, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
+           "settings": data.get("settings", {}), "character_identity": identity, "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_clips": clean_clips, "custom_cleanup": clean_cleanup, "scene": clean_scene, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
            "anim_params": data.get("anim_params", {}), "tab": data.get("tab", 1), "palette": data.get("palette"), "template": data.get("template"), "directions": data.get("directions"),
            "has_ref": (d / "ref.png").exists(), "has_anim": (d / "anim.png").exists()}
     tmp = d / "project.json.tmp"
