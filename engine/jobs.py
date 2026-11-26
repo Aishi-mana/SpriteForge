@@ -291,7 +291,9 @@ class Manager:
                   if (d / f"in_{k}.png").exists()}
         self.progress[jid] = [0, int(job["params"].get("n") or 1)]
         try:
-            results = self.executor(job["kind"], job["params"], inputs, lambda done, total: self.progress.__setitem__(jid, [done, total]))
+            def progress(done,total):self.progress[jid]=[done,total]
+            progress.cancelled=lambda:jid in self._cancel_running
+            results = self.executor(job["kind"], job["params"], inputs, progress)
             if jid in self._cancel_running:
                 job["status"], job["error"] = "cancelled", "cancelled while running (results discarded)"
             else:
@@ -303,8 +305,8 @@ class Manager:
                     job["results"].append({"info": r.get("info") or {}})
                 job["status"] = "done"
         except Exception as e:  # keep the readable message (HTTPException has .detail)
-            job["status"] = "error"
-            job["error"] = str(getattr(e, "detail", None) or f"{type(e).__name__}: {e}")
+            job["status"] = "cancelled" if jid in self._cancel_running else "error"
+            job["error"] = "cancelled while running (results discarded)" if job["status"]=="cancelled" else str(getattr(e, "detail", None) or f"{type(e).__name__}: {e}")
         job["finished"] = time.time()
         self._cancel_running.discard(jid)
         self.progress.pop(jid, None)

@@ -156,10 +156,13 @@ def list_projects(root):
 
 
 def save(root, name, data):
+    from . import modular
+    recipe=data.get("modular")
+    clean_recipe=modular.validate(recipe)[0] if recipe is not None else None
     d = _dir(root, name)
     d.mkdir(parents=True, exist_ok=True)
     images = data.get("images") or {}
-    for key in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd"):
+    for key in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant"):
         f = d / f"{key}.png"
         if images.get(key):
             f.write_bytes(_decode_png(images[key]))
@@ -169,7 +172,7 @@ def save(root, name, data):
     _save_portrait(d, data.get("portrait"))
     _save_tileset(d, data.get("tileset"))
     doc = {"version": 1, "name": d.name, "saved_at": time.time(),
-           "settings": data.get("settings", {}), "rig": data.get("rig"), "skeleton": data.get("skeleton"),
+           "settings": data.get("settings", {}), "modular": clean_recipe, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
            "anim_params": data.get("anim_params", {}), "tab": data.get("tab", 1), "palette": data.get("palette"), "template": data.get("template"), "directions": data.get("directions"),
            "has_ref": (d / "ref.png").exists(), "has_anim": (d / "anim.png").exists()}
     tmp = d / "project.json.tmp"
@@ -187,7 +190,7 @@ def load(root, name):
     doc["results"] = _load_results(d)
     doc["portrait"] = _load_portrait(d)
     doc["tileset"] = _load_tileset(d)
-    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd")}
+    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant")}
     return doc
 
 

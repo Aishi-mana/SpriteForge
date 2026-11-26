@@ -58,6 +58,14 @@ def render_directions(slots, clips, dirs, secondary=None, ss=4):
     for u in needed(dirs):
         if u not in slots or slots[u].get("sprite") is None:
             raise DirectionError(f"the {u} view has no sprite yet")
+    if any(rig.is_hd(slots[u]["sprite"]) for u in needed(dirs)):
+        pixels=0
+        for c in clips:
+            for direction in dirs:
+                im=slots[MIRROR.get(direction,direction)]["sprite"]
+                pad=c.get("pad",0) or round(rig.CLIP_PAD.get(c["anim"],.25)*max(im.size))
+                pixels+=(im.width+2*pad)*(im.height+2*pad)*c["count"]
+        if pixels>48_000_000: raise DirectionError("HD direction set exceeds memory budget; reduce clips, frames or directions")
     out, cache = {}, {}
     for c in clips:
         for d in dirs:
@@ -67,7 +75,7 @@ def render_directions(slots, clips, dirs, secondary=None, ss=4):
                 s = slots[src]
                 cache[key] = rig.render(s["sprite"], s["joints"], s.get("ovr") or [], c["anim"], c["count"], "right", NEAR[src],
                                         c.get("weapon", "r"), c.get("amp", 1.0), c.get("pad", 0), c.get("overlap", 1), ss,
-                                        secondary=_sec_for(secondary, src), view=VIEW[src])
+                                        secondary=_sec_for(secondary, src), view=VIEW[src], softness=c.get("softness",0))
             frames, meta = cache[key]
             out[(c["anim"], d)] = mirror(frames, meta) if d in MIRROR else (frames, meta)
     return out
@@ -83,7 +91,7 @@ def export_directions(slots, clips, dirs, order, options, name, secondary, root)
             frames, meta = res[(c["anim"], d)]
             entries.append({"name": f"{c['anim']}_{d.lower()}", "fps": c["fps"], "loop": c["anim"] not in rig.ONE_SHOT,
                             "frames": frames, "pivot": tuple(meta["pivot"])})
-    out = exporter.export_pack(entries, options, name, root)
+    out = exporter.export_pack(entries, dict(options,smooth=any(rig.is_hd(s["sprite"]) for s in slots.values())), name, root)
     (Path(out["dir"]) / "directions.json").write_text(json.dumps({
         "directions": rows, "clips": [c["anim"] for c in clips], "animations": [e["name"] for e in entries],
         "mirrored": {k: v for k, v in MIRROR.items() if k in rows},

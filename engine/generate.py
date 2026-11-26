@@ -4,9 +4,10 @@ import time
 import threading
 from pathlib import Path
 from PIL import Image
-from . import styles
+from . import styles, model_families as mf
 
 _lock = threading.Lock()
+_job_context = threading.local()
 PROGRESS = None  # optional callback(done, total) set by the job queue; called after each finished image
 _cache = {"key": None, "pipe": None}
 
@@ -25,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "modular_asset":
+        return "person, mannequin, face, skin, hands, body, scenery, cast shadow, text, watermark, cropped item, duplicate items, blurry"
     if kind == "sprite" and art_style != "pixel":
         return styles.HD_NEGATIVE
     """Default negative prompt per generation kind (sprite, tile, prop/icon/ui; everything else = portrait-style)."""
@@ -49,6 +52,8 @@ def set_sampler(name):
 def _apply_sampler(pipe):
     """Swap the scheduler (cheap, no reload). DPM++ 2M Karras converges to cleaner detail than Euler ancestral at equal steps."""
     from diffusers import EulerAncestralDiscreteScheduler, DPMSolverMultistepScheduler, EulerDiscreteScheduler
+    if type(pipe.scheduler).__name__.startswith("FlowMatch"):
+        return  # keep architecture-native flow schedule
     cfg = pipe.scheduler.config
     if SAMPLER == "dpmpp_2m_karras":
         pipe.scheduler = DPMSolverMultistepScheduler.from_config(cfg, use_karras_sigmas=True, algorithm_type="dpmsolver++")
@@ -59,6 +64,8 @@ def _apply_sampler(pipe):
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "modular_asset":
+        return f"{styles.PRESETS[art_style]}, {user_prompt}, isolated game customization asset, plain flat solid {bg} background"
     if kind == "sprite" and art_style != "pixel":
         return f"{styles.PRESETS[art_style]}, {user_prompt}, single character, full body, centered, plain flat solid {bg} background"
     if kind == "portrait":
@@ -113,25 +120,43 @@ def controlnet_name():
 def _load(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None):
     import torch
     from diffusers import StableDiffusionXLPipeline, StableDiffusionXLControlNetPipeline, EulerAncestralDiscreteScheduler
+    family=mf.identify(ckpt)
+    mf.check_lora(ckpt,lora_dir,lora)
+    if family not in ("sdxl","unknown") and (use_ip or use_cn):
+        raise ValueError("Reference IP-Adapter and ControlNet currently require SDXL")
     key = (ckpt, lora, lora_w, use_ip, use_cn)
     if _cache["key"] == key:
         return _cache["pipe"]
     _cache.update(key=None, pipe=None)
     gc.collect()
     torch.cuda.empty_cache()
-    if use_cn:
+    if family=="sd15":
+        from diffusers import StableDiffusionPipeline
+        pipe=(StableDiffusionPipeline.from_pretrained(ckpt,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionPipeline.from_single_file(ckpt,torch_dtype=torch.float16,use_safetensors=True))
+    elif family in mf.FLOW:
+        import diffusers
+        cls=getattr(diffusers, next(k for k,v in mf.FOLDERS.items() if v==family))
+        if Path(ckpt).is_dir():
+            pipe=cls.from_pretrained(ckpt,torch_dtype=torch.bfloat16,local_files_only=True)
+        elif family=="lumina2":
+            base=Path(ckpt).parent/"Lumina2-base"
+            transformer=diffusers.Lumina2Transformer2DModel.from_single_file(ckpt,config=str(base/"transformer"),torch_dtype=torch.bfloat16,local_files_only=True)
+            pipe=cls.from_pretrained(str(base),transformer=transformer,torch_dtype=torch.bfloat16,local_files_only=True)
+        else: raise ValueError("This model needs a complete Diffusers pipeline folder")
+    elif use_cn:
         cn, cn_name = _controlnet(cn_dir)
         pipe = StableDiffusionXLControlNetPipeline.from_single_file(ckpt, controlnet=cn, torch_dtype=torch.float16, use_safetensors=True)
         _cache["cn_name"] = cn_name
     else:
-        pipe = StableDiffusionXLPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
-    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+        pipe = StableDiffusionXLPipeline.from_pretrained(ckpt,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionXLPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
+    if family not in mf.FLOW:
+        pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
     if lora:
         pipe.load_lora_weights(str(Path(lora_dir)), weight_name=lora, adapter_name="pixel")
         pipe.set_adapters(["pixel"], [lora_w])
     if use_ip:  # first use downloads ~3 GB from Hugging Face, then it's cached and works offline
         pipe.load_ip_adapter("h94/IP-Adapter", subfolder="sdxl_models", weight_name="ip-adapter_sdxl.safetensors")
-    if use_cn:
+    if use_cn or family in mf.FLOW:
         # UNet + ControlNet together don't fit in 8 GB; stream weights layer by layer (slower, but fits)
         pipe.enable_sequential_cpu_offload()
     else:
@@ -139,7 +164,7 @@ def _load(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None):
     try:  # newer diffusers moved this onto the VAE; older ones have it on the pipeline
         pipe.vae.enable_tiling()
     except AttributeError:
-        pipe.enable_vae_tiling()
+        if hasattr(pipe,"enable_vae_tiling"): pipe.enable_vae_tiling()
     _cache.update(key=key, pipe=pipe)
     return pipe
 
@@ -149,8 +174,21 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
     """Returns [(PIL image, seed), ...]. ip_image = reference sprite, control_image = OpenPose skeleton render."""
     import torch
     with _lock:
+        from . import local_runtime as lr
+        if lr.route(ckpt):
+            if control_image is not None:raise ValueError("Local model does not support SDXL ControlNet")
+            _cache.update(key=None,pipe=None);gc.collect();torch.cuda.empty_cache()
+            base=seed if seed is not None and seed>=0 else int(torch.randint(0,2**31-1,(1,)).item())
+            out=[]
+            for i in range(n):
+                py,req=lr.request(ckpt,lora_dir,lora,lora_w,build_prompt(prompt,bg,kind,art_style),(negative+", " if negative else "")+negative_for(kind,art_style),steps,cfg,base+i,size,ip_image,bg,ip_scale)
+                out.append((lr.run(py,req,cancelled=getattr(_job_context,"cancelled",None)),req["seed"]))
+                if PROGRESS:PROGRESS(i+1,n)
+            return out
         pipe = _load(ckpt, lora, lora_w, lora_dir, ip_image is not None, control_image is not None, cn_dir)
         _apply_sampler(pipe)
+        family=mf.identify(ckpt)
+        if family=="sd15": size=min(size,768)
         kw = {}
         if control_image is not None:
             kw.update(image=control_image.convert("RGB").resize((size, size)), controlnet_conditioning_scale=cn_scale,
@@ -164,8 +202,12 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
         try:
             for i in range(n):
                 gen = torch.Generator("cpu").manual_seed(base + i)
-                img = pipe(prompt=build_prompt(prompt, bg, kind, art_style), negative_prompt=neg, num_inference_steps=steps,
-                           guidance_scale=cfg, width=size, height=size, generator=gen, **kw).images[0]
+                import inspect
+                allowed=inspect.signature(pipe.__call__).parameters
+                opts=dict(prompt=build_prompt(prompt,bg,kind,art_style),negative_prompt=neg,num_inference_steps=steps,guidance_scale=cfg,width=size,height=size,generator=gen,**kw)
+                if family=="qwen" and "true_cfg_scale" in allowed: opts["true_cfg_scale"]=cfg
+                if family in mf.FLOW: opts={k:v for k,v in opts.items() if k in allowed}
+                img=pipe(**opts).images[0]
                 outs.append((img, base + i))
                 if PROGRESS:
                     try:
@@ -186,13 +228,16 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
 def _load_inpaint(ckpt, lora, lora_w, lora_dir, use_ip=False):
     import torch
     from diffusers import StableDiffusionXLInpaintPipeline, EulerAncestralDiscreteScheduler
+    if mf.identify(ckpt) not in ("sdxl","unknown"):
+        raise ValueError("Inpainting currently requires SDXL")
+    mf.check_lora(ckpt,lora_dir,lora)
     key = (ckpt, lora, lora_w, "inpaint", use_ip)
     if _cache["key"] == key:
         return _cache["pipe"]
     _cache.update(key=None, pipe=None)
     gc.collect()
     torch.cuda.empty_cache()
-    pipe = StableDiffusionXLInpaintPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
+    pipe = StableDiffusionXLInpaintPipeline.from_pretrained(ckpt,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionXLInpaintPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
     pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
     if lora:
         pipe.load_lora_weights(str(Path(lora_dir)), weight_name=lora, adapter_name="pixel")
@@ -233,7 +278,7 @@ def smoke_test(ckpt, lora, lora_dir):
 
 
 def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strength=0.45, steps=22, cfg=7.0, seed=0,
-            bg="magenta", kind="sprite", ip_image=None, ip_scale=0.7):
+            bg="magenta", kind="sprite", ip_image=None, ip_scale=0.7, art_style="pixel"):
     """Repaint only the white area of `mask` (low strength = stay close to what is there). Returns a PIL RGB image."""
     import torch
     with _lock:
@@ -244,9 +289,9 @@ def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strengt
             pipe.set_ip_adapter_scale(ip_scale)
             kw["ip_adapter_image"] = ip_image
         try:
-            neg = (negative + ", " if negative else "") + negative_for(kind)
+            neg = (negative + ", " if negative else "") + negative_for(kind, art_style)
             gen = torch.Generator("cpu").manual_seed(int(seed))
-            out = pipe(prompt=build_prompt(prompt, bg, kind), negative_prompt=neg, image=image, mask_image=mask,
+            out = pipe(prompt=build_prompt(prompt, bg, kind, art_style), negative_prompt=neg, image=image, mask_image=mask,
                        strength=strength, num_inference_steps=steps, guidance_scale=cfg,
                        width=image.width, height=image.height, generator=gen, **kw).images[0]
             torch.cuda.empty_cache()

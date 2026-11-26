@@ -53,7 +53,15 @@ def b64(img):
 
 def scan(sub):
     d = Path(cfg()["models_dir"]) / sub
-    return sorted(p.name for p in d.glob("*.safetensors")) if cfg()["models_dir"] and d.exists() else []
+    if not cfg()["models_dir"] or not d.exists(): return []
+    names=[p.name for p in d.glob("*.safetensors") if p.is_file()]
+    if sub=="checkpoints":
+        names += [p.name for p in d.iterdir() if p.is_dir() and (p/"model_index.json").is_file()]
+        from .local_runtime import QWEN_CHECKPOINTS
+        for name in QWEN_CHECKPOINTS:
+            q=d.parent/"diffusion_models"/name
+            if q.is_file() and q.name not in names:names.append(q.name)
+    return sorted(names)
 
 
 @app.get("/api/state")
@@ -67,9 +75,15 @@ def state():
     kinds = {"checkpoints": {}, "loras": {}}
     for sub in kinds:  # tag files that cannot work with the SDXL pipelines (Flux, SD1.5, video...) or are broken
         for name in scan(sub):
-            r = diag.inspect_file(Path(md) / sub / name, sub == "loras")
+            path = _checkpoint_path(Path(md),name) if sub=="checkpoints" else Path(md)/sub/name
+            if path.is_dir():
+                kinds[sub][name]=mf.identify(path)
+                continue
+            r = diag.inspect_file(path, sub == "loras")
             kinds[sub][name] = r["kind"] if r["status"] == "ok" else "broken"
-    return {"ckpt_kinds": kinds["checkpoints"], "lora_kinds": kinds["loras"], "models_dir": md, "models_dir_ok": bool(md) and Path(md).exists(), "checkpoints": scan("checkpoints"),
+    models={name:mf.describe(_checkpoint_path(Path(md),name)) for name in scan("checkpoints")}
+    lora_families={name:mf.identify(Path(md)/"loras"/name,True) for name in scan("loras")}
+    return {"model_info":models,"lora_families":lora_families,"ckpt_kinds": kinds["checkpoints"], "lora_kinds": kinds["loras"], "models_dir": md, "models_dir_ok": bool(md) and Path(md).exists(), "checkpoints": scan("checkpoints"),
             "loras": scan("loras"), "palettes": list(px.PALETTES), "gpu": gpu}
 
 
@@ -85,11 +99,22 @@ def set_cfg(c: Cfg):
     return state()
 
 
+def _checkpoint_path(md,name):
+    p=md/"checkpoints"/name
+    from .local_runtime import QWEN_CHECKPOINTS
+    if not p.exists() and name in QWEN_CHECKPOINTS:p=md/"diffusion_models"/name
+    return p
+
+
 def _paths(checkpoint):
     md = Path(cfg()["models_dir"])
-    ckpt = md / "checkpoints" / checkpoint
+    if not checkpoint or Path(checkpoint).name != checkpoint:
+        raise HTTPException(400,"Select a valid checkpoint")
+    ckpt = _checkpoint_path(md,checkpoint)
     if not ckpt.exists():
         raise HTTPException(400, f"checkpoint not found: {ckpt}")
+    info=mf.describe(ckpt)
+    if not info["supported"]: raise HTTPException(400,info["detail"])
     return str(ckpt), str(md / "loras")
 
 
@@ -107,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets
 
 
 def _art_style(value):
@@ -179,9 +204,10 @@ def _do_generate(p):
     else:
         post = lambda raw: px.pixelize(raw, p.mode, p.size, p.colors, p.palette, p.remove_bg, p.bg_tol,
                                        remove_shadow=p.remove_shadow, crisp=p.crisp, clean=p.clean, outline=_outline(p.outline))
+    from . import local_runtime as lr
     return _run(ckpt, lora_dir, p.lora, p.lora_weight, p.prompt, p.negative, p.steps, p.cfg, p.seed, p.bg,
                 max(1, min(p.n, 6)), None, 0, post, kind=kind, art_style=art_style,
-                gen_size=max(512, min(p.gen_size, 1024)) // 64 * 64 if art_style != "pixel" else 1024)
+                gen_size=max(512, min(p.gen_size, 1024)) // 64 * 64 if art_style != "pixel" or lr.route(ckpt) else 1024)
 
 
 @app.post("/api/generate")
@@ -241,7 +267,10 @@ def _do_reference(ref_img, control, f):
     q = dict(remove_shadow=remove_shadow, crisp=crisp, clean=clean, outline=_outline(outline))
     ref_sprite = px.crop_to_content(px.remove_bg(ref_img, bg_tol))
     pal = px.palette_from_sprite(ref_sprite) if lock_palette and art_style == "pixel" else None  # None if ref isn't a real low-colour sprite
-    ip_img = gen.prep_reference(ref_sprite, bg)
+    from . import local_runtime as lr
+    if lr.route(ckpt) and control is not None:
+        raise HTTPException(400,"This local model supports image references but not SDXL skeleton ControlNet; turn off Use skeleton pose")
+    ip_img = ref_sprite if lr.route(ckpt) else gen.prep_reference(ref_sprite, bg)
     prompt = ", ".join(s for s in (character.strip(), pose.strip()) if s)
     pal_arg = pal if pal is not None else "none"
     if art_style != "pixel":
@@ -312,7 +341,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
                 refine: bool = Form(False), checkpoint: str = Form(""), lora: str = Form(""),
                 lora_weight: float = Form(1.0), character: str = Form(""), negative: str = Form(""),
                 strength: float = Form(0.45), steps: int = Form(22), cfg: float = Form(7.0), seed: int = Form(-1),
-                radius: float = Form(0), sampler: str = Form("euler_a"), secondary: str = Form(""), keyframes: str = Form("[]")):
+                radius: float = Form(0), sampler: str = Form("euler_a"), secondary: str = Form(""), keyframes: str = Form("[]"), softness: float = Form(0.0)):
     if anim not in rig.CLIPS and anim != "custom":
         raise HTTPException(400, f"unknown animation: {anim}")
     frames, fps = max(1, min(frames, 32)), max(1, min(fps, 60))
@@ -326,7 +355,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         raise HTTPException(400, str(e))
     sec = _secondary(secondary)
     args = (anim, frames, facing, near, weapon, amp, max(0, min(pad, 200)), max(0, min(overlap, 3)), max(1, min(ss, 6)))
-    params = [args, checkpoint, lora, lora_weight, character, negative, strength, steps, cfg, seed, radius, jn, ov, sampler, sec, keys]
+    params = [args, checkpoint, lora, lora_weight, character, negative, strength, steps, cfg, seed, radius, jn, ov, sampler, sec, keys, softness]
     key = hashlib.sha1(sp.tobytes() + json.dumps(params, sort_keys=True, default=str).encode()).hexdigest()
     info = {}
     if refine and key in _RCACHE:  # e.g. same settings again: don't pay for the AI pass twice
@@ -334,7 +363,7 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         raw, imgs, meta, info = e["raw"], e["imgs"], e["meta"], e["info"]
     else:
         try:
-            raw, meta = rig.render(sp, jn, ov, *args, secondary=sec, keyframes=keys)
+            raw, meta = rig.render(sp, jn, ov, *args, secondary=sec, keyframes=keys, softness=softness)
         except ValueError as e:
             raise HTTPException(400, str(e))
         imgs = raw
@@ -395,6 +424,81 @@ def rig_redo(b: RedoBody):
             "accept": [i not in set(info["reverted_idx"]) for i in range(len(imgs))]}
 
 
+class ReferenceFrames(BaseModel):
+    start: str
+    end: str
+    count: int = 8
+    fps: int = 10
+    method: str = "ai"
+    prompt: str = ""
+    negative: str = ""
+    checkpoint: str = ""
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "pixel"
+    steps: int = 25
+    cfg: float = 7.0
+    strength: float = .65
+    seed: int = -1
+    sampler: str = "euler_a"
+
+
+@app.post("/api/rig/reference_frames")
+def rig_reference_frames(b: ReferenceFrames):
+    try:
+        start,end=_dec_img(b.start),_dec_img(b.end)
+        inbetween.validate(start,end,b.count)
+    except Exception as e:
+        raise HTTPException(400,str(e))
+    if b.method not in ("ai","blend"):
+        raise HTTPException(400,"Unknown in-between method")
+    style=_art_style(b.art_style)
+    seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+    redraw=None
+    if b.method=="ai" and b.count>2:
+        ckpt,lora_dir=_paths(b.checkpoint)
+        gen.set_sampler(b.sampler)
+        def redraw(guide,t,i):
+            def run(image,mask,ref):
+                prompt=f"{b.prompt}, intermediate animation pose, {round(t*100)} percent through motion, consistent character and costume, single coherent pose, no ghosting"
+                return gen.inpaint(ckpt,b.lora,b.lora_weight,lora_dir,prompt,b.negative,image,mask,
+                                   strength=max(.15,min(.85,b.strength)),steps=max(12,min(50,b.steps)),cfg=b.cfg,
+                                   seed=seed,bg="magenta",ip_image=ref,ip_scale=.7,art_style=style)
+            return inbetween.ai_frame(guide,start,end,t,run,style)
+    try:
+        imgs=inbetween.frames(start,end,b.count,redraw)
+    except Exception as e:
+        raise HTTPException(500,f"{type(e).__name__}: {e}")
+    return {"frames":[b64(im) for im in imgs],"fps":max(1,min(60,b.fps)),"size":list(start.size),
+            "pivot":[start.width/2,start.height-1],"info":{"method":b.method,"seed":seed,"endpoints_locked":True}}
+
+
+class ReferenceExport(BaseModel):
+    frames: List[str]
+    fps: int = 10
+    name: str = "sprite"
+    options: dict = {}
+
+
+@app.post("/api/rig/reference_export")
+def rig_reference_export(b: ReferenceExport):
+    try:
+        if not 2<=len(b.frames)<=32:
+            raise ValueError("Need 2-32 frames")
+        imgs=[_dec_img(u) for u in b.frames]
+        inbetween.validate(imgs[0],imgs[-1],len(imgs))
+        if any(im.size!=imgs[0].size for im in imgs):
+            raise ValueError("Frames must share canvas dimensions")
+        w,h=imgs[0].size
+        opts=dict(b.options,crop=False,uniform=True,frames=True,smooth=rig.is_hd(imgs[0]))
+        return exporter.export_pack([{"name":"reference","fps":max(1,min(60,b.fps)),"loop":False,
+                                     "frames":imgs,"pivot":(w/2,h-1)}],opts,b.name,ROOT)
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    except Exception as e:
+        raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
 class ExportBody(BaseModel):
     frames: List[str]
     fps: int = 10
@@ -420,6 +524,7 @@ def rig_export_frames(b: ExportBody):
 
 class PackAnim(BaseModel):
     anim: str
+    softness: float = 0
     keyframes: Optional[List[dict]] = None
     count: int = 8
     fps: int = 10
@@ -481,7 +586,7 @@ def rig_export_pack(b: PackBody):
                 raise HTTPException(400, 'HD pack exceeds pixel budget; export fewer clips or frames')
             try:
                 frames, meta = rig.render(sp, jn, b.overrides, a.anim, count, a.facing, a.near, a.weapon,
-                                          a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary), keyframes=a.keyframes)
+                                          a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary), keyframes=a.keyframes, softness=a.softness)
             except ValueError as e:
                 raise HTTPException(400, str(e))
             pivot = tuple(meta["pivot"])
@@ -680,11 +785,12 @@ def _dir_clip(c):
     if c.anim not in rig.CLIPS:
         raise HTTPException(400, f"unknown animation: {c.anim}")
     return {"anim": c.anim, "count": max(1, min(c.count, 32)), "fps": max(1, min(c.fps, 60)), "amp": max(.3, min(c.amp, 2.0)),
-            "pad": max(0, min(c.pad, 200)), "overlap": max(0, min(c.overlap, 3)), "weapon": c.weapon if c.weapon in ("l", "r") else "r"}
+            "softness": max(0, min(c.softness, 100)), "pad": max(0, min(c.pad, 200)), "overlap": max(0, min(c.overlap, 3)), "weapon": c.weapon if c.weapon in ("l", "r") else "r"}
 
 
 class DirClip(BaseModel):
     anim: str
+    softness: float = 0
     count: int = 8
     fps: int = 10
     amp: float = 1.0
@@ -785,6 +891,167 @@ def dirs_generate(ref: Optional[UploadFile] = File(None), dirs: str = Form(...),
     return {"results": results, "seed": base, "error": err}
 
 
+class CharacterView(BaseModel):
+    reference: str
+    view: str
+    locks: Optional[List[str]] = None
+    description: str = ""
+    checkpoint: str
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "anime"
+    size: int = 256
+    gen_size: int = 768
+    steps: int = 20
+    cfg: float = 4.0
+    seed: int = -1
+    sampler: str = "euler_a"
+    negative: str = ""
+    bg: str = "white"
+    ip_scale: float = .7
+    colors: int = 24
+    lock_palette: bool = True
+    bg_tol: int = 40
+
+
+@app.post("/api/character/view")
+def character_view(b: CharacterView):
+    """Generate one view from the same master image; no mutation of existing views."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    art=_art_style(b.art_style)
+    try:
+        if not mf.describe(ckpt)["reference"]: raise ValueError("Select a model with image-reference support")
+        if art=="pixel" and b.size not in (32,48,64,96,128): raise ValueError("Choose a pixel canvas of 32–128 px")
+        if art!="pixel" and b.size!=256: raise ValueError("HD direction canvas is limited to 256 px")
+        anchor=character.decode_reference(b.reference)
+        if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
+        prompt=character.view_prompt(b.view,b.description,b.locks)
+        if len(b.negative)>1800: raise ValueError("Negative prompt too long")
+        ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        neg=", ".join(x for x in (b.negative,"multiple characters, duplicate views, text, cropped feet, scenery") if x)
+        result=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,neg,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                    ref,max(0.,min(b.ip_scale,1.)),lambda raw:character.finish(raw,anchor,art,b.size,b.colors,b.lock_palette,b.bg_tol),
+                    gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
+        sprite=_dec_img(result["sprite"])
+        return {**result,"dir":b.view,"seed":seed,"joints":rig.autoplace(sprite),"overrides":[]}
+    except ValueError as e: raise HTTPException(400,str(e))
+
+
+class CharacterVariation(CharacterView):
+    view: str = "S"  # variation does not force a camera angle
+    target: str = "outfit"
+    change: str
+    lock_palette: bool = False
+
+
+@app.post("/api/character/variation")
+def character_variation(b: CharacterVariation):
+    """Generate an independent candidate from the immutable master."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    art=_art_style(b.art_style)
+    try:
+        if not mf.describe(ckpt)["reference"]: raise ValueError("Select a model with image-reference support")
+        if b.size not in ((32,48,64,96,128) if art=="pixel" else (256,512,768,1024)):
+            raise ValueError("Unsupported output size")
+        prompt,locks=character.variation_prompt(b.description,b.target,b.change,b.locks)
+        if len(b.negative)>1800: raise ValueError("Negative prompt too long")
+        anchor=character.decode_reference(b.reference)
+        if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
+        ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        # Do not force the old low-colour palette when the selected change can introduce new colours.
+        palette_safe=b.lock_palette and b.target in ("pose","expression")
+        neg=", ".join(x for x in (b.negative,"multiple characters, duplicate figures, text, cropped feet, scenery") if x)
+        result=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,neg,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                    ref,max(0.,min(b.ip_scale,1.)),lambda raw:character.finish_variation(raw,anchor,art,b.size,b.colors,palette_safe,b.bg_tol),
+                    gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
+        result["info"].update(target=b.target,change=b.change,locks=locks,checkpoint=b.checkpoint,
+                              reference_method=lr.route(ckpt) or "sdxl_ip_adapter",lock_mode="reference_guidance")
+        return result
+    except ValueError as e: raise HTTPException(400,str(e))
+
+
+class ModularAsset(BaseModel):
+    recipe: dict
+    category: str
+    description: str
+    view: str = "front"
+    source: str = "body"
+    replace_category: bool = True
+    checkpoint: str
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "anime"
+    gen_size: int = 768
+    steps: int = 20
+    cfg: float = 4.0
+    seed: int = -1
+    sampler: str = "euler_a"
+    negative: str = ""
+    bg: str = "magenta"
+    ip_scale: float = .4
+    colors: int = 24
+    bg_tol: int = 40
+
+
+@app.post("/api/modular/generate_asset")
+def modular_generate_asset(b: ModularAsset):
+    """One isolated asset, fitted to the body; never mutates a project or recipe."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    try:
+        if not mf.describe(ckpt)["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
+        prompt=modular_assets.prompt(b.category,b.description,b.view)
+        if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
+        if len(b.negative)>1800:raise ValueError("Negative prompt too long")
+        recipe,images,ref,bb=modular_assets.reference(b.recipe,b.source)
+        if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
+        art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
+        rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
+        # A square RGB reference preserves the full character silhouette for all three runtimes.
+        ref=gen.prep_reference(ref,b.bg,canvas=512)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                 ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
+                 gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
+        info=res["info"]
+        layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
+               "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
+        # Validate the resulting recipe budget before presenting an addable candidate.
+        modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
+        preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
+        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
+        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/render")
+def modular_render(body: dict = Body(...)):
+    try:return {"sprite":modular.png_uri(modular.render(body))}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/validate")
+def modular_validate(body: dict = Body(...)):
+    try:return modular.validate(body)[0]
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/export")
+def modular_export(body: dict = Body(...)):
+    try:
+        data=modular.bundle(body)
+        return StreamingResponse(io.BytesIO(data),media_type="application/zip",
+                                 headers={"Content-Disposition":'attachment; filename="character_layers.zip"'})
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
 # ---------------- diagnostics ----------------
 @app.get("/api/diag")
 def diag_run():
@@ -799,6 +1066,8 @@ class GpuTest(BaseModel):
 @app.post("/api/diag/gpu_test")
 def diag_gpu_test(b: GpuTest):
     ckpt, lora_dir = _paths(b.checkpoint)
+    from . import local_runtime as lr
+    if lr.route(ckpt):raise HTTPException(400,"This GPU benchmark is for SDXL; use the local worker readiness in the model picker and a small generation for a live check.")
     try:
         return gen.smoke_test(ckpt, b.lora, lora_dir)
     except Exception as e:
@@ -1206,12 +1475,14 @@ def terrain_export(b: TerrainBody):
 def _exec_job(kind, params, inputs, progress):
     """Runs one queued job (called by the queue's worker thread). Returns the list of results."""
     gen.PROGRESS = progress
+    gen._job_context.cancelled = getattr(progress,"cancelled",None)
     try:
         if kind == "generate":
             return _do_generate(GenParams(**params))["results"]
         return _do_reference(inputs["ref"], inputs.get("pose"), params)["results"]
     finally:
         gen.PROGRESS = None
+        gen._job_context.cancelled = None
 
 
 _JOBS = None
