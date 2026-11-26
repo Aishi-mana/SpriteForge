@@ -1,0 +1,3 @@
+# Phase 61D — Character identity
+
+Open Portrait > Character identity. Enter appearance, hair, eyes, palette and accessories. Store up to eight named outfits and select one. Preserve attributes adds descriptive prompt guidance, not a hard model lock. Artwork, framed portraits and emotional portraits share this profile; approved master conditioning remains optional except for gestures. Save project to retain the profile. Existing projects load without a profile. Changing outfits while conditioning on an older master may preserve its original clothing; inspect and approve results. Multi-image conditioning and dedicated approved/rejected asset tracking remain deferred. Actual GPU verification pending.
