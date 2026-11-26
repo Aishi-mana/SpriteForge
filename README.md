@@ -2,7 +2,7 @@
 
 A **local-first AI pixel-art sprite studio** for Windows (usable offline after required models have been downloaded): generate character sprites, give them poses, animate them
 with a bone rig, and export sprite sheets with ready-made Godot 4 / Unity data. Everything runs on your own machine
-(SDXL via `diffusers`, plus an optional local chat assistant through `llama.cpp`).
+(SDXL via `diffusers`, supported local Qwen Rapid and NetaYume workers, plus optional local chat via `llama.cpp`).
 
 Built for an 8 GB laptop GPU (RTX 5070 Laptop, 32 GB RAM): SDXL runs with CPU offload; the assistant runs on the CPU.
 
@@ -66,12 +66,13 @@ spriteforge/
 - `docs/TESTING_CHECKLIST.md`  ordered manual test plan for a real GPU
 - `docs/ROADMAP.md`  proposed work, verification priorities and known limits
 - `docs/REPOSITORY_WORKFLOW.md`  GitHub workflow, tracked runtime data and safe cleanup guidance
-- `docs/phases/`  historical notes for each delivered phase (through Phase 22)
+- `docs/phases/`  detailed implementation notes for delivered phases
+- [Living implementation diary](docs/IMPLEMENTATION_DIARY.md) — timestamped changes, PRs, decisions, failures and validation
 - `CHANGELOG.md`  historical phase notes; `HANDOFF.md`  current maintainer context
 
 ## Current project status
 
-The checked-in code and docs cover **Phase 22**. Earlier handoff notes record laptop testing through Phase 18; **Phases 19-22 (queue/history, tiles, terrain and tile follow-ups) still need real-device and Godot/Tiled validation**. The test suite checks logic with faked model calls but does not prove GPU inference, Tauri rendering, or game-engine imports. Start with [the manual testing checklist](docs/TESTING_CHECKLIST.md).
+The implementation baseline is **Phase 61K-F**, merged 2026-11-26 at `351d4a132543`. Character Studio supports master artwork, framed portraits, identity profiles, sprite conversion, body templates, alpha cleanup, multi-model instruction edits, regional protection, edit presets and staged revision history. CPU validation passed for the latest implementation PR; real GPU output, desktop interactions and native engine imports still need verification. **61K-G** is next; **Phase 62 Windows packaging** is on hold. See the [living diary](docs/IMPLEMENTATION_DIARY.md) and [manual testing checklist](docs/TESTING_CHECKLIST.md).
 
 **Repository hygiene:** projects, history, exports, local `config.json` and diagnostics are runtime/user data. Some of these files are already tracked in this initial Git snapshot. Review [the maintenance guide](docs/REPOSITORY_WORKFLOW.md#tracked-runtime-files--cleanup) before committing or sharing this repository; do not commit model files, logs or personal configuration changes.
 
