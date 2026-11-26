@@ -283,3 +283,6 @@ Feature-specific reference guidance, temporary target unlocks, separate full-bod
 
 ## Phase 31 — Modular character customization
 Non-destructive CPU layer stack, transparent body/outfit/hair/accessory import and swaps, per-layer transforms, composite PNG, reusable ZIP recipe and source assets, project persistence and Reference/Animate handoff. Tests added; browser validation pending.
+
+## Phase 32 — AI-assisted modular asset generation
+Reference-led isolated outfit, footwear, hair and accessory candidates, transparent finishing, approximate fitting, raw/asset/composite review and explicit layer acceptance. Existing model/memory policy and modular recipes retained. Tests added; GPU validation pending.
