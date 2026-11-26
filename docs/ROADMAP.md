@@ -1,8 +1,15 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 48 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61K-F (latest implementation CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
-## First: verify the newest delivered features
+## Current priorities (2026-11-26 UTC)
+
+- Phase 61K-G: integration testing, performance and VRAM optimization for instruction editing and staged workspace lifecycle.
+- Real Windows GPU, desktop interaction and native engine acceptance remain outstanding; prioritize Qwen, NetaYume and SDXL editing, mask alignment and project round trips.
+- Phase 62 Windows packaging is on hold.
+- See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-F.
+
+## Historical verification backlog
 
 The previous handoff recorded user testing through Phase 18, but **Phases 19-22 were not confirmed on the target laptop** at that point. Use the [manual testing checklist](TESTING_CHECKLIST.md), especially steps 15-22, before treating the following as production-ready:
 
@@ -29,7 +36,7 @@ Automated tests exercise internal logic and fake SDXL calls; they do not establi
 
 See the corresponding [phase notes](phases/) for scope and limitations. Regression tests have been added but the full suite and live hardware workflows have not been verified.
 
-## Candidate next features
+## Historical backlog and delivered milestones
 
 1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Phase 36 bundles Godot 4 and Unity desktop runtime components for synchronized clip playback, equipment choices and loadout persistence (engine validation pending). Phase 37 adds optional manual two-bone weight painting, explicit depth overrides and selected body-part occlusion baked into exported layers (validation pending). Phase 38 adds a cross-project character/asset/rig snapshot library and local model/LoRA readiness manager (validation pending). Phase 39 begins integration testing and stability fixes; full validation is a release gate before new character features.
 2. **Character improvements:** precise masked editing, semantic asset extraction, garment fitting, improved multiview conditioning and per-clip secondary motion presets.
@@ -55,4 +62,4 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 Clean up already-tracked runtime files (local configuration, logs, history) and duplicate root phase notes *separately* after confirming any needed user data is backed up. See [Repository workflow](REPOSITORY_WORKFLOW.md).
 
-Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Phase 47 adds deterministic procedural VFX, actor attachments and transparent effect export. Phase 48 adds persistent generation batches and sequential project animation exports. Next Phase 49 performance and integration validation.
+Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Phase 47 adds deterministic procedural VFX, actor attachments and transparent effect export. Phase 48 adds persistent generation batches and sequential project animation exports. Phase 49 subsequently introduced CPU integration coverage; Phases 50–61K-F are recorded in the living diary.

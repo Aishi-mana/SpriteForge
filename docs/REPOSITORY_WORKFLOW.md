@@ -6,7 +6,7 @@
 ## Making a change
 
 1. Fetch/pull the latest `main` and make a focused branch (for example `docs/update-install-guide` or `fix/terrain-export`).
-2. Change source files and add/adjust tests and documentation. The historical `docs/phases/PHASE*.md` files explain earlier deliveries; don't copy them back to the root.
+2. Change source files and add/adjust tests and documentation. Append a timestamped entry to [IMPLEMENTATION_DIARY.md](IMPLEMENTATION_DIARY.md) for every implementation or fix; append validation and merge outcomes and refresh status summaries at milestones. The historical `docs/phases/PHASE*.md` files explain earlier deliveries; don't copy them back to the root.
 3. Run `python tests/run_all.py` from the root. Install NumPy/Pillow/SciPy for the offline tests; install **Node.js** to exercise the embedded UI JS tests. Without Node.js, JS tests are skipped, not proved passing.
 4. If changing model loading, renderer behaviour or engine exports, also perform applicable checks from [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) on the Windows GPU and/or in Godot 4 / Tiled. Record what remains untested.
 5. Review `git status --short` and `git diff --stat`; commit only intended files; open a pull request for review before merging to `main`. Mention test results and any Tauri rebuild requirement.
@@ -30,15 +30,16 @@ The root `PHASE*.md` notes also duplicate `docs/phases/` for earlier phases. Aft
 - `run.bat`: starts the browser-mode local engine; open `http://127.0.0.1:8765` if it does not open automatically.
 - `config.example.json`: intended configuration template; **do not overwrite a user's existing `config.json`**.
 - Model files are external, not vendored. Initial online downloads may be needed for optional IP-Adapter/ControlNet, although the application can subsequently run locally.
-- In this snapshot there is no `.github/workflows/` CI configuration. Do not equate a PR existing with automated tests having run.
+- GitHub Actions CPU validation is configured; check actual run results before merging. Do not equate a PR existing with automated tests having run.
 
 ## Documentation map
 
 - [README](../README.md): overview, installation, troubleshooting and current status.
-- [User guide](USER_GUIDE.md): step-by-step feature workflows through Phase 22.
+- [User guide](USER_GUIDE.md): historical step-by-step feature workflows; newer workflows also appear in phase notes.
 - [Architecture](ARCHITECTURE.md): modules, persistence, API routes and conventions.
 - [Development](DEVELOPMENT.md): source-level changes and tests.
 - [Testing checklist](TESTING_CHECKLIST.md): hardware and import acceptance.
 - [Roadmap](ROADMAP.md): pending verification, possible next features and known limits.
 - [Handoff](../HANDOFF.md): concise maintainer overview and feature confidence.
+- [Living implementation diary](IMPLEMENTATION_DIARY.md): dated engineering history, validation, fixes and merge references.
 - [Phase notes](phases/): historical details; [Changelog](../CHANGELOG.md): chronological summaries.
