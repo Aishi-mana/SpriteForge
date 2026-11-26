@@ -26,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "character_art":
+        return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", close-up, headshot, waist-up, feet out of frame, character sheet, multiple views"
     if kind == "modular_asset":
         return "person, mannequin, face, skin, hands, body, scenery, cast shadow, text, watermark, cropped item, duplicate items, blurry"
     if kind == "sprite" and art_style != "pixel":
@@ -76,6 +78,8 @@ def _apply_sampler(pipe):
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "character_art":
+        return f"{styles.PRESETS[art_style]}, full-length character concept illustration, {user_prompt}, single character, entire body head to toe visible, feet visible, centered with space above and below, plain flat solid {bg} background"
     if kind == "modular_asset":
         return f"{styles.PRESETS[art_style]}, {user_prompt}, isolated game customization asset, plain flat solid {bg} background"
     if kind == "sprite" and art_style != "pixel":

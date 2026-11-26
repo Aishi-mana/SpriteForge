@@ -1,0 +1,3 @@
+# Phase 61A — Full-body artwork
+
+Open Portrait, then Full-body character artwork. Select checkpoint, style, view and resolution. Generate 1–3 variants, approve a master and save the project. Master PNG exports the approved image; Master → Reference transfers it to existing reference tools. Optional reference conditioning uses existing compatible model paths. Generation remains square; framing is prompt-guided, not guaranteed. Background removal is color-based. Only the master persists; candidates are session-only. Multi-framing expressions and integrated sprite conversion are future phases. Real GPU verification pending.
