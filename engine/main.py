@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup, custom_retarget, scenes
 
 
 def _art_style(value):
@@ -1076,6 +1076,171 @@ def custom_skeleton_weights(body: dict=Body(...)):
         _,segments=custom_skeleton.transforms(profile,size)
         return {"image":b64(custom_skin.heatmap(profile,size,segments,body.get("bone")))}
     except (ValueError,TypeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/timeline")
+def custom_timeline_preview(body: dict=Body(...)):
+    try:
+        frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32),frame=body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/export_timeline")
+def custom_timeline_export(body: dict=Body(...)):
+    try:
+        frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32),preview=False)
+        options=body.get("options") or {}
+        if not isinstance(options,dict):raise ValueError("Invalid export options")
+        # Fixed untrimmed canvas and rest root pivot, shared across every frame.
+        options=dict(options,crop=False,uniform=True,smooth=not body["profile"].get("pixel",True))
+        frames=custom_cleanup.apply(frames,meta,body.get("cleanup"))
+        entry={**meta,"frames":frames}
+        return exporter.export_pack([entry],options,meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/cleanup_mask")
+def custom_cleanup_mask(body: dict=Body(...)):
+    try:
+        frame,mask,opts,meta=custom_cleanup.prepare(body)
+        return {"original":b64(frame),"mask":b64(Image.fromarray(mask.astype("uint8")*255,"L")),
+                "fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"pixels":int(mask.sum())}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/cleanup")
+def custom_cleanup_frame(body: dict=Body(...)):
+    try:
+        from .custom_skeleton import number
+        ckpt,lora_dir=_paths(body.get("checkpoint"))
+        model=mf.describe(ckpt)
+        if model["family"]!="sdxl" or model.get("backend"):
+            raise ValueError("Selective cleanup needs a verified SDXL inpainting-compatible checkpoint; Qwen/NetaYume do not expose mask inpainting")
+        lora=body.get("lora","")
+        if not isinstance(lora,str):raise ValueError("Invalid LoRA")
+        mf.check_lora(ckpt,lora_dir,lora)
+        lw=number(body.get("lora_weight",1),0,2,"LoRA weight")
+        strength=number(body.get("strength",.35),.15,.75,"cleanup strength")
+        steps=modular.integer(body.get("steps",20),8,40,"cleanup steps")
+        guidance=number(body.get("cfg",5),1,12,"cleanup CFG")
+        seed=modular.integer(body.get("seed",0),0,2**31-1,"cleanup seed")
+        size=modular.integer(body.get("size",768),512,1024,"inference size")
+        if size not in (512,768,1024):raise ValueError("Choose 512, 768 or 1024 inference size")
+        prompt=body.get("prompt","");negative=body.get("negative","")
+        if not isinstance(prompt,str) or not isinstance(negative,str) or max(len(prompt),len(negative))>2000:
+            raise ValueError("Invalid cleanup prompt")
+        frame,mask,opts,meta=custom_cleanup.prepare(body)
+        pixel=body["profile"].get("pixel",True)
+        style="pixel" if pixel else body.get("art_style","custom")
+        if style not in styles.PRESETS or (not pixel and style=="pixel"):style="custom"
+        gen.set_sampler(body.get("sampler","euler_a"))
+        text="preserve same character identity, costume, pose, proportions, colors and linework; repair local joint seams and malformed folds"
+        if prompt.strip():text+=", "+prompt.strip()
+        out,info=custom_cleanup.cleanup(frame,mask,opts,gen.inpaint,ckpt,lora,lw,lora_dir,text,negative,strength,steps,guidance,seed,size,pixel,style)
+        return {"sprite":b64(out),"original":b64(frame),"fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"info":info}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(500,"Cleanup failed: "+str(e))
+
+
+@app.post("/api/scenes/actor")
+def scene_actor(body: dict=Body(...)):
+    try:return scenes.from_timeline(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/project_actor")
+def scene_project_actor(body: dict=Body(...)):
+    try:
+        doc=projects.load(ROOT,body.get("name"))
+        profile=doc.get("custom_skeleton")
+        image=doc.get("images",{}).get("customrig")
+        if not profile or not image:raise ValueError("Project has no custom rig source")
+        pad=int(doc.get("settings",{}).get("csPad",32))
+        include=body.get("cleanup",False)
+        if not isinstance(include,bool):raise ValueError("Invalid cleanup option")
+        return scenes.from_timeline({"image":image,"profile":profile,"padding":pad,
+                                     "cleanup":doc.get("custom_cleanup") if include else None})
+    except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/validate")
+def scene_validate(body: dict=Body(...)):
+    try:return scenes.validate(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/validate_actor")
+def scene_validate_actor(body: dict=Body(...)):
+    try:return scenes.clip(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/render")
+def scene_render(body: dict=Body(...)):
+    try:
+        frames,meta=scenes.render(body.get("scene"),body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/export_effect")
+def scene_export_effect(body: dict=Body(...)):
+    try:
+        scene,_=scenes.validate(body.get("scene"))
+        effect=next((e for e in scene["effects"] if e["id"]==body.get("effect")),None)
+        if effect is None:raise ValueError("Choose an effect to export")
+        count=effect["end"]-effect["start"]+1
+        if count<2:raise ValueError("Standalone export needs at least two active frames")
+        side=4*effect["radius"]+8
+        single={**effect,"actor":None,"start":0,"end":count-1,"x":side//2,"y":side//2,"visible":True}
+        recipe={"version":1,"name":effect["name"],"width":side,"height":side,"count":count,
+                "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
+        frames,meta=scenes.render(recipe,preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not effect["pixel"]),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/export")
+def scene_export(body: dict=Body(...)):
+    try:
+        frames,meta=scenes.render(body.get("scene"),preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid scene export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/retarget_suggest")
+def custom_retarget_suggest(body: dict=Body(...)):
+    try:return custom_retarget.suggest(body.get("source"),body.get("destination"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/retarget")
+def custom_retarget_preview(body: dict=Body(...)):
+    try:
+        return custom_retarget.transfer(body.get("source"),body.get("destination"),body.get("mapping"),
+            body.get("source_size"),body.get("destination_size"),body.get("transfer_ik",True),
+            body.get("ik_mode","limb"),body.get("frame",0))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/ik")
+def custom_skeleton_ik(body: dict=Body(...)):
+    try:
+        p=custom_skeleton.validate(body.get("profile"))
+        size=(modular.integer(body.get("width"),1,1024,"source width"),modular.integer(body.get("height"),1,1024,"source height"))
+        frame=body.get("frame")
+        if frame is not None:
+            if "timeline" not in p:raise ValueError("Create a timeline first")
+            frame=modular.integer(frame,0,p["timeline"]["count"]-1,"IK frame")
+            p=custom_timeline.pose(p,frame)
+        solved,points,reports=custom_ik.solve(p,size,frame)
+        return {"bones":points,"chains":reports,"angles":{b["id"]:b["angle"] for b in solved["bones"]}}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/pose")

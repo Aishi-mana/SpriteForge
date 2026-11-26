@@ -61,8 +61,8 @@ def build_weights(profile,size,segments):
     weights/=np.maximum(weights.sum(axis=-1,keepdims=True),1e-12)
     return uv,weights,ids
 
-def deform(image,profile,matrices,segments,padding):
-    uv,weights,ids=build_weights(profile,image.size,segments)
+def deform(image,profile,matrices,segments,padding,binding=None):
+    uv,weights,ids=binding if binding is not None else build_weights(profile,image.size,segments)
     dst=np.zeros_like(uv)
     for i,k in enumerate(ids):
         M=matrices[k]

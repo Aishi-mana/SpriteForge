@@ -313,3 +313,21 @@ Custom connected bone trees, editable endpoints/parent/name/rotation, humanoid/q
 
 ## Phase 41 — Multi-bone skinning and weight painting
 Optional custom-rig weighted mesh, automatic nearest-four binding, normalized manual influences for any bone, selected-bone heatmap and undo/reset, project/preset persistence, shared CPU triangle renderer. Rigid default retained. Feature branch CPU CI enabled; validation pending.
+
+## Phase 42 — Advanced animation timeline
+Custom rig frame-indexed bone rotation tracks, linear/ease/step interpolation, capture/duplicate/delete, scrub/playback and onion skins, reused weighted binding, fixed-cell spritesheet export and project/preset persistence. Existing manual pose preserved. CPU CI pending.
+
+## Phase 43 — Inverse kinematics and foot locking
+Two-bone analytic IK, adjustable bend/strength limits, draggable targets and residual preview, target keyframes and fixed contact ranges, shared rigid/weighted pose and timeline rendering, saved constraints. Existing manual and modular rigs retained. CPU validation pending.
+
+## Phase 44 — AI-assisted animation cleanup
+Custom timeline per-frame masked SDXL inpaint, posed-joint and manual mask selection, alpha/palette safeguards, original/candidate/accepted comparison, accepted frame persistence and fingerprint-checked playback/export. Qwen/Neta reference backends not exposed as masked inpainting. CPU CI pending.
+
+## Phase 45 — Animation retargeting between characters
+Motion bundles, ID/name mapping and manual overrides, local track transfer, proportion-aware IK and contact mapping, paired geometry preview and reachability report. Destination sprite and weights preserved. CPU CI pending.
+
+## Phase 46 — Multi-character animation scenes
+Scene tab with baked custom timeline snapshots, saved project and actor bundle import, static PNG props, independent timing, position tween, scale, mirror, depth and opacity; shared scene preview/playback, project and portable scene persistence, fixed-cell scene export. CPU CI pending.
+
+## Phase 47 — Visual effects, magic and particles
+Eight procedural effect presets, bounded seeded emitters, color/size/timing/depth and actor-pivot offsets, scene-integrated render and standalone transparent spritesheets, scene persistence. CPU CI pending.
