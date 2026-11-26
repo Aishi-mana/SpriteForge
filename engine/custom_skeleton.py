@@ -58,15 +58,6 @@ def preset(kind):
     def b(id,parent,x,y):
         return dict(id=id,name=id.replace("_"," ").title(),parent=parent,tail=[x,y],angle=0)
     if kind in ("humanoid","winged"):
-        root=[.5,.58]
-        bones=[b("torso",None,.5,.32),b("head","torso",.5,.12),
-               b("left_arm","torso",.25,.43),b("left_forearm","left_arm",.19,.62),
-               b("right_arm","torso",.75,.43),b("right_forearm","right_arm",.81,.62),
-               b("hips","torso",.5,.61),b("left_thigh","hips",.38,.78),b("left_shin","left_thigh",.36,.95),
-               b("right_thigh","hips",.62,.78),b("right_shin","right_thigh",.64,.95)]
-        # hips must originate at pelvis, not at the neck: root runs upward from pelvis,
-        # and a short pelvis branch connects via the root's tail in this connected tree.
-        # Use a pelvis root first instead, so torso and thighs share the pelvis joint.
         root=[.5,.66]
         bones=[b("pelvis",None,.5,.58),b("torso","pelvis",.5,.32),b("head","torso",.5,.12),
                b("left_arm","torso",.25,.43),b("left_forearm","left_arm",.19,.62),

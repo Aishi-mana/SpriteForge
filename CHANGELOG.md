@@ -307,3 +307,6 @@ Searchable local character/collection, individual asset and body-rig snapshots w
 
 ## Phase 39 — Integration testing, performance and stability
 Thread-local generation state, worker cancellation and scratch cleanup, bounded header classification cache and rig/batch limits, staged image saves, CPU validation workflow and Windows validation checklist. 33 existing JavaScript assertions passed in isolated harness; full suite and hardware/runtime checks remain to be verified.
+
+## Phase 40 — Custom skeleton and bone hierarchy editor
+Custom connected bone trees, editable endpoints/parent/name/rotation, humanoid/quadruped/winged/chain starters, portable JSON presets, project persistence and rigid CPU pose preview/export. Existing rigs preserved. CI validation pending.
