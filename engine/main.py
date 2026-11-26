@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup, custom_retarget
 
 
 def _art_style(value):
@@ -1141,6 +1141,21 @@ def custom_cleanup_frame(body: dict=Body(...)):
         return {"sprite":b64(out),"original":b64(frame),"fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"info":info}
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(500,"Cleanup failed: "+str(e))
+
+
+@app.post("/api/custom_skeleton/retarget_suggest")
+def custom_retarget_suggest(body: dict=Body(...)):
+    try:return custom_retarget.suggest(body.get("source"),body.get("destination"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/retarget")
+def custom_retarget_preview(body: dict=Body(...)):
+    try:
+        return custom_retarget.transfer(body.get("source"),body.get("destination"),body.get("mapping"),
+            body.get("source_size"),body.get("destination_size"),body.get("transfer_ik",True),
+            body.get("ik_mode","limb"),body.get("frame",0))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/ik")
