@@ -1021,7 +1021,11 @@ def modular_generate_asset(b: ModularAsset):
         recipe,images,ref,bb=modular_assets.reference(b.recipe,"body" if b.fixed_canvas else b.source)
         if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
         art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
-        rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
+        guide=None
+        if b.fixed_canvas:
+            rect,guide,landmarks=modular_assets.placement_guide(ref,b.category)
+        else:
+            rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
         # A square RGB reference preserves the full character silhouette for all three runtimes.
         ref=gen.prep_reference(ref,b.bg,canvas=512)
         seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
@@ -1033,13 +1037,15 @@ def modular_generate_asset(b: ModularAsset):
         if b.fixed_canvas:
             registered,info=modular_assets.register_asset(modular.decode(res["sprite"]),info,(recipe["width"],recipe["height"]))
             res["sprite"]=modular.png_uri(registered)
+            info.update(fit_method="silhouette_band_region",landmarks=landmarks,
+                        placement=modular_assets.placement_review(registered,guide))
         layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
                "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
         # Validate the resulting recipe budget before presenting an addable candidate.
         modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
         preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
         info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
-        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info}
+        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info,"placement_mask":modular.png_uri(guide) if guide is not None else None}
     except ValueError as e:raise HTTPException(400,str(e))
 
 

@@ -611,3 +611,16 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — Phase 61M-A: fixed-canvas registration
 
 - `engine/modular_assets.py` adds body-conditioned prompt and full-canvas placement of fitted RGBA (`9714f33ab2c0`); API opt-in (`fe1b3e0ad296`); Modular UI default fixed-canvas with legacy fallback (`3eafd1574be7`); regression tests (`cac871abd780`). Source body and recipe not mutated. Existing approximate anatomical fitting remains; no semantic extraction or real inference verified. CI pending. [Phase notes and planned B–G](phases/PHASE61MA.md). Windows packaging stays on hold.
+
+### 2026-11-26T20:13:17Z — 61M-A integration
+
+- PR #69 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45888560402) and merged at `5b7d9b219292`.
+
+### 2026-11-27 (Manila) — Phase 61M-B: silhouette landmarks and placement guides
+
+- `engine/modular_assets.py` adds body-alpha band estimates, category region and row-envelope guide, non-destructive spill review (`c604889e61da`). API fixed-canvas path uses derived region and returns mask and metadata (`cfe7487e3fee`). UI shows mask and spill warning (`36839353c71f`); regressions (`3a86818afe65`).
+- Design: CPU geometry only, no pose model or diffusion mask conditioning yet; no clipping. Fixed vertical fractions can misidentify unusual poses and proportions. Legacy path unchanged. [Phase notes](phases/PHASE61MB.md). CI, real model and desktop verification pending. Next 61M-C. Phase 62 stays on hold.
+
+### 2026-11-27 (Manila) — 61M-B test correction
+
+- CPU run 45889558860 failed on both platforms in the asymmetric silhouette fixture: shoulder pixels started at row 29, inside the estimated head band ending at row 30 exclusive. Moved synthetic shoulder boundary to row 30; production heuristic unchanged. Revalidation pending.
