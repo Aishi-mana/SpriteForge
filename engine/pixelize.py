@@ -18,26 +18,13 @@ PALETTES = {
 BUILTIN_PALETTES = list(PALETTES)
 
 
-def remove_bg(img, tol=40):
-    """Flood-style key: border-connected pixels close to the dominant border colour become transparent."""
-    img = img.convert("RGBA")
-    a = np.asarray(img)[..., 3]
-    if a.min() < 250:  # already has transparency
+def remove_bg(img, tol=40, background=None):
+    """Remove border-connected background and high-confidence enclosed flat pockets."""
+    img=img.convert("RGBA")
+    if img.getchannel("A").getextrema()[0]<250:
         return img
-    rgb = np.asarray(img.convert("RGB")).astype(np.int16)
-    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
-    q = border // 16
-    keys, counts = np.unique(q, axis=0, return_counts=True)
-    bg = border[(q == keys[counts.argmax()]).all(1)].mean(0)
-    cand = np.abs(rgb - bg).max(2) <= tol
-    lab, _ = ndi.label(cand)
-    edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
-    bgmask = np.isin(lab, list(edge))
-    # trim 1px halo of background colour mixed into the edge
-    bgmask = ndi.binary_dilation(bgmask, iterations=1) & (np.abs(rgb - bg).max(2) <= tol * 2.2) | bgmask
-    out = img.copy()
-    out.putalpha(Image.fromarray(np.where(bgmask, 0, 255).astype(np.uint8)))
-    return out
+    from .alpha_cleanup import clean
+    return clean(img,tol,mode="smart",background=background,soft=False)[0]
 
 
 def crop_to_content(img, pad=2):
