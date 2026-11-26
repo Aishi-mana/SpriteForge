@@ -63,8 +63,36 @@ def protected_composite(source,candidate,mask):
         raise ValueError("Mask, source and candidate must share dimensions")
     return Image.composite(candidate.convert("RGBA"),source.convert("RGBA"),mask)
 
+IDENTITY_LOCKS={
+    "face":"facial features and facial structure",
+    "eyes":"eye shape and eye color",
+    "hair_color":"hair color",
+    "hairstyle":"hairstyle and hair length",
+    "body":"body proportions and silhouette",
+    "pose":"pose and limb placement",
+    "style":"art style and rendering technique",
+    "palette":"existing character color palette",
+    "outfit":"outfit and footwear",
+    "accessories":"equipment and accessories",
+}
+DEFAULT_LOCKS=("face","eyes","hair_color","hairstyle","body","pose","style")
+
+def identity_locks(locks=None):
+    if locks is None:
+        return list(DEFAULT_LOCKS)
+    if not isinstance(locks,list) or len(locks)>len(IDENTITY_LOCKS) or any(not isinstance(k,str) or k not in IDENTITY_LOCKS for k in locks) or len(set(locks))!=len(locks):
+        raise ValueError("Invalid identity preservation locks")
+    return locks
+
+def edit_prompt(instruction,bg,locks=None):
+    selected=identity_locks(locks)
+    prompt="Edit the supplied character image. "+instruction.strip()+"."
+    if selected:
+        prompt+=" Preserve "+", ".join(IDENTITY_LOCKS[k] for k in selected)+" exactly where possible. Do not alter these selected features."
+    return prompt+" Keep one character, use a plain solid "+bg+" background."
+
 def edit(source,model,ckpt,lora_dir,instruction,negative="",size=768,bg="green",tolerance=30,pixel=False,
-         strength=.45,steps=4,cfg=1,seed=0,remove_bg=True,keep_canvas=True,lora="",lora_weight=1.0,mask=None):
+         strength=.45,steps=4,cfg=1,seed=0,remove_bg=True,keep_canvas=True,lora="",lora_weight=1.0,mask=None,locks=None):
     backend=capability(model)
     if not backend:
         raise ValueError("Select Qwen Rapid, NetaYume local or a verified SDXL editing checkpoint")
@@ -72,9 +100,8 @@ def edit(source,model,ckpt,lora_dir,instruction,negative="",size=768,bg="green",
     if region is not None and not keep_canvas:
         raise ValueError('Regional editing requires original canvas size')
     canvas,box=prepare(source,size,bg,pixel)
-    prompt=("Edit the supplied character image. "+instruction.strip()+
-            ". Preserve the character's identity, facial features, hairstyle, proportions, pose, framing and art style except where explicitly requested. "
-            "Keep one character, use a plain solid "+bg+" background.")
+    selected=identity_locks(locks)
+    prompt=edit_prompt(instruction,bg,selected)
     if region is not None:
         prompt += " Restrict the requested changes to the selected area; preserve surrounding content."
     if backend=="sdxl_inpaint":
@@ -94,4 +121,5 @@ def edit(source,model,ckpt,lora_dir,instruction,negative="",size=768,bg="green",
     return out,{"size":list(out.size),"backend":backend,"seed":seed,"pipeline":"pixel" if pixel else "hd",
                 "strength_supported":backend!="qwen_instruction","canvas_preserved":keep_canvas,"regional":region is not None,
                 "protected_pixels":int(np.count_nonzero(np.asarray(region)==0)) if region is not None else 0,
-                "native_mask":region is not None and backend=="sdxl_inpaint"}
+                "native_mask":region is not None and backend=="sdxl_inpaint",
+                "identity_locks":selected,"identity_lock_type":"prompt_guidance"}
