@@ -1529,6 +1529,7 @@ class AlphaCleanupParams(BaseModel):
     edge_strength: int = 50
     alpha_cutoff: int = 12
     hard_edges: bool = True
+    protection: Optional[str] = None
 
 
 @app.post("/api/alpha/cleanup")
@@ -1539,6 +1540,9 @@ def alpha_cleanup_ep(p: AlphaCleanupParams):
     try:
         im=_character_reference(p.image)
         out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft,p.shadow_strength,p.edge_strength,p.alpha_cutoff,p.hard_edges)
+        if p.protection is not None:
+            mask=_character_reference(p.protection)
+            out,info=alpha_cleanup.preserve_regions(im,out,mask,info)
     except ValueError as e:
         raise HTTPException(400,str(e))
     return {"sprite":b64(out),"info":info}
