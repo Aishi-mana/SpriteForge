@@ -5,7 +5,7 @@ import math
 import re
 import numpy as np
 from PIL import Image
-from . import modular, rig
+from . import modular, rig, custom_skin, custom_timeline, custom_ik
 
 MAX_BONES=32
 
@@ -51,7 +51,28 @@ def validate(profile):
     for b in out:visit(b)
     pixel=profile.get("pixel",True)
     if not isinstance(pixel,bool):raise ValueError("Invalid sampling mode")
-    return {"version":1,"root_head":root_head,"pixel":pixel,"bones":ordered}
+    clean={"version":1,"root_head":root_head,"pixel":pixel,"bones":ordered}
+    if profile.get("skin") is not None:clean["skin"]=validate_skin(profile["skin"],ids)
+    if profile.get("timeline") is not None:clean["timeline"]=custom_timeline.validate(profile["timeline"],ids)
+    if profile.get("ik") is not None:clean["ik"]=custom_ik.validate(profile["ik"],ordered,clean.get("timeline",{}).get("count",0))
+    return clean
+
+def validate_skin(skin,ids):
+    if not isinstance(skin,dict):raise ValueError("Invalid custom skin settings")
+    mode=skin.get("mode","rigid")
+    if mode not in ("rigid","weighted"):raise ValueError("Unknown custom skin mode")
+    strokes=skin.get("strokes",[])
+    if not isinstance(strokes,list) or len(strokes)>custom_skin.MAX_STAMPS:raise ValueError("At most 256 weight stamps")
+    clean=[]
+    for s in strokes:
+        if not isinstance(s,dict) or not isinstance(s.get("bone"),str) or s["bone"] not in ids:
+            raise ValueError("Weight stamp references missing bone")
+        clean.append({"bone":s["bone"],"x":number(s.get("x"),0,1,"brush x"),
+            "y":number(s.get("y"),0,1,"brush y"),"radius":number(s.get("radius"),.01,.75,"brush radius"),
+            "value":number(s.get("value"),0,1,"brush weight"),"strength":number(s.get("strength",1),0,1,"brush strength")})
+    return {"mode":mode,"blend":number(skin.get("blend",.12),.01,.5,"automatic blend radius"),
+            "resolution":modular.integer(skin.get("resolution",48),8,64,"mesh resolution"),"strokes":clean}
+
 
 def preset(kind):
     if kind not in ("humanoid","quadruped","winged","chain"):raise ValueError("Unknown skeleton preset")
@@ -87,7 +108,7 @@ def transforms(profile,size):
         segments[k]=(head,tail)
     return mat,segments
 
-def render(image,profile,padding=32):
+def render(image,profile,padding=32,binding=None,frame=None):
     profile=validate(profile)
     im=modular.decode(image) if isinstance(image,str) else image.convert("RGBA")
     w,h=im.size
@@ -98,7 +119,14 @@ def render(image,profile,padding=32):
     arr=np.asarray(im).copy()
     yy,xx=np.nonzero(arr[...,3]>0)
     if not len(xx):raise ValueError("Source image is transparent")
+    if profile.get("ik"):profile,_,_=custom_ik.solve(profile,im.size,frame)
     matrices,segments=transforms(profile,im.size)
+    shift=np.array([[1.,0,padding],[0,1.,padding],[0,0,1.]])
+    posed={k:[(shift@matrices[k]@np.r_[p,1])[:2].tolist() for p in segment] for k,segment in segments.items()}
+    if all(b["angle"]==0 for b in profile["bones"]):
+        out=Image.new("RGBA",(W,H));out.paste(im,(padding,padding));return out,posed
+    if profile.get("skin",{}).get("mode")=="weighted":
+        return custom_skin.deform(im,profile,matrices,segments,padding,binding),posed
     # Assign visible pixels to nearest rest segment. Only one distance vector retained per bone.
     x=xx.astype(float)+.5;y=yy.astype(float)+.5
     best=np.full(len(xx),np.inf);label=np.zeros(len(xx),np.int16)
@@ -108,7 +136,6 @@ def render(image,profile,padding=32):
         d=(x-a[0]-t*v[0])**2+(y-a[1]-t*v[1])**2
         take=d<best;best[take]=d[take];label[take]=i
     out=Image.new("RGBA",(W,H))
-    shift=np.array([[1.,0,padding],[0,1.,padding],[0,0,1.]])
     resample=Image.Resampling.NEAREST if profile["pixel"] else Image.Resampling.BICUBIC
     for i,b in enumerate(profile["bones"]):
         take=label==i
@@ -120,8 +147,4 @@ def render(image,profile,padding=32):
         inv=np.linalg.inv(shift@matrices[b["id"]]@offset)
         surface=Image.fromarray(part).transform((W,H),Image.Transform.AFFINE,tuple(inv[:2].flatten()),resample=resample)
         out=Image.alpha_composite(out,surface)
-    posed={}
-    for b in profile["bones"]:
-        k=b["id"];head,tail=segments[k]
-        posed[k]=[(shift@matrices[k]@np.r_[p,1])[:2].tolist() for p in (head,tail)]
     return out,posed
