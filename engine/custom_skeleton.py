@@ -5,7 +5,7 @@ import math
 import re
 import numpy as np
 from PIL import Image
-from . import modular, rig, custom_skin, custom_timeline
+from . import modular, rig, custom_skin, custom_timeline, custom_ik
 
 MAX_BONES=32
 
@@ -54,6 +54,7 @@ def validate(profile):
     clean={"version":1,"root_head":root_head,"pixel":pixel,"bones":ordered}
     if profile.get("skin") is not None:clean["skin"]=validate_skin(profile["skin"],ids)
     if profile.get("timeline") is not None:clean["timeline"]=custom_timeline.validate(profile["timeline"],ids)
+    if profile.get("ik") is not None:clean["ik"]=custom_ik.validate(profile["ik"],ordered,clean.get("timeline",{}).get("count",0))
     return clean
 
 def validate_skin(skin,ids):
@@ -107,7 +108,7 @@ def transforms(profile,size):
         segments[k]=(head,tail)
     return mat,segments
 
-def render(image,profile,padding=32,binding=None):
+def render(image,profile,padding=32,binding=None,frame=None):
     profile=validate(profile)
     im=modular.decode(image) if isinstance(image,str) else image.convert("RGBA")
     w,h=im.size
@@ -118,6 +119,7 @@ def render(image,profile,padding=32,binding=None):
     arr=np.asarray(im).copy()
     yy,xx=np.nonzero(arr[...,3]>0)
     if not len(xx):raise ValueError("Source image is transparent")
+    if profile.get("ik"):profile,_,_=custom_ik.solve(profile,im.size,frame)
     matrices,segments=transforms(profile,im.size)
     shift=np.array([[1.,0,padding],[0,1.,padding],[0,0,1.]])
     posed={k:[(shift@matrices[k]@np.r_[p,1])[:2].tolist() for p in segment] for k,segment in segments.items()}
