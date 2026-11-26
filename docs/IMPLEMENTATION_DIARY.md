@@ -642,3 +642,8 @@ Use the following template for each future change (replace placeholders with act
 
 - Shared adapter for Qwen, NetaYume, SDXL with SDXL guide masking (`330b8d3c88fb`); API capability routing and strength mapping (`8c1af8f40b2f`); Modular UI (`3100d78e8fce`); mocked regressions (`b515fe7624bd`).
 - SDXL uses a restrictive guide, Qwen/Neta use advisory guides. Explicit legacy fitting fallback, no automatic retry. Difference extraction remains nonsemantic; actual inference quality and desktop behavior unverified. CI pending. [Phase notes](phases/PHASE61MD.md). Next 61M-E; packaging on hold.
+
+### 2026-11-27 (Manila) — Phase 61M-E: asset specialization
+
+- `engine/modular_assets.py` adds optional profile prompts, depth, attachment and expanded placement guides (`c1388fad9431`); API integration (`aa9702ec64c1`), Modular profile selection and attachment retention (`04762ce1814e`), CPU regressions (`1e88f6518c0c`).
+- Existing recipe categories retained; category replacement still hides all matching layers. Expanded masks remain bounded by canvas, hand placement is heuristic, occluded rear surfaces are not reconstructed. CI and hardware acceptance pending; stacked on 61M-D. [Phase notes](phases/PHASE61ME.md). Next 61M-F. Packaging on hold.
