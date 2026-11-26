@@ -1076,6 +1076,24 @@ def modular_generate_asset(b: ModularAsset):
     except RuntimeError as e:raise HTTPException(409,str(e))
 
 
+class ModularCandidateReview(BaseModel):
+    recipe: dict
+    layer: dict
+    replace_category: bool = True
+    placement_mask: Optional[str] = None
+
+
+@app.post("/api/modular/review_asset")
+def modular_review_asset(b: ModularCandidateReview):
+    """Re-render a staged asset without modifying a saved recipe."""
+    try:
+        guide=modular.decode(b.placement_mask).convert("L") if b.placement_mask is not None else None
+        layer,preview,placed,info=modular_assets.review_candidate(b.recipe,b.layer,b.replace_category,guide)
+        return {"layer":layer,"preview":modular.png_uri(preview),"registered":modular.png_uri(placed),"info":info}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+
+
 class ModularAnimation(BaseModel):
     recipe: dict
     anim: str = "walk"
