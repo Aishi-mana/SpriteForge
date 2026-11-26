@@ -1578,12 +1578,13 @@ def character_instruction_edit(p: InstructionEditParams):
     try:
         mf.check_lora(ckpt,lora_dir,p.lora)
         gen.set_sampler("euler_a")
-        out,info=instruction_edit.edit(source,model,ckpt,lora_dir,**p.model_dump(exclude={"image","checkpoint"}))
+        out,info=instruction_edit.run_edit(source,model,ckpt,lora_dir,**p.model_dump(exclude={"image","checkpoint"}))
         return {"sprite":b64(out),"info":info}
     except ValueError as e:
         raise HTTPException(400,str(e))
     except Exception as e:
-        raise HTTPException(500,"Instruction edit failed: "+str(e))
+        hint=" Reduce resolution to 640, close other GPU applications, and retry." if "out of memory" in str(e).lower() else ""
+        raise HTTPException(500,"Instruction edit failed: "+str(e)+hint)
 
 
 class BodyBaseParams(BaseModel):
