@@ -12,3 +12,5 @@ local-image-jobs/
 
 # Shared local character snapshots (never commit user assets)
 character-library/
+
+history/
