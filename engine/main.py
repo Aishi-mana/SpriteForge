@@ -988,6 +988,8 @@ class ModularAsset(BaseModel):
     recipe: dict
     category: str
     description: str
+    profile: str = "auto"
+    hand: str = "right"
     view: str = "front"
     source: str = "body"
     fixed_canvas: bool = False
@@ -1021,7 +1023,10 @@ def modular_generate_asset(b: ModularAsset):
         if b.extraction and (not b.fixed_canvas or not backend):
             raise ValueError("Extraction requires fixed canvas and a supported instruction editing checkpoint")
         if not b.extraction and not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
-        prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,b.description,b.view)
+        spec=modular_assets.asset_profile(b.category,b.profile,b.hand)
+        modular_assets.prompt(b.category,b.description,b.view)
+        description=b.description.strip()+("; "+spec["description"] if spec["description"] else "")
+        prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
         recipe,images,ref,bb=modular_assets.reference(b.recipe,"body" if b.fixed_canvas else b.source)
@@ -1029,14 +1034,14 @@ def modular_generate_asset(b: ModularAsset):
         art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
         guide=None
         if b.fixed_canvas:
-            rect,guide,landmarks=modular_assets.placement_guide(ref,b.category)
+            rect,guide,landmarks=modular_assets.specialized_guide(ref,b.category,b.profile,b.hand)
         else:
             rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
         if b.extraction:
             mf.check_lora(ckpt,lora_dir,b.lora)
             seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
             gen.set_sampler(b.sampler)
-            asset,edited,info=modular_assets.edit_asset(ref,guide,model,ckpt,lora_dir,b.category,b.description,b.view,
+            asset,edited,info=modular_assets.edit_asset(ref,guide,model,ckpt,lora_dir,b.category,description,b.view,
                 size=min((640,768,896,1024),key=lambda v:abs(v-b.gen_size)),bg=b.bg,
                 tolerance=max(1,min(100,b.bg_tol)),pixel=recipe["pixel"],steps=max(1,min(50,b.steps)),
                 cfg=max(1,min(15,b.cfg)),seed=seed,negative=b.negative,lora=b.lora,lora_weight=b.lora_weight,
@@ -1059,6 +1064,9 @@ def modular_generate_asset(b: ModularAsset):
                             placement=modular_assets.placement_review(registered,guide))
         layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
                "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
+        if b.profile!="auto":
+            layer.update(attachment=spec["attachment"],occlusion={"depth":spec["depth"],"bones":[]})
+        info.update(asset_profile=b.profile,attachment=spec["attachment"],depth=spec["depth"])
         # Validate the resulting recipe budget before presenting an addable candidate.
         modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
         preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)

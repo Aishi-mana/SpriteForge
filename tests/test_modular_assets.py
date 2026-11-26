@@ -89,4 +89,21 @@ try:
     except ValueError:ok(True,"unsupported backend rejected")
 finally:
     instruction_edit.run_edit=original_run
+# Profiles map onto existing recipe categories and depth/attachment settings.
+for name,category in (("armor","outfit"),("long_hair","hair_back"),("fringe","hair_front"),("boots","footwear"),("weapon","accessory"),("wings","accessory"),("cape","accessory")):
+    spec=A.asset_profile(category,name)
+    ok(spec["category"]==category and spec["description"] and spec["attachment"] in M.ATTACHMENTS,"specialized profile "+name)
+ok(A.asset_profile("accessory","weapon","left")["attachment"]=="l_arm_l","left-hand weapon attachment")
+ok(A.asset_profile("accessory","wings")["depth"]=="behind","wings behind body")
+try:A.asset_profile("outfit","wings");ok(False,"profile mismatch rejected")
+except ValueError:ok(True,"profile mismatch rejected")
+wide_rect,wide_mask,_=A.specialized_guide(shaped,"accessory","wings")
+normal_rect,normal_mask,_=A.placement_guide(shaped,"accessory")
+ok(wide_mask.size==shaped.size and wide_rect[0]<normal_rect[0] and wide_rect[2]>normal_rect[2],"wings allowance expands laterally")
+# A behind-body candidate must not cover the source body on the assembled preview.
+rear=Image.new("RGBA",body.size)
+rear.paste((255,0,0,255),(0,20,32,60))
+rear_layer={"name":"Wing","category":"accessory","image":M.png_uri(rear),"x":0,"y":0,"scale":100,"opacity":100,"visible":True,"flip":False,"attachment":"torso","occlusion":{"depth":"behind","bones":[]}}
+back_preview=A.candidate_preview(clean,images,rear_layer,False)
+ok(back_preview.getpixel((20,30))==body.getpixel((20,30)) and back_preview.getpixel((2,30))==(255,0,0,255),"rear profile depth respects body")
 done("test_modular_assets")

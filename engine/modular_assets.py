@@ -237,3 +237,56 @@ def edit_asset(body,guide,model,ckpt,lora_dir,category,description,view,**settin
         keep_canvas=True,remove_bg=True,**settings)
     layer,info=extract_edit(body,edited,guide,settings.get("tolerance",30))
     return layer,edited,{**meta,**info}
+
+
+# Profiles map to existing portable recipe categories, not a new recipe schema.
+PROFILES = {
+    "armor": ("outfit", "fitted armor plates, articulated joints, empty neck and limb openings", "front", "auto"),
+    "long_hair": ("hair_back", "long flowing rear hair, no face, scalp or body", "behind", "head"),
+    "fringe": ("hair_front", "front fringe and bangs, preserve visible facial opening", "front", "head"),
+    "boots": ("footwear", "paired boots matching each foot angle, no legs or skin", "front", "auto"),
+    "weapon": ("accessory", "one held fantasy game weapon aligned to the selected hand, no hand or arm", "front", "r_arm_l"),
+    "wings": ("accessory", "paired wings attached behind the shoulders, no torso or arms", "behind", "torso"),
+    "cape": ("accessory", "rear cape attached at shoulders, no neck or torso", "behind", "torso"),
+}
+def asset_profile(category,profile="auto",hand="right"):
+    if category not in REGIONS:
+        raise ValueError("Invalid asset category")
+    if hand not in ("left","right"):
+        raise ValueError("Invalid equipment hand")
+    if profile=="auto":
+        return {"category":category,"description":"","attachment":modular.DEFAULT_ATTACH[category],
+                "depth":"stack","profile":"auto"}
+    if profile not in PROFILES:
+        raise ValueError("Invalid asset profile")
+    cat,desc,depth,attachment=PROFILES[profile]
+    if cat!=category:
+        raise ValueError("Asset profile does not match category")
+    if profile=="weapon":
+        attachment="l_arm_l" if hand=="left" else "r_arm_l"
+        desc+="; align grip to the character's "+hand+" hand"
+    return {"category":cat,"description":desc,"attachment":attachment,"depth":depth,"profile":profile}
+
+
+def specialized_guide(body,category,profile="auto",hand="right"):
+    spec=asset_profile(category,profile,hand)
+    rect,guide,marks=placement_guide(body,category)
+    if profile not in ("wings","cape","long_hair","weapon"):
+        return rect,guide,marks
+    W,H=body.size
+    x,y,r,b=marks["body"]; h=b-y; w=r-x
+    if profile=="wings":
+        bounds=(x-round(w*.75),marks["shoulders"][1]-round(h*.25),r+round(w*.75),marks["waist"][3]+round(h*.15))
+    elif profile=="cape":
+        bounds=(x-round(w*.25),marks["shoulders"][1],r+round(w*.25),b)
+    elif profile=="long_hair":
+        bounds=(x-round(w*.15),y-round(h*.06),r+round(w*.15),b)
+    else:
+        # Hand location is a broad side-band heuristic, not a detected joint.
+        # Left/right refer to the character, which may face away from viewer.
+        bounds=(x-round(w*.6),marks["shoulders"][1],r+round(w*.6),b)
+    l,t,rr,bb=bounds
+    rect=(max(0,l),max(0,t),min(W,rr),min(H,bb))
+    mask=Image.new("L",body.size,0)
+    mask.paste(255,rect)
+    return rect,mask,marks
