@@ -1165,7 +1165,7 @@ def model_manager():
                        "components":[{"path":str(c),"present":c.is_file()} for c in components],
                        "loras":[{"name":n,"family":family,"compatibility":mf.compatibility(info["family"],family)}
                                 for n,family in s["lora_families"].items()]})
-    return {"models":models,"models_dir":md,"gpu":s["gpu"],"runtime_root":str(root),"runtime_python":str(python),
+    return {"models":models,"lora_families":s["lora_families"],"models_dir":md,"gpu":s["gpu"],"runtime_root":str(root),"runtime_python":str(python),
             "runtime_present":python.is_file() and (root/"comfy/sd.py").is_file(),
             "note":"Header and file-presence inspection only; does not load model weights or benchmark GPU compatibility."}
 

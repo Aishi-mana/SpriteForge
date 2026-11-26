@@ -301,3 +301,6 @@ Godot 4 and Unity desktop modular runtime components bundled with layer exports;
 
 ## Phase 37 — Advanced layer occlusion and manual bone weight editing
 Per-layer two-bone weighted meshes and bounded paint strokes, brush canvas with undo/reset, explicit depth and animated body-bone alpha masks, persistence and consistent independent export ordering. Rigid/soft/spring modes preserved. Tests added; live validation pending.
+
+## Phase 38 — Character model and asset library manager
+Searchable local character/collection, individual asset and body-rig snapshots with tags, thumbnails and independent copies; matching rig validation; installed checkpoint, runtime component and LoRA compatibility manager. No model copies or GPU loading. Tests added; live validation pending.
