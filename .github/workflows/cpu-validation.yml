@@ -2,7 +2,7 @@ name: CPU validation
 on:
   pull_request:
   push:
-    branches: [main, feature/phase39-stability]
+    branches: [main, 'feature/**']
   workflow_dispatch:
 permissions:
   contents: read

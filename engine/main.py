@@ -1066,6 +1066,18 @@ def custom_skeleton_validate(body: dict=Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/custom_skeleton/weights")
+def custom_skeleton_weights(body: dict=Body(...)):
+    try:
+        from . import custom_skin
+        profile=custom_skeleton.validate(body.get("profile"))
+        if profile.get("skin",{}).get("mode")!="weighted":raise ValueError("Enable weighted skinning first")
+        size=(modular.integer(body.get("width"),1,1024,"source width"),modular.integer(body.get("height"),1,1024,"source height"))
+        _,segments=custom_skeleton.transforms(profile,size)
+        return {"image":b64(custom_skin.heatmap(profile,size,segments,body.get("bone")))}
+    except (ValueError,TypeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/custom_skeleton/pose")
 def custom_skeleton_pose(body: dict=Body(...)):
     try:
