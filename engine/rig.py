@@ -349,10 +349,10 @@ def _custom_pose(keys, t, rest, pad, ss):
 
 
 def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0):
+           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=False):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
-    hd = is_hd(sprite)
+    hd = is_hd(sprite) or force_hd
     softness = float(softness)
     if not math.isfinite(softness) or not 0 <= softness <= 100:
         raise ValueError("Joint softness must be 0-100")
@@ -448,6 +448,39 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         psi = np.degrees(np.unwrap([math.atan2(M[1, 0], M[0, 0]) for M in base]))
         pa = np.array([(M @ A_hi)[:2] / ss for M in base])
         rels[pt["name"]] = _simulate(pt, psi, pa, anim, anim not in ONE_SHOT, F, H0, secondary)
+    # Each modular asset is independently transformed in rest-canvas coordinates.
+    # Render relative to the body stack: behind layers first, front layers last.
+    attached = []
+    for asset, bone, behind in attachments or []:
+        asset = asset.convert("RGBA")
+        if asset.size != sprite.size:raise ValueError("Attachment canvas must match body canvas")
+        if bone not in ("auto","root",*BONE_NAMES):raise ValueError("Unknown attachment bone")
+        aa=np.asarray(asset).copy()
+        if not hd:
+            aa[aa[...,3]<128]=0;aa[...,3]=np.where(aa[...,3]>=128,255,0)
+        if bone=="auto":
+            labels=assign_parts(Image.fromarray(aa),joints)
+            masks_=[(nm,labels==BONE_IDX[nm]) for nm in z_order(near)]
+        else:masks_=[(bone,aa[...,3]>0)]
+        parts_=[]
+        for nm,mask in masks_:
+            if not mask.any():continue
+            a=np.zeros((CH,CW,4),np.uint8);a[pad:pad+H0,pad:pad+W0][mask]=aa[mask]
+            im=Image.fromarray(a)
+            if ss!=1:im=im.resize((CW*ss,CH*ss),Image.Resampling.NEAREST)
+            parts_.append((nm,im))
+        attached.append((behind,parts_))
+    def draw_attachments(canvas,behind,T,Wm):
+        for back,parts_ in attached:
+            if back!=behind:continue
+            for nm,im in parts_:
+                M=T if nm=="root" else T@Wm[nm]
+                inv=np.linalg.inv(M)
+                tl=im.transform(im.size,Image.AFFINE,tuple(inv[:2].flatten()),resample=Image.Resampling.BICUBIC if hd else Image.Resampling.NEAREST)
+                canvas=Image.alpha_composite(canvas,tl)
+        return canvas
+    # Preserve accessory colors rather than quantizing them to the body palette.
+    if attached:use_pal=False;keys=None
     out, jframes = [], []
     for fi in range(n):  # pass 3: draw
         T, Wm = poses[fi]
@@ -467,6 +500,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 jp[f"{pt['name']}_{i}"] = (float(v[0] / ss), float(v[1] / ss))  # lets AI cleanup treat cloth joints too
         jframes.append(jp)
         canvas = Image.new("RGBA", (CW * ss, CH * ss), (0, 0, 0, 0))
+        canvas=draw_attachments(canvas,True,T,Wm)
         for key in order:
             if key in meshes:
                 child,mesh = meshes[key]
@@ -478,6 +512,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
             inv = np.linalg.inv(mats[key])
             tl = layers[key].transform(layers[key].size, Image.AFFINE, tuple(inv[:2].flatten()), resample=Image.Resampling.BICUBIC if hd else Image.NEAREST)
             canvas = Image.alpha_composite(canvas, tl)
+        canvas=draw_attachments(canvas,False,T,Wm)
         out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
     ank = ((joints["l_ankle"][0] + joints["r_ankle"][0]) / 2 + pad, max(joints["l_ankle"][1], joints["r_ankle"][1]) + pad)
     return out, {"size": (CW, CH), "pad": pad, "pivot": [round(ank[0], 1), round(ank[1], 1)], "joints": jframes,

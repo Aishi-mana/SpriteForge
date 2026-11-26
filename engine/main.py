@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig
 
 
 def _art_style(value):
@@ -1028,6 +1028,48 @@ def modular_generate_asset(b: ModularAsset):
         preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
         info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
         return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+class ModularAnimation(BaseModel):
+    recipe: dict
+    anim: str = "walk"
+    count: int = 8
+    fps: int = 10
+    facing: str = "right"
+    near: str = "r"
+    weapon: str = "r"
+    amp: float = 1.0
+    pad: int = 0
+    softness: float = 0
+    name: str = "modular_character"
+    options: dict = {}
+
+
+@app.post("/api/modular/rig")
+def modular_rig_info(body: dict = Body(...)):
+    try:return modular_rig.describe(body)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+def _modular_clip(b):
+    return modular_rig.render(b.recipe,b.anim,b.count,b.facing,b.near,b.weapon,b.amp,b.pad,softness=b.softness)
+
+
+@app.post("/api/modular/animate")
+def modular_animate(b: ModularAnimation):
+    try:
+        frames,meta=_modular_clip(b)
+        return {"frames":[b64(im) for im in frames],"fps":max(1,min(60,b.fps)),"size":meta["size"],"pivot":meta["pivot"]}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/export_animation")
+def modular_export_animation(b: ModularAnimation):
+    try:
+        frames,meta=_modular_clip(b)
+        entries=[{"name":b.anim,"fps":max(1,min(60,b.fps)),"loop":b.anim not in rig.ONE_SHOT,"frames":frames,"pivot":tuple(meta["pivot"])}]
+        return exporter.export_pack(entries,dict(b.options,smooth=meta["render_mode"]=="hd"),b.name,ROOT)
     except ValueError as e:raise HTTPException(400,str(e))
 
 

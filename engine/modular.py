@@ -10,6 +10,8 @@ CATEGORIES = ("hair_back", "body", "outfit", "footwear", "hair_front", "accessor
 MAX_LAYERS = 24
 MAX_SOURCE_PIXELS = 16_000_000
 MAX_ENCODED = 24_000_000
+ATTACHMENTS = ("auto","root","torso","head","l_arm_u","l_arm_l","r_arm_u","r_arm_l","l_leg_u","l_leg_l","r_leg_u","r_leg_l")
+DEFAULT_ATTACH = {"hair_back":"head","hair_front":"head","outfit":"auto","footwear":"auto","accessory":"torso","other":"root","body":"auto"}
 
 def integer(v, lo, hi, name):
     if isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) or int(v)!=v or not lo<=v<=hi:
@@ -51,13 +53,19 @@ def validate(recipe):
         if not isinstance(name,str) or not name.strip() or len(name)>80 or category not in CATEGORIES:raise ValueError("Invalid layer name/category")
         visible=l.get("visible",True);flip=l.get("flip",False)
         if not isinstance(visible,bool) or not isinstance(flip,bool):raise ValueError("Invalid layer flag")
-        row=dict(name=name.strip(),category=category,image=png_uri(im),
+        attachment=l.get("attachment",DEFAULT_ATTACH[category])
+        if attachment not in ATTACHMENTS:raise ValueError("Invalid bone attachment")
+        row=dict(name=name.strip(),category=category,image=png_uri(im),attachment=attachment,
                  x=integer(l.get("x",0),-2048,2048,"X"),y=integer(l.get("y",0),-2048,2048,"Y"),
                  scale=integer(l.get("scale",100),10,200,"scale"),
                  opacity=integer(l.get("opacity",100),0,100,"opacity"),visible=visible,flip=flip)
         out.append(row);images.append(im)
     if sum(len(l["image"]) for l in out)>MAX_ENCODED:raise ValueError("Normalized PNG layers exceed 24 MB encoded budget")
-    return dict(version=1,width=w,height=h,pixel=pixel,layers=out),images
+    clean=dict(version=1,width=w,height=h,pixel=pixel,layers=out)
+    if recipe.get("rig") is not None:
+        from . import modular_rig
+        clean["rig"]=modular_rig.validate_profile(recipe["rig"])
+    return clean,images
 
 def composite(recipe, images):
     canvas=Image.new("RGBA",(recipe["width"],recipe["height"]))
