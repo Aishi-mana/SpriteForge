@@ -36,7 +36,7 @@ def prepare(recipe):
     joints=profile["joints"] if valid else rig.autoplace(body)
     for xy in joints.values():
         if xy[0]>body.width or xy[1]>body.height:raise ValueError("Joint outside body canvas")
-    attachments=[(single(i),clean["layers"][i]["attachment"],i<idx) for i in visible if i!=idx]
+    attachments=[(single(i),clean["layers"][i]["attachment"],i<idx,clean["layers"][i]["motion"]) for i in visible if i!=idx]
     return clean,body,key,joints,valid,attachments
 
 def describe(recipe):
@@ -55,8 +55,10 @@ def render(recipe,anim,count=8,facing="right",near="r",weapon="r",amp=1.,pad=0,o
     pixels=(body.width+2*margin)*(body.height+2*margin)
     if pixels*count>32_000_000:raise ValueError("Modular clip exceeds frame memory budget; lower size, frames or padding")
     # Each auto-partitioned layer may allocate up to ten surfaces; cap aggregate supersampled work.
-    parts=sum(len(rig.BONES) if bone=="auto" else 1 for _,bone,_ in attachments)
+    parts=sum(len(rig.BONES) if bone=="auto" else motion["segments"] if motion["mode"]=="spring" else 1 for _,bone,_,motion in attachments)
     ss=2 if clean["pixel"] else 1
     if pixels*ss*ss*(parts+len(rig.BONES))>32_000_000:raise ValueError("Too many visible bone layers for this canvas; hide alternatives or reduce size")
+    if any(m["mode"]!="rigid" for _,_,_,m in attachments) and pixels*ss*ss>8_000_000:
+        raise ValueError("Deformable modular canvas exceeds memory budget; reduce size or padding")
     return rig.render(body,joints,[],anim,count,facing,near,weapon,amp,pad,overlap,ss,
                       softness=softness,attachments=attachments,force_hd=not clean["pixel"])

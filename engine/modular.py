@@ -18,6 +18,25 @@ def integer(v, lo, hi, name):
         raise ValueError(f"Invalid {name}: expected integer {lo}–{hi}")
     return int(v)
 
+def motion_settings(value=None):
+    """Opt-in per-layer deformation. Legacy recipes retain rigid behavior."""
+    if value is None:value={}
+    if not isinstance(value,dict):raise ValueError("Invalid layer motion settings")
+    mode=value.get("mode","rigid")
+    if mode not in ("rigid","soft","spring"):raise ValueError("Unknown layer motion mode")
+    def number(k,default,lo,hi):
+        v=value.get(k,default)
+        if isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) or not lo<=v<=hi:raise ValueError("Invalid motion "+k)
+        return float(v)
+    preset=value.get("preset","cape")
+    if preset not in ("cape","hair","tail"):raise ValueError("Invalid spring preset")
+    return dict(mode=mode,softness=number("softness",50,0,100),preset=preset,
+                segments=integer(value.get("segments",3),1,6,"spring segments"),
+                anchor_x=number("anchor_x",.5,0,1),anchor_y=number("anchor_y",.05,0,1),
+                flutter=number("flutter",1,0,2),stiffness=number("stiffness",1,.4,2),
+                damping=number("damping",.35,.1,.9))
+
+
 def png_uri(im):
     buf=io.BytesIO()
     im.save(buf,"PNG")
@@ -55,7 +74,10 @@ def validate(recipe):
         if not isinstance(visible,bool) or not isinstance(flip,bool):raise ValueError("Invalid layer flag")
         attachment=l.get("attachment",DEFAULT_ATTACH[category])
         if attachment not in ATTACHMENTS:raise ValueError("Invalid bone attachment")
-        row=dict(name=name.strip(),category=category,image=png_uri(im),attachment=attachment,
+        motion=motion_settings(l.get("motion"))
+        if motion["mode"]=="soft" and attachment!="auto":raise ValueError("Soft garment motion requires Auto split attachment")
+        if motion["mode"]=="spring" and attachment=="auto":raise ValueError("Spring motion requires a single attachment bone or root")
+        row=dict(name=name.strip(),category=category,image=png_uri(im),attachment=attachment,motion=motion,
                  x=integer(l.get("x",0),-2048,2048,"X"),y=integer(l.get("y",0),-2048,2048,"Y"),
                  scale=integer(l.get("scale",100),10,200,"scale"),
                  opacity=integer(l.get("opacity",100),0,100,"opacity"),visible=visible,flip=flip)
