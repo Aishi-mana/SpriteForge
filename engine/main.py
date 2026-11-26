@@ -1564,7 +1564,7 @@ class FramedPortraitParams(CharacterArtParams):
     aspect: str = "1:1"
 
 
-def _portrait_aspect(img, aspect):
+def _portrait_aspect(img, aspect, transparent=True, bg="white"):
     ratios = {"1:1": (1,1), "3:4": (3,4), "2:3": (2,3)}
     if aspect not in ratios:
         raise ValueError("Unsupported portrait aspect")
@@ -1573,7 +1573,7 @@ def _portrait_aspect(img, aspect):
     # Preserve the complete composition; pad rather than clip limbs.
     unit = max((w+x-1)//x, (h+y-1)//y)
     target = (unit*x,unit*y)
-    out = Image.new("RGBA",target)
+    out = Image.new("RGBA",target,(0,0,0,0) if transparent else (*gen.BG_RGB.get(bg,(255,255,255)),255))
     out.paste(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
     return out
 
@@ -1601,7 +1601,7 @@ def framed_portrait(p: FramedPortraitParams):
             im,info = px.pixelize(raw,"canvas",max(64,min(p.size,256)),max(4,min(p.colors,64)),"none",p.remove_bg,p.bg_tol,remove_shadow=False)
         else:
             im,info = styles.finish(raw,p.hd_size,p.remove_bg,p.bg_tol)
-        im = _portrait_aspect(im,p.aspect)
+        im = _portrait_aspect(im,p.aspect,p.remove_bg,p.bg)
         if max(im.size)>1024:
             im.thumbnail((1024,1024),Image.Resampling.NEAREST if art_style=="pixel" else Image.Resampling.LANCZOS)
         info.update(size=list(im.size),framing=p.framing,aspect=p.aspect)
