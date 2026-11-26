@@ -1184,6 +1184,25 @@ def scene_render(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/scenes/export_effect")
+def scene_export_effect(body: dict=Body(...)):
+    try:
+        scene,_=scenes.validate(body.get("scene"))
+        effect=next((e for e in scene["effects"] if e["id"]==body.get("effect")),None)
+        if effect is None:raise ValueError("Choose an effect to export")
+        count=effect["end"]-effect["start"]+1
+        if count<2:raise ValueError("Standalone export needs at least two active frames")
+        side=4*effect["radius"]+8
+        single={**effect,"actor":None,"start":0,"end":count-1,"x":side//2,"y":side//2,"visible":True}
+        recipe={"version":1,"name":effect["name"],"width":side,"height":side,"count":count,
+                "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
+        frames,meta=scenes.render(recipe,preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not effect["pixel"]),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/export")
 def scene_export(body: dict=Body(...)):
     try:
