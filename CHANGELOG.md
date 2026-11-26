@@ -313,3 +313,6 @@ Custom connected bone trees, editable endpoints/parent/name/rotation, humanoid/q
 
 ## Phase 41 — Multi-bone skinning and weight painting
 Optional custom-rig weighted mesh, automatic nearest-four binding, normalized manual influences for any bone, selected-bone heatmap and undo/reset, project/preset persistence, shared CPU triangle renderer. Rigid default retained. Feature branch CPU CI enabled; validation pending.
+
+## Phase 42 — Advanced animation timeline
+Custom rig frame-indexed bone rotation tracks, linear/ease/step interpolation, capture/duplicate/delete, scrub/playback and onion skins, reused weighted binding, fixed-cell spritesheet export and project/preset persistence. Existing manual pose preserved. CPU CI pending.

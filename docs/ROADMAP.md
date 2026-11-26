@@ -1,6 +1,6 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 41 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 42 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## First: verify the newest delivered features
 
@@ -55,4 +55,4 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 Clean up already-tracked runtime files (local configuration, logs, history) and duplicate root phase notes *separately* after confirming any needed user data is backed up. See [Repository workflow](REPOSITORY_WORKFLOW.md).
 
-Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Next Phase 42 advanced animation timeline.
+Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Next Phase 43 inverse kinematics and foot locking.
