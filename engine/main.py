@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline
 
 
 def _art_style(value):
@@ -1076,6 +1076,27 @@ def custom_skeleton_weights(body: dict=Body(...)):
         _,segments=custom_skeleton.transforms(profile,size)
         return {"image":b64(custom_skin.heatmap(profile,size,segments,body.get("bone")))}
     except (ValueError,TypeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/timeline")
+def custom_timeline_preview(body: dict=Body(...)):
+    try:
+        frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32),frame=body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/export_timeline")
+def custom_timeline_export(body: dict=Body(...)):
+    try:
+        frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32),preview=False)
+        options=body.get("options") or {}
+        if not isinstance(options,dict):raise ValueError("Invalid export options")
+        # Fixed untrimmed canvas and rest root pivot, shared across every frame.
+        options=dict(options,crop=False,uniform=True,smooth=not body["profile"].get("pixel",True))
+        entry={**meta,"frames":frames}
+        return exporter.export_pack([entry],options,meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/pose")
