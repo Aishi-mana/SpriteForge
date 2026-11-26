@@ -1518,6 +1518,47 @@ def llm_chat(b: ChatBody):
 
 
 # ---------------- portraits ----------------
+class CharacterArtParams(GenParams):
+    view: str = "front"
+    reference: Optional[str] = None
+    reference_strength: float = 0.65
+    art_style: str = "anime"
+    gen_size: int = 768
+    remove_bg: bool = False
+
+
+CHARACTER_VIEWS = {"front": "front view, facing viewer", "side": "side profile, facing right",
+                   "back": "rear view, facing away", "three_quarter": "three-quarter view"}
+
+
+@app.post("/api/character/artwork")
+def character_artwork(p: CharacterArtParams):
+    if p.view not in CHARACTER_VIEWS or not p.prompt.strip():
+        raise HTTPException(400, "Choose a valid view and describe the character")
+    if not 1 <= p.n <= 3 or p.gen_size not in (640, 768, 896, 1024):
+        raise HTTPException(400, "Choose 1–3 variations and a supported generation size")
+    ckpt, lora_dir = _paths(p.checkpoint)
+    art_style = _art_style(p.art_style)
+    gen.set_sampler(p.sampler)
+    ip = None
+    if p.reference:
+        try:
+            ref = _dec_img(p.reference)
+            if max(ref.size) > 1024:
+                raise ValueError("Reference exceeds 1024 px")
+            ip = gen.prep_reference(ref, p.bg)
+        except Exception as e:
+            raise HTTPException(400, "Invalid master reference: " + str(e))
+    if art_style == "pixel":
+        post = lambda raw: px.pixelize(raw, "canvas", max(64,min(p.size,256)), max(4,min(p.colors,64)), "none", p.remove_bg, p.bg_tol, remove_shadow=False)
+    else:
+        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
+    prompt = p.prompt + ", " + CHARACTER_VIEWS[p.view] + ", neutral relaxed standing pose"
+    return _run(ckpt, lora_dir, p.lora, p.lora_weight, prompt, p.negative, p.steps, p.cfg, p.seed,
+                p.bg, p.n, ip, max(0,min(p.reference_strength,1)), post,
+                gen_size=p.gen_size, kind="character_art", art_style=art_style)
+
+
 @app.post("/api/portrait/base")
 def portrait_base(ref: Optional[UploadFile] = File(None), prompt: str = Form(""), negative: str = Form(""),
                   checkpoint: str = Form(...), lora: str = Form(""), lora_weight: float = Form(1.0),
