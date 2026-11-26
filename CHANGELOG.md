@@ -322,3 +322,6 @@ Two-bone analytic IK, adjustable bend/strength limits, draggable targets and res
 
 ## Phase 44 — AI-assisted animation cleanup
 Custom timeline per-frame masked SDXL inpaint, posed-joint and manual mask selection, alpha/palette safeguards, original/candidate/accepted comparison, accepted frame persistence and fingerprint-checked playback/export. Qwen/Neta reference backends not exposed as masked inpainting. CPU CI pending.
+
+## Phase 45 — Animation retargeting between characters
+Motion bundles, ID/name mapping and manual overrides, local track transfer, proportion-aware IK and contact mapping, paired geometry preview and reachability report. Destination sprite and weights preserved. CPU CI pending.
