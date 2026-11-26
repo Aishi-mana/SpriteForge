@@ -3,7 +3,7 @@ Identity is perfect because every output pixel is an original sprite pixel."""
 import json, math, re
 from pathlib import Path
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageChops
 from scipy import ndimage as ndi
 from . import pixelize as px, softmesh
 
@@ -451,6 +451,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     # Independent modular attachment surfaces, using the same pose matrices.
     from . import layer_motion
     attached = []
+    wanted_occlusion=set()
     palette_parts=[cols] if not hd else []
     def asset_surface(aa,mask):
         a=np.zeros((CH,CW,4),np.uint8);a[pad:pad+H0,pad:pad+W0][mask]=aa[mask]
@@ -459,6 +460,8 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     for attachment_index,entry in enumerate(attachments or []):
         asset,bone,behind=entry[:3]
         motion=entry[3] if len(entry)>3 else {"mode":"rigid"}
+        occlude=entry[4] if len(entry)>4 and not behind else []
+        wanted_occlusion.update(occlude)
         asset=asset.convert("RGBA")
         if asset.size!=sprite.size:raise ValueError("Attachment canvas must match body canvas")
         if bone not in ("auto","root",*BONE_NAMES):raise ValueError("Unknown attachment bone")
@@ -467,6 +470,12 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
             aa[aa[...,3]<128]=0;aa[...,3]=np.where(aa[...,3]>=128,255,0)
             palette_parts.append(np.unique(aa[aa[...,3]>0][:,:3],axis=0))
         mode=motion["mode"]
+        if mode=="weighted":
+            weights=motion["weights"]
+            mesh=layer_motion.weighted_mesh(aa,weights,hd)
+            parts_=[] if mesh is None else [(weights["bone_a"],"mesh",(weights["bone_b"],mesh))]
+            attached.append((attachment_index,behind,bone,"parts",parts_,occlude))
+            continue
         if mode=="spring" and bone!="auto":
             pt=layer_motion.spring_geometry(aa,motion,SEC_DEFAULTS[motion["preset"]])
             if pt is not None:
@@ -476,7 +485,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 pa=np.array([(M@A_hi)[:2]/ss for M in base])
                 rel=_simulate(pt,psi,pa,anim,anim not in ONE_SHOT,F,H0,motion)
                 surfaces=[asset_surface(aa,m) if m.any() else None for m in layer_motion.spring_masks(pt,overlap)]
-                attached.append((attachment_index,behind,bone,"spring",(pt,rel,surfaces)))
+                attached.append((attachment_index,behind,bone,"spring",(pt,rel,surfaces),occlude))
                 continue
         mesh_by,children={},set()
         if bone=="auto":
@@ -492,15 +501,16 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 child,mesh=mesh_by[nm]
                 parts_.append((nm,"mesh",(child,mesh)))
             elif mask.any():parts_.append((nm,"image",asset_surface(aa,mask)))
-        attached.append((attachment_index,behind,bone,"parts",parts_))
-    def draw_attachments(canvas,behind,T,Wm,fi):
+        attached.append((attachment_index,behind,bone,"parts",parts_,occlude))
+    def draw_attachments(canvas,behind,T,Wm,fi,body_alpha=None):
         def matrix(nm):return T if nm=="root" else T@Wm[nm]
         def draw(im,M):
             inv=np.linalg.inv(M)
             return im.transform(im.size,Image.AFFINE,tuple(inv[:2].flatten()),resample=Image.Resampling.BICUBIC if hd else Image.Resampling.NEAREST)
-        for index,back,bone,kind,payload in attached:
+        for index,back,bone,kind,payload,occlude in attached:
             if back!=behind:continue
-            target=Image.new('RGBA',canvas.size) if layer_sink is not None else canvas
+            isolated=layer_sink is not None or bool(occlude)
+            target=Image.new("RGBA",canvas.size) if isolated else canvas
             if kind=="spring":
                 pt,rel,surfaces=payload
                 M=matrix(bone)
@@ -515,8 +525,15 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                         tl=softmesh.deform(mesh,matrix(nm),matrix(child),pad,ss,canvas.size,hd)
                     else:tl=draw(data,matrix(nm))
                     target=Image.alpha_composite(target,tl)
+            if occlude and body_alpha:
+                mask=Image.new("L",target.size)
+                for b in occlude:
+                    if b in body_alpha:mask=ImageChops.lighter(mask,body_alpha[b])
+                # Subtract body coverage; no original asset pixels are changed.
+                target.putalpha(ImageChops.multiply(target.getchannel("A"),ImageChops.invert(mask)))
             if layer_sink is not None:
                 layer_sink(index,fi,isolated_frame(target))
+            elif isolated:canvas=Image.alpha_composite(canvas,target)
             else:canvas=target
         return canvas
     # Preserve accessory colors rather than quantizing them to the body palette.
@@ -547,19 +564,26 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         jframes.append(jp)
         canvas = Image.new("RGBA", (CW * ss, CH * ss), (0, 0, 0, 0))
         canvas=draw_attachments(canvas,True,T,Wm,fi)
+        body_alpha={}
+        def record_occlusion(key,tl):
+            if key[0]=="b" and BONE_NAMES[key[1]] in wanted_occlusion:
+                body_alpha[BONE_NAMES[key[1]]]=tl.getchannel("A")
         for key in order:
             if key in meshes:
                 child,mesh = meshes[key]
                 tl = softmesh.deform(mesh,mats[key],mats[child],pad,ss,canvas.size,hd)
+                # A soft pair is one surface: either selected bone occludes the pair.
+                record_occlusion(key,tl);record_occlusion(child,tl)
                 canvas = Image.alpha_composite(canvas,tl)
                 continue
             if key not in layers:
                 continue
             inv = np.linalg.inv(mats[key])
             tl = layers[key].transform(layers[key].size, Image.AFFINE, tuple(inv[:2].flatten()), resample=Image.Resampling.BICUBIC if hd else Image.NEAREST)
+            record_occlusion(key,tl)
             canvas = Image.alpha_composite(canvas, tl)
         if layer_sink is not None:layer_sink(-1,fi,isolated_frame(canvas))
-        canvas=draw_attachments(canvas,False,T,Wm,fi)
+        canvas=draw_attachments(canvas,False,T,Wm,fi,body_alpha)
         if layer_sink is None:out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
     ank = ((joints["l_ankle"][0] + joints["r_ankle"][0]) / 2 + pad, max(joints["l_ankle"][1], joints["r_ankle"][1]) + pad)
     return out, {"size": (CW, CH), "pad": pad, "pivot": [round(ank[0], 1), round(ank[1], 1)], "joints": jframes,
