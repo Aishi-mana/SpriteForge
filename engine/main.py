@@ -203,7 +203,7 @@ def _do_generate(p):
     kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
     art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
     if art_style != "pixel":
-        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
+        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol, gen.BG_RGB.get(p.bg))
     elif kind == "tile":
         size = max(8, min(int(p.size), 128))
         post = lambda raw: tiles.tile_post(raw, size, p.colors, p.palette, p.seamless)
@@ -1518,6 +1518,28 @@ def llm_chat(b: ChatBody):
 
 
 # ---------------- portraits ----------------
+class AlphaCleanupParams(BaseModel):
+    image: str
+    mode: str = "smart"
+    background: str = "white"
+    tolerance: int = 40
+    points: List[List[int]] = []
+    soft: bool = True
+
+
+@app.post("/api/alpha/cleanup")
+def alpha_cleanup_ep(p: AlphaCleanupParams):
+    from . import alpha_cleanup
+    if p.background not in ("auto", *gen.BG_RGB) or not 1<=p.tolerance<=100 or len(p.points)>64 or any(len(q)!=2 for q in p.points):
+        raise HTTPException(400,"Invalid alpha cleanup settings")
+    try:
+        im=_character_reference(p.image)
+        out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft)
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    return {"sprite":b64(out),"info":info}
+
+
 class BodyBaseParams(BaseModel):
     build: str = "androgynous"
     proportions: str = "anime"
@@ -1603,7 +1625,7 @@ def character_artwork(p: CharacterArtParams):
     if art_style == "pixel":
         post = lambda raw: px.pixelize(raw, "canvas", max(64,min(p.size,256)), max(4,min(p.colors,64)), "none", p.remove_bg, p.bg_tol, remove_shadow=False)
     else:
-        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
+        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol, gen.BG_RGB.get(p.bg))
     prompt = _identity_prompt(p) + ", " + CHARACTER_VIEWS[p.view] + ", neutral relaxed standing pose"
     return _run(ckpt, lora_dir, p.lora, p.lora_weight, prompt, p.negative, p.steps, p.cfg, p.seed,
                 p.bg, p.n, ip, max(0,min(p.reference_strength,1)), post,
@@ -1689,7 +1711,7 @@ def framed_portrait(p: FramedPortraitParams):
         if art_style == "pixel":
             im,info = px.pixelize(raw,"canvas",max(64,min(p.size,256)),max(4,min(p.colors,64)),"none",p.remove_bg,p.bg_tol,remove_shadow=False)
         else:
-            im,info = styles.finish(raw,p.hd_size,p.remove_bg,p.bg_tol)
+            im,info = styles.finish(raw,p.hd_size,p.remove_bg,p.bg_tol,gen.BG_RGB.get(p.bg))
         im = _portrait_aspect(im,p.aspect,p.remove_bg,p.bg)
         if max(im.size)>1024:
             im.thumbnail((1024,1024),Image.Resampling.NEAREST if art_style=="pixel" else Image.Resampling.LANCZOS)
