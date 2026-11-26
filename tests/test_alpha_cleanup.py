@@ -95,4 +95,21 @@ except ValueError:
     ok(True,"wrong-size protection rejected")
 else:
     ok(False,"wrong-size protection rejected")
+# Full pipeline: protect a matching detail, remove cast shadow, refine.
+lock=Image.new("L",opaque.size,0)
+lock.putpixel((0,0),255)
+first=main.alpha_cleanup_ep(main.AlphaCleanupParams(image=main.b64(opaque),mode="shadow",background="white",protection=main.b64(lock)))
+import base64,io
+def decoded(r):
+    return Image.open(io.BytesIO(base64.b64decode(r["sprite"].split(",",1)[1]))).convert("RGBA")
+candidate=decoded(first)
+ok(candidate.size==opaque.size and candidate.getpixel((0,0))==opaque.getpixel((0,0)) and candidate.getpixel((20,52))[3]==0,"protected shadow pipeline")
+second=main.alpha_cleanup_ep(main.AlphaCleanupParams(image=first["sprite"],mode="refine",background="white",protection=main.b64(lock)))
+ok(decoded(second).tobytes()==candidate.tobytes(),"hard refine stable on opaque retained pixels")
+res=main.alpha_cleanup_ep(main.AlphaCleanupParams(image=main.b64(blank),mode="all",background="white"))
+ok(decoded(res).tobytes()==blank.tobytes() and res["info"]["removed"]==0,"API rejects full erasure in legacy modes")
+large=Image.new("RGBA",(1024,1024),(255,255,255,255))
+ImageDraw.Draw(large).rectangle((256,128,767,895),fill=(20,40,60,255))
+out,info=alpha_cleanup.clean(large,30,"magic",(255,255,255))
+ok(out.size==large.size and out.getpixel((512,512))==large.getpixel((512,512)) and info["removed"]==1024**2-512*768,"maximum supported canvas")
 done("test_alpha_cleanup")
