@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup, custom_retarget, scenes
 
 
 def _art_style(value):
@@ -1141,6 +1141,91 @@ def custom_cleanup_frame(body: dict=Body(...)):
         return {"sprite":b64(out),"original":b64(frame),"fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"info":info}
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(500,"Cleanup failed: "+str(e))
+
+
+@app.post("/api/scenes/actor")
+def scene_actor(body: dict=Body(...)):
+    try:return scenes.from_timeline(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/project_actor")
+def scene_project_actor(body: dict=Body(...)):
+    try:
+        doc=projects.load(ROOT,body.get("name"))
+        profile=doc.get("custom_skeleton")
+        image=doc.get("images",{}).get("customrig")
+        if not profile or not image:raise ValueError("Project has no custom rig source")
+        pad=int(doc.get("settings",{}).get("csPad",32))
+        include=body.get("cleanup",False)
+        if not isinstance(include,bool):raise ValueError("Invalid cleanup option")
+        return scenes.from_timeline({"image":image,"profile":profile,"padding":pad,
+                                     "cleanup":doc.get("custom_cleanup") if include else None})
+    except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/validate")
+def scene_validate(body: dict=Body(...)):
+    try:return scenes.validate(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/validate_actor")
+def scene_validate_actor(body: dict=Body(...)):
+    try:return scenes.clip(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/render")
+def scene_render(body: dict=Body(...)):
+    try:
+        frames,meta=scenes.render(body.get("scene"),body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/export_effect")
+def scene_export_effect(body: dict=Body(...)):
+    try:
+        scene,_=scenes.validate(body.get("scene"))
+        effect=next((e for e in scene["effects"] if e["id"]==body.get("effect")),None)
+        if effect is None:raise ValueError("Choose an effect to export")
+        count=effect["end"]-effect["start"]+1
+        if count<2:raise ValueError("Standalone export needs at least two active frames")
+        side=4*effect["radius"]+8
+        single={**effect,"actor":None,"start":0,"end":count-1,"x":side//2,"y":side//2,"visible":True}
+        recipe={"version":1,"name":effect["name"],"width":side,"height":side,"count":count,
+                "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
+        frames,meta=scenes.render(recipe,preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not effect["pixel"]),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/export")
+def scene_export(body: dict=Body(...)):
+    try:
+        frames,meta=scenes.render(body.get("scene"),preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid scene export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/retarget_suggest")
+def custom_retarget_suggest(body: dict=Body(...)):
+    try:return custom_retarget.suggest(body.get("source"),body.get("destination"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/retarget")
+def custom_retarget_preview(body: dict=Body(...)):
+    try:
+        return custom_retarget.transfer(body.get("source"),body.get("destination"),body.get("mapping"),
+            body.get("source_size"),body.get("destination_size"),body.get("transfer_ik",True),
+            body.get("ik_mode","limb"),body.get("frame",0))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/ik")

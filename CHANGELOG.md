@@ -322,3 +322,12 @@ Two-bone analytic IK, adjustable bend/strength limits, draggable targets and res
 
 ## Phase 44 — AI-assisted animation cleanup
 Custom timeline per-frame masked SDXL inpaint, posed-joint and manual mask selection, alpha/palette safeguards, original/candidate/accepted comparison, accepted frame persistence and fingerprint-checked playback/export. Qwen/Neta reference backends not exposed as masked inpainting. CPU CI pending.
+
+## Phase 45 — Animation retargeting between characters
+Motion bundles, ID/name mapping and manual overrides, local track transfer, proportion-aware IK and contact mapping, paired geometry preview and reachability report. Destination sprite and weights preserved. CPU CI pending.
+
+## Phase 46 — Multi-character animation scenes
+Scene tab with baked custom timeline snapshots, saved project and actor bundle import, static PNG props, independent timing, position tween, scale, mirror, depth and opacity; shared scene preview/playback, project and portable scene persistence, fixed-cell scene export. CPU CI pending.
+
+## Phase 47 — Visual effects, magic and particles
+Eight procedural effect presets, bounded seeded emitters, color/size/timing/depth and actor-pivot offsets, scene-integrated render and standalone transparent spritesheets, scene persistence. CPU CI pending.
