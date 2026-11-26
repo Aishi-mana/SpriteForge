@@ -5,11 +5,11 @@ from scipy import ndimage as ndi
 
 PRESETS = {
     "pixel": "pixel art",
-    "anime": "modern anime illustration, refined linework, detailed costume, cel shading",
-    "rpg_chibi": "stylized JRPG chibi, three-head-tall proportions, detailed costume",
+    "anime": "modern anime illustration, refined linework, cel shading",
+    "rpg_chibi": "stylized JRPG chibi, three-head-tall proportions, clean linework",
     "super_chibi": "super-deformed cartoon chibi, oversized head, compact proportions",
     "soft_chibi": "soft pastel chibi illustration, gentle shading, rounded shapes",
-    "premium_chibi": "polished fantasy RPG chibi illustration, intricate costume, clean shading",
+    "premium_chibi": "polished RPG chibi illustration, refined linework, clean shading",
     "custom": "stylized character illustration",
 }
 HD_NEGATIVE = "blurry, low quality, watermark, text, cropped, multiple characters, extra limbs, malformed hands, pixel art"

@@ -142,6 +142,7 @@ def _art_style(value):
 
 
 class GenParams(BaseModel):
+    body_base: bool = False  # Generate-only mannequin workflow
     art_style: str = "pixel"
     hd_size: int = 768
     gen_size: int = 1024
@@ -202,6 +203,8 @@ def _do_generate(p):
     gen.set_sampler(p.sampler)
     kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
     art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
+    if p.body_base and kind == "sprite":
+        kind = "body_base"
     if art_style != "pixel":
         post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol, gen.BG_RGB.get(p.bg))
     elif kind == "tile":

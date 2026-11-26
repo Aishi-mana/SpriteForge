@@ -1,6 +1,6 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub implementation baseline `99a04d0480f7`, Phase 61M-F, merged 2026-11-26T22:21:10Z.  
+**Snapshot:** GitHub implementation baseline `054c55806cd3`, Phase 61M-G, merged 2026-11-26T22:36:09Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (private).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
@@ -26,7 +26,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 - Engine: `python -m engine.main`, bound to `127.0.0.1` (default port 8765).
 - UI edits take effect on reload; Python edits require restart. Rust/Tauri changes require `spriteforge.bat rebuild`.
 - With no models or GPU, many algorithm/API tests can run, but a full GPU acceptance test cannot.
-- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest merged implementation PR #74 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45903911050). This does not establish GPU or desktop acceptance.
+- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest merged implementation PR #75 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45904396866). This does not establish GPU or desktop acceptance.
 - Run [Manual testing checklist](docs/TESTING_CHECKLIST.md) for hardware and Godot/Tiled validation.
 
 ## Features and confidence as recorded in previous phase notes
