@@ -4,6 +4,7 @@ import time
 import threading
 from pathlib import Path
 from PIL import Image
+from . import styles
 
 _lock = threading.Lock()
 PROGRESS = None  # optional callback(done, total) set by the job queue; called after each finished image
@@ -23,7 +24,9 @@ NEGATIVE_PROP = "3d, realistic, photo, blurry, gradient, soft shading, text, wat
 KINDS_PROP = ("prop", "icon", "ui")
 
 
-def negative_for(kind):
+def negative_for(kind, art_style="pixel"):
+    if kind == "sprite" and art_style != "pixel":
+        return styles.HD_NEGATIVE
     """Default negative prompt per generation kind (sprite, tile, prop/icon/ui; everything else = portrait-style)."""
     if kind == "sprite":
         return NEGATIVE
@@ -55,7 +58,9 @@ def _apply_sampler(pipe):
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(cfg)
 
 
-def build_prompt(user_prompt, bg="white", kind="sprite"):
+def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "sprite" and art_style != "pixel":
+        return f"{styles.PRESETS[art_style]}, {user_prompt}, single character, full body, centered, plain flat solid {bg} background"
     if kind == "portrait":
         return f"pixel art, portrait, {user_prompt}, head and shoulders, face close-up, looking at viewer, plain flat solid {bg} background"
     if kind == "tile":
@@ -140,7 +145,7 @@ def _load(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None):
 
 
 def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.0, seed=-1, size=1024, bg="white",
-             ip_image=None, ip_scale=0.7, n=1, control_image=None, cn_scale=0.8, cn_dir=None, kind="sprite"):
+             ip_image=None, ip_scale=0.7, n=1, control_image=None, cn_scale=0.8, cn_dir=None, kind="sprite", art_style="pixel"):
     """Returns [(PIL image, seed), ...]. ip_image = reference sprite, control_image = OpenPose skeleton render."""
     import torch
     with _lock:
@@ -154,12 +159,12 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
             pipe.set_ip_adapter_scale(ip_scale)
             kw["ip_adapter_image"] = ip_image
         base = seed if seed is not None and seed >= 0 else int(torch.randint(0, 2**31 - 1 - n, (1,)).item())
-        neg = (negative + ", " if negative else "") + negative_for(kind)
+        neg = (negative + ", " if negative else "") + negative_for(kind, art_style)
         outs = []
         try:
             for i in range(n):
                 gen = torch.Generator("cpu").manual_seed(base + i)
-                img = pipe(prompt=build_prompt(prompt, bg, kind), negative_prompt=neg, num_inference_steps=steps,
+                img = pipe(prompt=build_prompt(prompt, bg, kind, art_style), negative_prompt=neg, num_inference_steps=steps,
                            guidance_scale=cfg, width=size, height=size, generator=gen, **kw).images[0]
                 outs.append((img, base + i))
                 if PROGRESS:

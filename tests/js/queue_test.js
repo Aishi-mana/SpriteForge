@@ -40,6 +40,7 @@ const A = { params: { steps: 25, seed: 1, prompt: 'a' } }, B = { params: { steps
 ok(JSON.stringify(T.qDiff([A, B]).sort()) == '["cfg","steps"]' && T.qDiff([A, A]).length == 0, 'compare lists exactly the settings that differ');
 
 const g = T.genParams(); ok(g.steps === 25 && g.lora_weight === 0.9 && g.n === 2 && g.seed === -1 && g.rmbg === undefined && g.remove_bg === true && g.clean === false && g.palette === 'none' && g.size === 64, 'generate params have real numbers/booleans (not strings)');
+set({artstyle:'anime',hdsize:'768',hdgen:'1024'}); ok(T.genParams().art_style==='anime' && T.genParams().hd_size===768 && T.refParams().art_style==='anime','HD style settings travel with both job types'); set({artstyle:'pixel'});
 const r = T.refParams(); ok(r.ip_scale === 0.7 && r.n === 3 && r.canvas === 128 && r.gen_size === 768 && r.lock_palette === true && r.match_size === false && r.cn_scale === 0.8 && typeof r.cfg == 'number', 'reference params have real numbers/booleans');
 
 (async () => {

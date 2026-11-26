@@ -107,7 +107,19 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
+from . import styles
+
+
+def _art_style(value):
+    if value not in styles.PRESETS:
+        raise HTTPException(400, f"Unknown art style: {value}")
+    return value
+
+
 class GenParams(BaseModel):
+    art_style: str = "pixel"
+    hd_size: int = 768
+    gen_size: int = 1024
     prompt: str
     negative: str = ""
     checkpoint: str
@@ -134,10 +146,12 @@ class GenParams(BaseModel):
 
 
 def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_image, ip_scale, post,
-         control_image=None, cn_scale=0.8, cn_dir=None, gen_size=1024, kind="sprite"):
+         control_image=None, cn_scale=0.8, cn_dir=None, gen_size=1024, kind="sprite", art_style="pixel"):
     try:
         outs = gen.generate(p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
-                            control_image, cn_scale, cn_dir, kind)
+                            control_image, cn_scale, cn_dir, kind, art_style=art_style) if art_style != "pixel" else gen.generate(
+                                p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
+                                control_image, cn_scale, cn_dir, kind)
     except Exception as e:
         hint = " - out of GPU memory: lower 'Generation size', set Variations to 1, close other GPU apps" if "out of memory" in str(e).lower() else ""
         raise HTTPException(500, f"{type(e).__name__}: {e}{hint}")
@@ -145,6 +159,7 @@ def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_i
     for raw, s in outs:
         sprite, info = post(raw)
         info["seed"] = s
+        info["art_style"] = art_style
         if control_image is not None:
             info["controlnet"] = gen.controlnet_name()
         results.append({"raw": b64(raw.resize((384, 384))), "sprite": b64(sprite), "info": info})
@@ -155,14 +170,18 @@ def _do_generate(p):
     ckpt, lora_dir = _paths(p.checkpoint)
     gen.set_sampler(p.sampler)
     kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
-    if kind == "tile":
+    art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
+    if art_style != "pixel":
+        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
+    elif kind == "tile":
         size = max(8, min(int(p.size), 128))
         post = lambda raw: tiles.tile_post(raw, size, p.colors, p.palette, p.seamless)
     else:
         post = lambda raw: px.pixelize(raw, p.mode, p.size, p.colors, p.palette, p.remove_bg, p.bg_tol,
                                        remove_shadow=p.remove_shadow, crisp=p.crisp, clean=p.clean, outline=_outline(p.outline))
     return _run(ckpt, lora_dir, p.lora, p.lora_weight, p.prompt, p.negative, p.steps, p.cfg, p.seed, p.bg,
-                max(1, min(p.n, 6)), None, 0, post, kind=kind)
+                max(1, min(p.n, 6)), None, 0, post, kind=kind, art_style=art_style,
+                gen_size=max(512, min(p.gen_size, 1024)) // 64 * 64 if art_style != "pixel" else 1024)
 
 
 @app.post("/api/generate")
@@ -178,17 +197,19 @@ def reference_ep(ref: UploadFile = File(...), pose_img: Optional[UploadFile] = F
                  lock_palette: bool = Form(True), match_size: bool = Form(True), bg_tol: int = Form(40),
                  cn_scale: float = Form(0.8), canvas: int = Form(128), remove_shadow: bool = Form(True),
                  gen_size: int = Form(768), crisp: bool = Form(True), clean: bool = Form(True),
-                 outline: str = Form("none"), sampler: str = Form("euler_a")):
+                 outline: str = Form("none"), sampler: str = Form("euler_a"),
+                 art_style: str = Form("pixel"), hd_size: int = Form(768)):
     return _do_reference(Image.open(ref.file), Image.open(pose_img.file).convert("RGB") if pose_img is not None else None,
                          dict(pose=pose, character=character, negative=negative, checkpoint=checkpoint, lora=lora, lora_weight=lora_weight,
                               steps=steps, cfg=cfg, seed=seed, bg=bg, ip_scale=ip_scale, n=n, colors=colors, lock_palette=lock_palette,
                               match_size=match_size, bg_tol=bg_tol, cn_scale=cn_scale, canvas=canvas, remove_shadow=remove_shadow,
-                              gen_size=gen_size, crisp=crisp, clean=clean, outline=outline, sampler=sampler))
+                              gen_size=gen_size, crisp=crisp, clean=clean, outline=outline, sampler=sampler,
+                              art_style=art_style, hd_size=hd_size))
 
 
 REF_DEFAULTS = dict(pose="", character="", negative="", checkpoint="", lora="", lora_weight=1.0, steps=25, cfg=7.0, seed=-1, bg="white",
                     ip_scale=0.7, n=1, colors=16, lock_palette=True, match_size=True, bg_tol=40, cn_scale=0.8, canvas=128,
-                    remove_shadow=True, gen_size=768, crisp=True, clean=True, outline="none", sampler="euler_a")
+                    remove_shadow=True, gen_size=768, crisp=True, clean=True, outline="none", sampler="euler_a", art_style="pixel", hd_size=768)
 
 
 def _coerce_ref(f):
@@ -213,23 +234,26 @@ def _do_reference(ref_img, control, f):
     """Reference-pose generation: ref_img = reference sprite (PIL), control = OpenPose render (PIL RGB) or None, f = field dict."""
     f = _coerce_ref(f)
     (pose, character, negative, checkpoint, lora, lora_weight, steps, cfg, seed, bg, ip_scale, n, colors, lock_palette, match_size,
-     bg_tol, cn_scale, canvas, remove_shadow, gen_size, crisp, clean, outline, sampler) = [f[k] for k in REF_DEFAULTS]
+     bg_tol, cn_scale, canvas, remove_shadow, gen_size, crisp, clean, outline, sampler, art_style, hd_size) = [f[k] for k in REF_DEFAULTS]
+    art_style = _art_style(art_style)
     ckpt, lora_dir = _paths(checkpoint)
     gen.set_sampler(sampler)
     q = dict(remove_shadow=remove_shadow, crisp=crisp, clean=clean, outline=_outline(outline))
     ref_sprite = px.crop_to_content(px.remove_bg(ref_img, bg_tol))
-    pal = px.palette_from_sprite(ref_sprite) if lock_palette else None  # None if ref isn't a real low-colour sprite
+    pal = px.palette_from_sprite(ref_sprite) if lock_palette and art_style == "pixel" else None  # None if ref isn't a real low-colour sprite
     ip_img = gen.prep_reference(ref_sprite, bg)
     prompt = ", ".join(s for s in (character.strip(), pose.strip()) if s)
     pal_arg = pal if pal is not None else "none"
-    if control is not None:  # skeleton mode: fixed canvas, fixed scale, every frame lines up
+    if art_style != "pixel":
+        post = lambda raw: styles.finish(raw, hd_size, True, bg_tol)
+    elif control is not None:  # skeleton mode: fixed canvas, fixed scale, every frame lines up
         post = lambda raw: px.pixelize(raw, "canvas", canvas, colors, pal_arg, True, bg_tol, **q)
     else:
         size = max(ref_sprite.size) if match_size and max(ref_sprite.size) <= 160 else 64
         post = lambda raw: px.pixelize(raw, "fixed", size, colors, pal_arg, True, bg_tol, **q)
     return _run(ckpt, lora_dir, lora, lora_weight, prompt, negative, steps, cfg, seed, bg, max(1, min(n, 6)),
                 ip_img, ip_scale, post, control, cn_scale, str(Path(cfg_dir()) / "controlnet"),
-                max(512, min(gen_size, 1024)) // 64 * 64)
+                max(512, min(gen_size, 1024)) // 64 * 64, art_style=art_style)
 
 
 # ---------------- rig animation ----------------
