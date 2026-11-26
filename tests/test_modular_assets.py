@@ -21,4 +21,12 @@ try:A.finish(Image.new("RGB",(64,64),"magenta"),rect,False);ok(False,"empty reje
 except ValueError:ok(True,"empty rejected")
 try:A.reference({"width":64,"height":128,"layers":[]});ok(False,"missing body")
 except ValueError:ok(True,"missing body rejected")
+registered,meta=A.register_asset(asset,info,body.size)
+ok(registered.size==body.size and meta["x"]==meta["y"]==0,"registered layer uses full source canvas and origin")
+ok(registered.crop((info["x"],info["y"],info["x"]+asset.width,info["y"]+asset.height)).tobytes()==asset.tobytes(),"registration preserves fitted RGBA")
+full={**layer,"image":M.png_uri(registered),"x":0,"y":0}
+ok(A.candidate_preview(clean,images,full).tobytes()==preview.tobytes(),"registered preview equivalent to legacy fitted preview")
+ok("fixed pose" in A.registered_prompt("hair_front","short hair","front"),"registered reference prompt")
+try:A.register_asset(asset,{**info,"x":-1},body.size);ok(False,"invalid registration rejected")
+except ValueError:ok(True,"invalid registration rejected")
 done("test_modular_assets")
