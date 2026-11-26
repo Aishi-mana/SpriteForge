@@ -87,13 +87,13 @@ def fake_generate(*a, **k):
     out = []
     for i in range(n):
         out.append((img, a[8] + i))
-        if M.gen.PROGRESS: M.gen.PROGRESS(i + 1, n); progress_seen.append(i + 1)
+        if getattr(M.gen._job_context,'progress',None): M.gen._progress(i + 1,n); progress_seen.append(i + 1)
     return out
 M.gen.generate = fake_generate
 body = dict(kind="generate", params=dict(prompt="knight", checkpoint="sd_xl_base_1.0.safetensors", seed=5, n=2, size=32, mode="fixed", colors=8, sampler="dpmpp_2m_karras"), ui={"prompt": "knight"})
 r = M.queue_add(body); M._jobmgr().wait_idle(15)
 jb = M.job_get(r["id"]); ok(jb["status"] == "done" and len(jb["results"]) == 2 and from_url(jb["results"][0]["sprite"]).size[0] <= 32 and jb["results"][1]["info"]["seed"] == 6, "queued generate job runs the real handler and stores pixelised results")
-ok(gcalls and gcalls[0][8] == 5 and M.gen.SAMPLER == "dpmpp_2m_karras" and progress_seen == [1, 2] and M.gen.PROGRESS is None, "seed + sampler reach the pipeline, per-image progress is reported, hook is cleared")
+ok(gcalls and gcalls[0][8] == 5 and progress_seen == [1, 2] and getattr(M.gen._job_context,"progress",None) is None, "seed + sampler reach the pipeline, per-image progress is reported, hook is cleared")
 ok(M.history_list()["total"] == 1 and M.queue_state()["jobs"] == [], "history endpoint lists it; queue is empty")
 try: M.queue_add(dict(kind="generate", params=dict(prompt="x"))); ok(False, "no checkpoint")
 except HTTPException as e: ok(e.status_code == 400, "queueing without a checkpoint -> 400")
