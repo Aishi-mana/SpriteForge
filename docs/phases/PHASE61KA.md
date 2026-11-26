@@ -1,0 +1,7 @@
+# Phase 61K-A — Instruction editing
+
+On a regular generated result, click AI edit reference. Select an installed compatible model, enter the requested change, choose resolution and background, and generate a candidate. Accept replaces the result (invalidates its template rig); discard or close preserves the original. Save the original separately before accepting if needed. Pixel sampling preserves hard alpha, not the original palette. Keep original canvas restores source dimensions and may clip additions; disable it for wings or larger equipment.
+
+Qwen Rapid uses the existing native Image Edit Plus conditioning, defaults to 4 steps/CFG 1, and has no reference strength slider. Neta local uses reference image-to-image, SDXL uses full-canvas inpainting; their defaults are 20 steps/CFG 4 or 5, and their edit strength is adjustable. No LoRA by default. Other models are rejected rather than silently falling back to text generation. Existing dynamic GPU memory handling is reused; no extra model installation is introduced.
+
+All routes use the source image and standalone instruction rather than the character outfit prompt. Alpha cleanup uses the selected flat background. The source canvas is fitted to the generation square; exact identity, registration, background separation and instruction adherence are not guaranteed. Mask compositing and edit history are deferred. CPU tests mock model execution; real GPU/desktop and checkpoint quality verification remains outstanding. Phase 62 remains on hold.
