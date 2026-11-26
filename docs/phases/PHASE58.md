@@ -1,0 +1,3 @@
+# Phase 58 — Workspace productivity
+
+Drag the sidebar divider or focus it and use arrow keys to adjust width. Width is stored locally. Ctrl+K opens searchable workspace and command navigation; Enter selects the first result. Ctrl+S saves outside text inputs and the pixel editor; Ctrl+Shift+F toggles focus mode, which hides the sidebar. Escape exits focus mode. The toolbar offers sidebar reset and fullscreen (if supported by the desktop webview). Existing pixel editor shortcuts retain priority. Arbitrary docking and named multi-panel layouts are not included. Desktop interaction remains unverified.
