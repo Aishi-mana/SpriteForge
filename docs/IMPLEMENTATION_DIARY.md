@@ -566,3 +566,9 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-26T19:40:07Z — 61L-B integration and 61L-C correction
 
 - PR #63 passed CPU validation run 45883522786 and merged at `681cef153466`. PR #64 failed Windows and Ubuntu run 45883789688 in the new JS regression; the wand test omitted the y coordinate. Corrected test call; rerun pending. No production feature removed.
+
+### 2026-11-27 (Manila) — Phase 61L-D: edge and alpha refinement
+
+- `engine/alpha_cleanup.py` adds boundary-only partial alpha cutoff, optional estimated matte reversal with bounded gain, hard-color default and full-erasure guard (`a3e1c7267bd9`). API settings (`02e0308b5edd`), current-preview refinement button and counts (`d42519d7e75d`), regression tests (`f0af1b6fe944`).
+- Decisions: no opaque recoloring or resampling, no automatic matte inference, no model dependency; estimated matte correction can miscorrect already-unmatted pixels. Existing manual preview retained and undo supported.
+- [Phase notes](phases/PHASE61LD.md); CI and desktop acceptance pending. Stacked on corrected 61L-C. Next: 61L-E protected areas and pixel preservation. 61M queued; Phase 62 packaging on hold.

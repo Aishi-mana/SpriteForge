@@ -3,14 +3,16 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True,shadow_strength=50):
-    if mode not in ("edge","smart","all","manual","magic","shadow"):
+def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True,shadow_strength=50,edge_strength=50,alpha_cutoff=12,hard_edges=True):
+    if mode not in ("edge","smart","all","manual","magic","shadow","refine"):
         raise ValueError("Unknown cleanup mode")
     im=image.convert("RGBA")
     a=np.array(im)
     rgb=a[:,:,:3].astype(np.float32)
     alpha=a[:,:,3]
     tol=max(1,min(100,int(tolerance)))
+    if mode=="refine":
+        return refine(im,background,edge_strength,alpha_cutoff,hard_edges)
     if mode=="shadow":
         return _shadow_cleanup(im,tol,background,shadow_strength)
     if background is None:
@@ -193,3 +195,41 @@ def _boundary_seeds(mask):
     seeds[:,0]=mask[:,0]
     seeds[:,-1]=mask[:,-1]
     return seeds
+
+
+def refine(image,background=None,strength=50,cutoff=12,hard_edges=True):
+    """Refine existing alpha without expanding or resampling the silhouette."""
+    if not 0<=strength<=100 or not 0<=cutoff<=254:
+        raise ValueError("Invalid edge refinement settings")
+    if background is not None and (len(background)!=3 or any(not 0<=v<=255 for v in background)):
+        raise ValueError("Invalid background color")
+    im=image.convert("RGBA")
+    a=np.array(im)
+    alpha=a[:,:,3].copy()
+    visible=alpha>0
+    info={"removed":0,"pockets":0,"decontaminated":0}
+    if not visible.any() or visible.all():
+        return im,dict(info,note="Edge refinement needs an existing transparent boundary.")
+    # Only partial-alpha pixels adjacent to transparency, including holes.
+    rim=ndi.binary_dilation(~visible)&visible&(alpha<255)
+    weak=rim&(alpha<=cutoff)
+    if not (visible&~weak).any():
+        return im,dict(info,note="Refinement would erase the entire sprite; lower alpha cutoff.")
+    a[weak]=0
+    info["removed"]=int(weak.sum())
+    # Hard-edge mode never recolors or changes surviving alpha.
+    if not hard_edges and strength and background is not None:
+        target=rim&~weak
+        if target.any():
+            rgb=a[:,:,:3].astype(np.float32)
+            bg=np.asarray(background,dtype=np.float32)
+            opacity=alpha[target,None].astype(np.float32)/255
+            # Reverse estimated matte mixing; clamp gain for faint pixels.
+            corrected=np.clip((rgb[target]-(1-opacity)*bg)/np.maximum(opacity,.25),0,255)
+            blend=rgb[target]+(corrected-rgb[target])*(strength/100)
+            new=np.rint(blend).astype(np.uint8)
+            info["decontaminated"]=int(np.any(new!=a[:,:,:3][target],axis=1).sum())
+            a[:,:,:3][target]=new
+    if not hard_edges and strength and background is None:
+        info["note"]="Select the original background color for halo removal; alpha cutoff was applied."
+    return Image.fromarray(a),info
