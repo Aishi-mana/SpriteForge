@@ -272,3 +272,123 @@ Adds a maximum-layer CPU scene integration regression with repeat timing, determ
 
 Fix hidden panel CSS, group navigation, add contextual workspace headings, collapsible setup, connection feedback and responsive styling. Preserve existing control IDs. Desktop visual verification remains pending.
 
+### Phase 51 — Advanced pixel editor tools
+
+- Opened: 2026-11-26T04:45:23Z; merged: 2026-11-26T04:48:08Z (UTC).
+- [PR #31](https://github.com/Aishi-mana/SpriteForge/pull/31); merge commit `57e8f4db2f1a`.
+- Recorded scope and verification at submission:
+
+Adds selection clipboard, rotation, shading, outline, vertical symmetry, wrapped brush and bounded undo. Layered editing is deferred. Desktop validation pending.
+
+### Phase 52 — selected-region AI character editing and extraction
+
+- Opened: 2026-11-26T04:48:57Z; merged: 2026-11-26T04:58:38Z (UTC).
+- [PR #32](https://github.com/Aishi-mana/SpriteForge/pull/32); merge commit `51f0fbda2217`.
+- Recorded scope and verification at submission:
+
+Adds SDXL masked region edits with alpha lock, explicit candidate acceptance and undo, and manual rectangular asset PNG extraction. Semantic segmentation and real GPU verification remain outstanding.
+
+### Phase 53 — reusable character identity profiles and consistency review
+
+- Opened: 2026-11-26T04:59:31Z; merged: 2026-11-26T05:06:53Z (UTC).
+- [PR #33](https://github.com/Aishi-mana/SpriteForge/pull/33); merge commit `534053a9b65d`.
+- Recorded scope and verification at submission:
+
+Adds device-local named character profiles for master, identity text, appearance locks and style, plus visual consistency review. No new model dependencies. Desktop validation pending.
+
+### Phase 54 — persistent animation clips and eased transitions
+
+- Opened: 2026-11-26T05:07:15Z; merged: Not merged (UTC).
+- [PR #34](https://github.com/Aishi-mana/SpriteForge/pull/34); superseded/unmerged.
+- Recorded scope and verification at submission:
+
+Superseded by reconciled PR #36; original branch retained.
+
+### Phase 55 — tile map painter and collision-cell export
+
+- Opened: 2026-11-26T05:14:44Z; merged: Not merged (UTC).
+- [PR #35](https://github.com/Aishi-mana/SpriteForge/pull/35); superseded/unmerged.
+- Recorded scope and verification at submission:
+
+Superseded by corrected PR #38; original branch retained.
+
+### Phase 54 — reconciled animation clips and transitions
+
+- Opened: 2026-11-26T05:16:16Z; merged: 2026-11-26T06:43:29Z (UTC).
+- [PR #36](https://github.com/Aishi-mana/SpriteForge/pull/36); merge commit `e65c8d98f4f9`.
+- Recorded scope and verification at submission:
+
+Supersedes conflicted PR #34. Reapplies Phase 54 on the merged Phase 53 base, preserving identity profiles.
+
+### Phase 56 — interactive character behavior preview
+
+- Opened: 2026-11-26T05:16:57Z; merged: 2026-11-26T08:53:39Z (UTC).
+- [PR #37](https://github.com/Aishi-mana/SpriteForge/pull/37); merge commit `3c2b669230dc`.
+- Recorded scope and verification at submission:
+
+Adds baked clip idle/walk/attack sandbox, movement controls and illustrative collision boxes. No scene mutation. Full state graph and collision authoring deferred.
+
+### Phase 55 — corrected map editor integration
+
+- Opened: 2026-11-26T07:54:52Z; merged: 2026-11-26T07:59:36Z (UTC).
+- [PR #38](https://github.com/Aishi-mana/SpriteForge/pull/38); merge commit `a5594addf822`.
+- Recorded scope and verification at submission:
+
+Supersedes #35. Isolates map-specific DOM code from queue test extraction and preserves merged Phase 54.
+
+### Phase 57 — project duplication and portable backups
+
+- Opened: 2026-11-26T08:55:46Z; merged: 2026-11-26T09:14:41Z (UTC).
+- [PR #39](https://github.com/Aishi-mana/SpriteForge/pull/39); merge commit `de435205956a`.
+- Recorded scope and verification at submission:
+
+Adds project copy, ZIP export/import, bounded archive validation, non-overwriting restore and regression checks. Manual snapshots via ZIP; automatic version history and desktop verification remain outstanding.
+
+### Phase 58 — workspace productivity controls
+
+- Opened: 2026-11-26T09:15:13Z; merged: 2026-11-26T09:20:18Z (UTC).
+- [PR #40](https://github.com/Aishi-mana/SpriteForge/pull/40); merge commit `86fee971c3e1`.
+- Recorded scope and verification at submission:
+
+Resizable persistent sidebar, accessible command search, keyboard shortcuts, focus mode and fullscreen API integration. Desktop verification pending.
+
+### Phase 59 — game engine export integration
+
+- Opened: 2026-11-26T09:20:22Z; merged: 2026-11-26T10:04:50Z (UTC).
+- [PR #41](https://github.com/Aishi-mana/SpriteForge/pull/41); merge commit `f35e53169c24`.
+- Recorded scope and verification at submission:
+
+Adds Aseprite-style array JSON, atlas validation, checksum manifest, portable asset ZIP and Unity controller/prefab generation. Native engine import verification remains outstanding.
+
+### Phase 60 — GPU resource management
+
+- Opened: 2026-11-26T10:12:40Z; merged: 2026-11-26T10:19:20Z (UTC).
+- [PR #42](https://github.com/Aishi-mana/SpriteForge/pull/42); merge commit `3825c63a0806`.
+- Recorded scope and verification at submission:
+
+GPU resource status, lock-protected cache release, conservative presets and GPU-free regression tests.
+
+### Phase 61 — integration safeguards and regression coverage
+
+- Opened: 2026-11-26T10:20:46Z; merged: 2026-11-26T10:48:44Z (UTC).
+- [PR #43](https://github.com/Aishi-mana/SpriteForge/pull/43); merge commit `61aa7e945c95`.
+- Recorded scope and verification at submission:
+
+Fixes project map isolation, protects clips on skeleton hierarchy changes, cancels stale behavior previews, preserves worker-specific settings and adds UI regression tests. Phase 62 packaging remains deferred; real GPU and native engine verification outstanding.
+
+### Phase 61A — Full-body character artwork
+
+- Opened: 2026-11-26T11:39:40Z; merged: 2026-11-26T11:51:47Z (UTC).
+- [PR #44](https://github.com/Aishi-mana/SpriteForge/pull/44); merge commit `dc43712d820d`.
+- Recorded scope and verification at submission:
+
+Dedicated full-length artwork generation, view selection, master approval and project persistence, optional reference conditioning and CPU regression tests. Existing portrait expressions unchanged.
+
+### Phase 61B — Multi-framing portraits
+
+- Opened: 2026-11-26T17:17:17Z; merged: 2026-11-26T17:29:21Z (UTC).
+- [PR #45](https://github.com/Aishi-mana/SpriteForge/pull/45); merge commit `0cf13e256fc1`.
+- Recorded scope and verification at submission:
+
+Four portrait framings with master reference, padded aspect ratios, pixel/HD output, asset saving and compatible pixel expression handoff. CPU regression tests and documentation included.
+
