@@ -552,3 +552,13 @@ Use the following template for each future change (replace placeholders with act
 - Engine `engine/alpha_cleanup.py`: CPU-only shallow component detection near foreground feet, exterior contact, optional background pass, transparent-source bypass and hard RGBA preservation. Commit `fadeb61586cf`.
 - API `engine/main.py` validates independent 0–100 sensitivity; UI `ui/index.html` offers Ground shadow removal and reports pixel counts. Tests `tests/test_alpha_cleanup.py` cover opaque/translucent shadows, clothing/boots, zero strength and API integration. Commits `d8274286c38d`, `98f705c3770c`, `31a0d23ceb3e`.
 - [Phase notes](phases/PHASE61LB.md) describe heuristic limits. No semantic guarantee or measured hardware result. CI pending; stacked on 61L-A. Next: 61L-C manual erase/restore. 61M remains queued, Phase 62 packaging on hold.
+
+### 2026-11-26T19:26:07Z — 61L-A integration
+
+- PR #62 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45883175799) and merged into main at `44ce9936e7e7`. PR #63 retargeted to main; validation pending at observation.
+
+### 2026-11-27 (Manila) — Phase 61L-C: manual alpha tools
+
+- `ui/index.html` adds source-resolution canvas preview, RGBA connected wand, sampled and unrestricted circular erasers, original restore, interpolated strokes, eight snapshots and fully transparent apply guard. Commit `15b6ca05d810`.
+- JS buffer regression tests registered in `tests/test_ui.py` (`62518afb107d`, `ba3a3a939b9e`). CI and desktop verification pending. Canvas premultiplied alpha round trips may round partial-alpha RGB. Automatic previews replace manual edits; undo retains the preceding preview. No new model dependency.
+- [Phase notes](phases/PHASE61LC.md). Stacked on 61L-B; next 61L-D. 61M queued after 61L. Phase 62 packaging on hold.
