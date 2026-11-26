@@ -1,13 +1,13 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61K-F (latest implementation CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61K-G (latest implementation CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## Current priorities (2026-11-26 UTC)
 
-- Phase 61K-G: integration testing, performance and VRAM optimization for instruction editing and staged workspace lifecycle.
+- Phase 61K-G: merged and CPU validated; manual reference-editing acceptance and measured GPU performance remain outstanding.
 - Real Windows GPU, desktop interaction and native engine acceptance remain outstanding; prioritize Qwen, NetaYume and SDXL editing, mask alignment and project round trips.
 - Phase 62 Windows packaging is on hold.
-- See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-F.
+- See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-G.
 
 ## Historical verification backlog
 
@@ -62,4 +62,4 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 Clean up already-tracked runtime files (local configuration, logs, history) and duplicate root phase notes *separately* after confirming any needed user data is backed up. See [Repository workflow](REPOSITORY_WORKFLOW.md).
 
-Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Phase 47 adds deterministic procedural VFX, actor attachments and transparent effect export. Phase 48 adds persistent generation batches and sequential project animation exports. Phase 49 subsequently introduced CPU integration coverage; Phases 50–61K-F are recorded in the living diary.
+Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Phase 47 adds deterministic procedural VFX, actor attachments and transparent effect export. Phase 48 adds persistent generation batches and sequential project animation exports. Phase 49 subsequently introduced CPU integration coverage; Phases 50–61K-G are recorded in the living diary.
