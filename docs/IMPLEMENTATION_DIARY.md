@@ -534,3 +534,10 @@ Use the following template for each future change (replace placeholders with act
 - Tests: added `tests/test_instruction_integration.py` for Qwen/Neta/SDXL mocked removal and protected pixels, timing, output bounds, overlap rejection and lock recovery. CPU CI pending; no hardware verification performed.
 - References: commits `be0cd568`, `b83bcccf`, `c05e30b2`, `471b6280`, `210e00f6`, `cf24488d`; [phase notes](phases/PHASE61KG.md), [manual acceptance](TESTING_CHECKLIST.md).
 - Status: implemented, validation pending. Documentation branch dependency PR #60 is still being validated. Next: submit 61K-G PR, validate, merge dependencies in order, then record actual outcomes. Real GPU quality, peak VRAM, desktop interaction and native engine imports remain outstanding. Phase 62 stays on hold.
+
+### 2026-11-26T19:15:41Z (2026-11-27 03:15:41 Manila) — Phase 61K final integration
+
+- Documentation PR [#60](https://github.com/Aishi-mana/SpriteForge/pull/60) passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45881403350) and merged at 2026-11-26T19:15:29Z (`4da12e6bd533`).
+- Phase 61K-G PR [#61](https://github.com/Aishi-mana/SpriteForge/pull/61) passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45881683504); retargeted to main after #60, confirmed mergeable, merged at 2026-11-26T19:15:41Z (`6ab3ade814fc`).
+- All seven reference-editing implementation phases are merged. Updated README, HANDOFF, roadmap and phase notes to reflect the verified milestone. Documentation-only closure; no production changes or new hardware test results.
+- Continue pushing implementations and maintaining documentation and dated diary entries. Next: manual GPU/desktop and native engine acceptance; measure actual latency and VRAM. Phase 62 Windows packaging stays on hold until explicitly resumed.
