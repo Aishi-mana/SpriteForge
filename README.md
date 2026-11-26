@@ -1,6 +1,6 @@
 # SpriteForge
 
-A **local, offline AI pixel-art sprite studio** for Windows: generate character sprites, give them poses, animate them
+A **local-first AI pixel-art sprite studio** for Windows (usable offline after required models have been downloaded): generate character sprites, give them poses, animate them
 with a bone rig, and export sprite sheets with ready-made Godot 4 / Unity data. Everything runs on your own machine
 (SDXL via `diffusers`, plus an optional local chat assistant through `llama.cpp`).
 
@@ -18,6 +18,8 @@ Built for an 8 GB laptop GPU (RTX 5070 Laptop, 32 GB RAM): SDXL runs with CPU of
 | **Palette** | Import/export palettes (.hex .gpl .pal, swatch PNG), your own library, remap with dithering, merge/reduce, hue variants, shading ramps. |
 | **Template** | A neutral **mannequin** (with a ready rig) + a **reference image** produce a sprite with the template's exact size and silhouette. |
 | **Directions** | 4/8-direction characters (5 views + mirrors), view-aware walk cycles, one aligned sprite sheet per animation. |
+| **Tiles & props** | Seamless tiles, props, icons, UI elements, tileset workbench, 47-blob/16-edge autotiles, corner and multi-terrain sets, animated tiles, collision flags and AI seam repair. |
+| **Queue** | Queue generation jobs, pause/cancel, re-run or fork from history, compare results and save favourites. |
 
 Also: a **pixel editor** (Edit buttons everywhere), **projects** (save/load/autosave), a **local assistant chat**
 (proposes prompts/settings as "Apply" buttons), and a **Diagnostics** panel (GPU, models, downloads, self-tests).
@@ -29,8 +31,9 @@ Generate and Reference pose now support retro pixel art, modern anime, four chib
 ## Install and run (Windows)
 
 1. Install **Python 3.10-3.12**. For the desktop window also install **Rust** (rustup.rs), the VS C++ Build Tools and WebView2 (built into Windows 11).
-2. Copy `config.example.json` to `config.json` and set `models_dir` (the folder containing `checkpoints/` and `loras/`),
-   **or** just start the app and set it in the sidebar. Use forward slashes.
+2. If `config.json` does not exist, copy `config.example.json` to `config.json`. Set `models_dir` to the folder containing `checkpoints/` and `loras/`,
+   **or** start the app and set it in the sidebar. Use forward slashes in JSON paths. **Do not overwrite an existing local configuration.**
+   Note: this repository snapshot already tracks a `config.json`; see [repository maintenance](docs/REPOSITORY_WORKFLOW.md#tracked-runtime-files--cleanup).
 3. Double-click **`spriteforge.bat`**. First run creates `.venv`, installs PyTorch (CUDA 12.8 build, required for RTX 50-series) and
    the requirements, builds the Tauri window once, and launches. Without Rust it opens in your browser at http://127.0.0.1:8765.
    `run.bat` = browser-only mode. `spriteforge.bat rebuild` rebuilds the Tauri shell.
@@ -49,7 +52,7 @@ spriteforge/
   engine/        Python backend (FastAPI + all the image/rig/export logic)  -> docs/ARCHITECTURE.md
   ui/index.html  the entire web UI (one file, vanilla JS)
   src-tauri/     Tauri v2 desktop shell (starts/stops the engine)   shell/ = its loading page
-  tests/         435-check test suite, no GPU needed:  python tests/run_all.py
+  tests/         automated Python + JavaScript checks:  python tests/run_all.py
   docs/          USER_GUIDE, ARCHITECTURE, DEVELOPMENT, TESTING_CHECKLIST, ROADMAP, phases/ (per-phase notes)
   projects/ exports/ palettes/   created at runtime (your data)
   engine.log  llm.log  diagnostics.txt   created at runtime
@@ -61,8 +64,16 @@ spriteforge/
 - `docs/ARCHITECTURE.md`  modules, data formats, conventions, full API table
 - `docs/DEVELOPMENT.md`  how to work on the code, test it, and add features
 - `docs/TESTING_CHECKLIST.md`  ordered manual test plan for a real GPU
-- `docs/ROADMAP.md`  ideas and known limits
-- `CHANGELOG.md`  what each phase added;  `HANDOFF.md`  state of the project for a new maintainer/chat
+- `docs/ROADMAP.md`  proposed work, verification priorities and known limits
+- `docs/REPOSITORY_WORKFLOW.md`  GitHub workflow, tracked runtime data and safe cleanup guidance
+- `docs/phases/`  historical notes for each delivered phase (through Phase 22)
+- `CHANGELOG.md`  historical phase notes; `HANDOFF.md`  current maintainer context
+
+## Current project status
+
+The checked-in code and docs cover **Phase 22**. Earlier handoff notes record laptop testing through Phase 18; **Phases 19-22 (queue/history, tiles, terrain and tile follow-ups) still need real-device and Godot/Tiled validation**. The test suite checks logic with faked model calls but does not prove GPU inference, Tauri rendering, or game-engine imports. Start with [the manual testing checklist](docs/TESTING_CHECKLIST.md).
+
+**Repository hygiene:** projects, history, exports, local `config.json` and diagnostics are runtime/user data. Some of these files are already tracked in this initial Git snapshot. Review [the maintenance guide](docs/REPOSITORY_WORKFLOW.md#tracked-runtime-files--cleanup) before committing or sharing this repository; do not commit model files, logs or personal configuration changes.
 
 ## Troubleshooting (top 8)
 

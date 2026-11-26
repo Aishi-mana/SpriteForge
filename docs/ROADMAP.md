@@ -1,35 +1,56 @@
 # Roadmap and known limits
 
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 32 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+
+## First: verify the newest delivered features
+
+The previous handoff recorded user testing through Phase 18, but **Phases 19-22 were not confirmed on the target laptop** at that point. Use the [manual testing checklist](TESTING_CHECKLIST.md), especially steps 15-22, before treating the following as production-ready:
+
+- **Phase 19 — queue and history:** multi-job queue, pause/cancel, restart persistence, fork/re-run/compare.
+- **Phase 20 — tiles and props:** seamless tiles, workbench, packed atlas and tileset exports.
+- **Phase 21 — terrain sets:** 47-blob / 16-edge auto-tiles and Godot 4 / Tiled import and painting.
+- **Phase 22 — corner/multi-terrain sets, animated tiles, solid flags and AI seam repair:** visual seams, exported collision and animation, and especially Godot multi-terrain painting semantics.
+
+Automated tests exercise internal logic and fake SDXL calls; they do not establish real GPU quality, VRAM behaviour, Tauri/browser rendering or Godot/Tiled import compatibility. Track observed failures before adding more export formats.
+
+## Implemented since Phase 22 (live verification pending)
+
+- Phase 23: multi-style pixel and HD character generation.
+- Phase 24: HD rig animation and exports.
+- Pose preset library: editable and reusable Reference Pose presets.
+- Phase 25: custom rig keyframes.
+- Phase 26: actual first/final reference images and AI or crossfade in-betweens.
+- Phase 27: optional soft elbow/knee deformation.
+- Phase 28: multi-model text generation and LoRA family checks; standalone NetaYume and Qwen Rapid routes using shared local model files and native image references. SDXL-only ControlNet/inpaint remain.
+- Phase 29: master-reference directional character generation, shared framing, palette and approved-view locks.
+- Phase 30: feature-level reference guidance and separate appearance candidates.
+- Phase 31: modular layer compositor and reusable recipes.
+- Phase 32: AI-assisted isolated modular assets, approximate fitting and explicit approval.
+
+See the corresponding [phase notes](phases/) for scope and limitations. Regression tests have been added but the full suite and live hardware workflows have not been verified.
+
 ## Candidate next features
-- **Animate: start and end reference** (Phase 26 initial implementation; validation pending): the Animate tab already takes a reference sprite; let it also take an optional **start** and **end** reference (first and last pose of the clip).
-  Ideas to evaluate: derive start/end poses from the two sprites (auto-placed rigs) and have the rig interpolate between them (extends *Custom clips*); and/or use both as references for AI in-betweens (IP-Adapter + skeleton per frame).
-  Needs a design pass first (loop vs one-shot, how the two rigs map onto each other, palette lock).
-- **Tiles follow-ups (remaining)**: collision / navigation polygons derived from the art and for terrain tiles; hand-drawn-looking borders (AI inpaint along the mask edge); transitions with different border widths per terrain pair; verify the Godot multi-terrain painting rules and adjust the export if needed.
-- **First-run setup wizard / model manager**: download IP-Adapter / ControlNet with progress, check models, pick the assistant model, optional installer.
-- **Custom clips**: pose keyframes yourself, interpolate (and save/share clips); per-clip secondary-motion presets.
-- **Softer joints**: soft deformation (skinning) instead of rigid parts; better elbows/knees.
-- **Better multi-view consistency**: line-art / depth conditioning for the view generator; multi-view reference sheets; per-view regen with the first view as extra reference.
-- **Pixel editor extras**: layers, tile mode, selection copy/paste, outline/shade tools, palette ramps inside the editor.
-- **Aseprite `.aseprite` export**, Godot `AnimationPlayer` scenes, Unity prefab generation.
-- **Auto-tune rig weights** from AI cleanup results (not done: mapping cleaned pixels back to sprite pixels is unreliable).
+
+1. **Phase 33 candidate — modular layer rigging and bone attachment:** attach equipment, hair and garments to bones, preserve independent layers while animating, and validate swap behavior.
+2. **Character improvements:** precise masked editing, semantic asset extraction, garment fitting, improved multiview conditioning and per-clip secondary motion presets.
+3. **First-run setup wizard / model manager:** validate local model/runtime components, optional IP-Adapter/ControlNet setup, dependency checks and assistant model configuration.
+4. **Pixel editor extras:** layers, copy/paste, tile mode, outline/shade tools and palette ramps.
+5. **More exports:** Aseprite `.aseprite`, Godot `AnimationPlayer` scenes, Unity prefab generation.
+6. **Automatic rig-weight tuning from AI cleanup:** experimental because mapping edited pixels back to the rig is unreliable.
+7. **Deferred tiles/terrain:** art-derived collision/navigation polygons, AI-painted terrain edges, per-pair border widths and Godot multi-terrain verification. Resume after character work.
+
 
 ## Known limits
-- Phase 28: architecture-aware text generation routes (experimental): SDXL, SD1.5, Lumina 2, FLUX.1, SD3 and Qwen-Image with supported layouts. SDXL remains required for image conditioning/inpaint. See PHASE28. Tile/terrain work deferred in favor of character improvements.
-- 8 GB VRAM: skeleton (ControlNet) mode uses sequential offload (1-3 min per image); video models are out of scope.
-- The AI cannot keep a character identical across poses; the **rig** is the consistent path. Reference/skeleton is for exploring.
-- Rig motion is rigid cut-outs: the walk/run/attack clips are generic; side views look best. Front/back walks are a step-and-bob. Three-quarter views are approximations.
-- AI joint cleanup needs frames <= 256 px and is slow (20-60 s per frame).
-- Template/direction generation: the AI sees only the dummy's silhouette and shading (no pose-control model), so limb placement can wander; lower *Redraw strength*, or Regen/Edit a view.
-- Not verified on real hardware as of phase 19 (the queue/history tab included): pixel editor in a real browser, palette tab UI, secondary motion, templates, directions, Godot/Unity import of exports, AI cleanup quality, `.tres`/importer script in the engines.
 
-Phase 27 initial soft elbow/knee mesh deformation is implemented (validation pending); rigid animation remains available. More advanced mesh weights and volume-preserving deformation remain possible follow-ups.
+- **Model support is architecture and layout dependent.** SDXL retains reference, skeleton and inpainting; the specific standalone NetaYume and Qwen Rapid routes add native image references. SD1.5 and supported Diffusers-format Lumina 2, FLUX.1, SD3 and Qwen-Image text-generation routes are experimental. Check exact model/LoRA compatibility and installed runtime components.
+- On an **8 GB GPU**, ControlNet/skeleton mode uses CPU/sequential offload and may take minutes per image; large generation settings can still cause OOM.
+- Reference-pose and view generation may drift from the character's original identity or silhouette. The rig produces the most repeatable animation frames.
+- Rigid movement remains available; optional soft mesh elbows/knees can stretch or fold. Front/back walking is simplified and three-quarter views approximate. AI reference guidance does not guarantee identity or exact feature locks.
+- AI joint cleanup is slow and most useful for small frames; its output must be reviewed. Modular asset generation is not semantic extraction or exact garment fitting. Modular animation currently uses flattened composites, not independently rigged layers.
+- Current tile collision is a full square for manually marked solid tiles; **art-derived polygons and terrain collisions are not implemented**.
+- Godot/Tiled outputs are format-tested, but **import/painting must be verified in the actual target editors**. Multi-terrain Godot painting is explicitly best effort.
+- The desktop shell targets Windows; real inference, memory use and renderer behaviour are not established by the headless unit tests.
 
-Phase 28 follow-up: prioritize the user's installed NetaYume and Qwen Rapid standalone runtimes, reusing shared model files and memory-management practices from Mana. Image-reference generation is available in these specific routes; SDXL-only skeleton/inpaint remains. Live hardware validation pending.
+## Maintenance follow-ups
 
-Phase 29: reference-led multi-view character workflow, project master image, approved-view locks, common canvas/palette and sequential view generation. Identity fidelity remains probabilistic; richer appearance locking is a later phase. Tile and terrain work remains deferred.
-
-Phase 30: per-feature reference-guidance locks and independent character appearance variants, master/candidate comparison and project persistence. Exact region-level editing and modular layer extraction remain future work. No tile/terrain changes.
-
-Phase 31: modular character layer compositor, portable recipes, manual alignment/order and swap/export workflows. AI garment/hair extraction, fitting and independently rigged layers remain follow-ups. Tile/terrain deferred.
-
-Phase 32: AI-assisted modular asset candidates using existing character reference runtimes, isolated asset prompts, border keying and approximate body-relative fitting, review/accept into the non-destructive layer stack. Semantic extraction, exact garment fitting and independent bone-following remain follow-ups.
+Clean up already-tracked runtime files (local configuration, logs, history) and duplicate root phase notes *separately* after confirming any needed user data is backed up. See [Repository workflow](REPOSITORY_WORKFLOW.md).
