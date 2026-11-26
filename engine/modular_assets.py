@@ -83,3 +83,28 @@ def candidate_preview(recipe,images,layer,replace_category=True):
     rows.insert(index,dict(layer))
     ims=list(images);ims.insert(index,modular.decode(layer["image"]))
     return modular.composite({**recipe,"layers":rows},ims)
+
+
+def registered_prompt(category,description,view):
+    return prompt(category,description,view)+(
+        " Use the supplied body as a fixed pose and registration template. "
+        "Match its exact head, shoulders, waist, limbs and feet as appropriate. "
+        "Keep the item at the corresponding position in the same framed canvas; "
+        "do not center, enlarge, rotate, redesign or redraw the body. "
+        "Return the isolated wearable on a solid contrasting background.")
+
+
+def register_asset(asset,info,canvas):
+    """Embed an already fitted asset without resampling or changing its placement."""
+    W,H=canvas
+    x,y=info["x"],info["y"]
+    asset=asset.convert("RGBA")
+    if not (0<=x and 0<=y and x+asset.width<=W and y+asset.height<=H):
+        raise ValueError("Fitted asset lies outside the fixed canvas")
+    if not asset.getchannel("A").getbbox():
+        raise ValueError("Registered asset has no visible pixels")
+    layer=Image.new("RGBA",(W,H))
+    layer.paste(asset,(x,y))
+    return layer,{**info,"size":[W,H],"x":0,"y":0,"asset_bounds":list(layer.getchannel("A").getbbox()),
+                  "registration":"fixed_canvas","fit_method":"approximate_region",
+                  "review_required":True}
