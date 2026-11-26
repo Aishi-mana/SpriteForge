@@ -1,0 +1,5 @@
+# Phase 61I — Body base and modular dressing
+
+Open Character Studio > Body base & dressing, or Modular > Body base generator. Choose a build, proportions, approximate view, pose, canvas size, sampling and color. Generate a featureless mannequin on a transparent square canvas without loading a model or using the character prompt, outfit, reference or LoRA. Use as modular body adds a body layer and hides previous body layers after confirmation; existing outfit layers remain and may need manual alignment. Use the existing layer controls and asset generation to dress the base, then preview, save or export the assembled character. Save the project to retain the independent body base and modular recipe. PNG export is also available.
+
+This is a stylized geometric mannequin, not an anatomically detailed illustration or a true 3D turnaround. Front/back silhouettes can be identical, side and three-quarter views are approximate projections, and there is no hair generation in the procedural template. AI-assisted body generation is not added. GPU verification of existing AI dressing tools is outstanding. Phase 62 remains on hold.

@@ -1518,6 +1518,26 @@ def llm_chat(b: ChatBody):
 
 
 # ---------------- portraits ----------------
+class BodyBaseParams(BaseModel):
+    build: str = "androgynous"
+    proportions: str = "anime"
+    view: str = "front"
+    pose: str = "a_pose"
+    size: int = 128
+    color: str = "#C6A58B"
+    pixel: bool = True
+
+
+@app.post("/api/character/body_base")
+def character_body_base(p: BodyBaseParams):
+    from . import body_base
+    try:
+        im=body_base.render(**p.model_dump())
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    return {"sprite":b64(im),"size":list(im.size),"preset":p.model_dump()}
+
+
 class CharacterArtParams(GenParams):
     identity: Optional[dict] = None
     view: str = "front"
