@@ -6,6 +6,8 @@ This is a **candidate backlog**, not a release promise. The repository now inclu
 
 - Phase 61K-G: merged and CPU validated; manual reference-editing acceptance and measured GPU performance remain outstanding.
 - Real Windows GPU, desktop interaction and native engine acceptance remain outstanding; prioritize Qwen, NetaYume and SDXL editing, mask alignment and project round trips.
+- Phase 61L — Magic Background Eraser & Alpha Refinement: A conservative exterior segmentation; B cast shadow removal; C wand/erase/restore; D edge refinement; E protection and pixel preservation; F workspace integration; G testing and performance.
+- Phase 61M — Exact-Fit Modular Asset Generation (after 61L): generate isolated hair, outfits, armor and accessories against a fixed unclothed character sprite base; identical source canvas, origin, pose and proportions; preserve base pixels, support front/back layer order, transparent export, alignment validation and manual correction. Generative exact fit is a target, not a verified guarantee.
 - Phase 62 Windows packaging is on hold.
 - See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-G.
 
