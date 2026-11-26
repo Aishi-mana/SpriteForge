@@ -4,7 +4,7 @@ python-multipart
 pillow
 numpy
 scipy
-diffusers>=0.32
+diffusers>=0.36
 transformers
 accelerate
 safetensors

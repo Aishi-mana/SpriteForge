@@ -14,7 +14,7 @@
 - **Auto-tune rig weights** from AI cleanup results (not done: mapping cleaned pixels back to sprite pixels is unreliable).
 
 ## Known limits
-- Only **SDXL**. Flux / HiDream / Qwen files are detected and blocked. No SD 1.5 path.
+- Phase 28: architecture-aware text generation routes (experimental): SDXL, SD1.5, Lumina 2, FLUX.1, SD3 and Qwen-Image with supported layouts. SDXL remains required for image conditioning/inpaint. See PHASE28. Tile/terrain work deferred in favor of character improvements.
 - 8 GB VRAM: skeleton (ControlNet) mode uses sequential offload (1-3 min per image); video models are out of scope.
 - The AI cannot keep a character identical across poses; the **rig** is the consistent path. Reference/skeleton is for exploring.
 - Rig motion is rigid cut-outs: the walk/run/attack clips are generic; side views look best. Front/back walks are a step-and-bob. Three-quarter views are approximations.
@@ -23,3 +23,13 @@
 - Not verified on real hardware as of phase 19 (the queue/history tab included): pixel editor in a real browser, palette tab UI, secondary motion, templates, directions, Godot/Unity import of exports, AI cleanup quality, `.tres`/importer script in the engines.
 
 Phase 27 initial soft elbow/knee mesh deformation is implemented (validation pending); rigid animation remains available. More advanced mesh weights and volume-preserving deformation remain possible follow-ups.
+
+Phase 28 follow-up: prioritize the user's installed NetaYume and Qwen Rapid standalone runtimes, reusing shared model files and memory-management practices from Mana. Image-reference generation is available in these specific routes; SDXL-only skeleton/inpaint remains. Live hardware validation pending.
+
+Phase 29: reference-led multi-view character workflow, project master image, approved-view locks, common canvas/palette and sequential view generation. Identity fidelity remains probabilistic; richer appearance locking is a later phase. Tile and terrain work remains deferred.
+
+Phase 30: per-feature reference-guidance locks and independent character appearance variants, master/candidate comparison and project persistence. Exact region-level editing and modular layer extraction remain future work. No tile/terrain changes.
+
+Phase 31: modular character layer compositor, portable recipes, manual alignment/order and swap/export workflows. AI garment/hair extraction, fitting and independently rigged layers remain follow-ups. Tile/terrain deferred.
+
+Phase 32: AI-assisted modular asset candidates using existing character reference runtimes, isolated asset prompts, border keying and approximate body-relative fitting, review/accept into the non-destructive layer stack. Semantic extraction, exact garment fitting and independent bone-following remain follow-ups.

@@ -169,32 +169,35 @@ def check_models(models_dir):
     if not md or not md.exists():
         return [C(S, "Models folder", "fail", f"not found: {models_dir or '(not set)'}", "Set it in the sidebar (the folder that contains checkpoints/ and loras/)")]
     out.append(C(S, "Models folder", "ok", str(md)))
-    ck = sorted((md / "checkpoints").glob("*.safetensors")) if (md / "checkpoints").exists() else []
+    from . import model_families as mf
+    ck = sorted(p for p in (md / "checkpoints").iterdir() if (p.is_file() and p.suffix==".safetensors") or (p.is_dir() and (p/"model_index.json").is_file())) if (md / "checkpoints").exists() else []
+    from . import local_runtime as lr
+    for name in lr.QWEN_CHECKPOINTS:
+        qwen=md/"diffusion_models"/name
+        if qwen.is_file() and not any(p.name==qwen.name for p in ck):ck.append(qwen)
     lo = sorted((md / "loras").glob("*.safetensors")) if (md / "loras").exists() else []
-    sdxl, rows = [], []
+    sdxl, rows, supported = [], [], []
     for p in ck:
-        r = inspect_file(p)
-        rows.append(f"{p.name}: {r['kind'] if r['status'] == 'ok' else 'BROKEN - ' + r['msg']}")
-        if r["status"] == "ok" and r["kind"] in ("sdxl", "unknown"):
-            sdxl.append(p.name)
-    bad = [x for x in rows if "BROKEN" in x]
-    out.append(C(S, "Checkpoints", "fail" if not sdxl else ("warn" if bad else "ok"),
-                 f"{len(sdxl)} usable of {len(ck)} (sdxl = recognised, unknown = not recognised but allowed; dit = Flux/Qwen-type, sd15 = SD 1.5: not usable): " + "; ".join(rows[:12]),
-                 "No SDXL checkpoint found: put sd_xl_base_1.0.safetensors in checkpoints/" if not sdxl else
-                 ("Re-download the broken files" if bad else "Flux / SD1.5 / other files are listed but only SDXL ones work here")))
+        r=mf.describe(p)
+        rows.append(f"{p.name}: {r['label']} — {r['detail']}")
+        if r["supported"]: supported.append(p.name)
+        if r["family"] in ("sdxl","unknown") and r["supported"]: sdxl.append(p.name)
+    out.append(C(S,"Checkpoints","fail" if not supported else ("warn" if len(supported)<len(ck) else "ok"),
+                 f"{len(supported)} selectable of {len(ck)}: "+"; ".join(rows[:12]),
+                 "SDXL: skeleton/inpaint; local NetaYume/Qwen: image references; other architectures: text-to-image. See Phase 28 setup."))
     base = [n for n in sdxl if n.startswith("sd_xl_base")]
     out.append(C(S, "Recommended base (sd_xl_base_1.0)", "ok" if base else "warn", base[0] if base else "not found",
                  "" if base else "The pixel-art-xl LoRA was trained on SDXL base; other SDXL checkpoints may give different looks"))
     lrows, usable = [], []
     for p in lo:
-        r = inspect_file(p, True)
-        lrows.append(f"{p.name}: {r['kind'] if r['status'] == 'ok' else 'BROKEN'}")
-        if r["status"] == "ok" and r["kind"] in ("sdxl", "unknown"):
+        kind = mf.identify(p, True)
+        lrows.append(f"{p.name}: {kind}")
+        if kind in ("sdxl", "unknown"):
             usable.append(p.name)
     pix = [n for n in usable if "pixel" in n.lower()]
     out.append(C(S, "Pixel-art LoRA", "ok" if pix else "warn", pix[0] if pix else f"none found among {len(lo)} LoRAs",
                  "" if pix else "Put pixel-art-xl-v1.1.safetensors in loras/ (nerijs/pixel-art-xl)"))
-    out.append(C(S, "LoRA files", "info", f"{len(lo)} found (kind 'other' = Flux/Qwen/video LoRA, not usable here): " + "; ".join(lrows[:12])))
+    out.append(C(S, "LoRA files", "info", f"{len(lo)} found (compatibility depends on selected model): " + "; ".join(lrows[:12])))
     return out
 
 
