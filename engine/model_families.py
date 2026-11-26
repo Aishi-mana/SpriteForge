@@ -1,5 +1,6 @@
 """Conservative architecture detection and local generation capabilities."""
 import json
+from functools import lru_cache
 from pathlib import Path
 from . import diag
 
@@ -28,6 +29,15 @@ def identify(path,lora=False):
     if p.name=="NetaYumev35_pretrained_all_in_one.safetensors" and not lora:return "lumina2"
     from .local_runtime import QWEN_CHECKPOINTS
     if p.name in QWEN_CHECKPOINTS and not lora:return "qwen"
+    try:
+        stat=p.stat()
+        return _identify_header(str(p.resolve()),stat.st_mtime_ns,stat.st_size,lora,d["kind"])
+    except (OSError,ValueError,TypeError):return "broken"
+
+
+@lru_cache(maxsize=256)
+def _identify_header(path,mtime,size,lora,legacy):
+    p=Path(path)
     h=header(p)
     meta=h.pop("__metadata__",{}) or {}
     ks=" ".join(h.keys()).lower()
@@ -38,8 +48,8 @@ def identify(path,lora=False):
     if "qwen" in tags or "img_mod" in ks and "txt_mod" in ks: return "qwen"
     if "sdxl" in tags or "stable-diffusion-xl" in tags: return "sdxl"
     if "sd1.5" in tags or "sd_v1" in tags or "stable-diffusion-v1" in tags: return "sd15"
-    if lora and p.name=="modern-anime.safetensors" and d["kind"] in ("other","unknown"):return "qwen"  # documented installed Qwen adapter
-    return d["kind"]
+    if lora and p.name=="modern-anime.safetensors" and legacy in ("other","unknown"):return "qwen"  # documented installed Qwen adapter
+    return legacy
 
 def describe(path):
     p=Path(path); family=identify(p)

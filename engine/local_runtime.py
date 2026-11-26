@@ -1,5 +1,5 @@
 """Standalone worker bridge, using existing local Comfy libraries without a server."""
-import base64, io, json, os, subprocess, tempfile, time
+import base64, io, json, os, subprocess, tempfile, time, shutil
 from pathlib import Path
 from PIL import Image, ImageOps
 
@@ -39,7 +39,7 @@ def readiness(path):
 def reference_uri(im,bg):
     from PIL import ImageColor
     im=im.convert("RGBA");im.thumbnail((1024,1024),Image.Resampling.LANCZOS)
-    canvas=Image.new("RGB",im.size,ImageColor.getrgb(bg.replace(" ","")));canvas.paste(im,(0,0),im)
+    canvas=Image.new("RGB",im.size,ImageColor.getrgb("lightgray" if bg=="light gray" else bg));canvas.paste(im,(0,0),im)
     b=io.BytesIO()
     for quality in (92,85,75,60):
         b.seek(0);b.truncate();canvas.save(b,"JPEG",quality=quality)
@@ -75,28 +75,46 @@ def run(python,req,progress=None,cancelled=None):
     input_path.write_text(json.dumps(req,ensure_ascii=False),encoding="utf-8")
     worker=Path(__file__).resolve().parent/"workers/local_image.py"
     env=dict(os.environ,HF_HUB_OFFLINE="1",TRANSFORMERS_OFFLINE="1",DIFFUSERS_OFFLINE="1",PYTHONIOENCODING="utf-8")
-    with (job/"job.log").open("w",encoding="utf-8") as log:
-        child=subprocess.Popen([str(python),str(worker),str(input_path)],shell=False,stdout=log,stderr=subprocess.STDOUT,env=env,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
-        try:
-            last=None
-            while child.poll() is None:
-                if cancelled and cancelled():raise RuntimeError("Cancelled local image worker")
-                if progress:
-                    try:
-                        d=json.loads((job/"progress.json").read_text(encoding="utf-8"))
-                        step=int(d.get("step",0))
-                        if step!=last:progress(step,req["steps"]);last=step
-                    except (OSError,ValueError):pass
-                time.sleep(.25)
-        finally:
-            if child.poll() is None:
-                if os.name=="nt":
-                    subprocess.run(["taskkill.exe","/PID",str(child.pid),"/T","/F"],capture_output=True,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
-                if child.poll() is None:child.terminate()
-                child.wait()
-    png=job/"image.png"
-    if child.returncode!=0 or not png.is_file():
-        try: detail=json.loads((job/"progress.json").read_text(encoding="utf-8")).get("error","")
-        except (OSError,ValueError):detail=""
-        raise RuntimeError(f"Local {req['backend']} worker failed (exit {child.returncode}). {detail} Log: {job/'job.log'}")
-    with Image.open(png) as im:return im.convert("RGB")
+    # Only retain logs on failed jobs; remove request (including reference) and image.
+    ok=False
+    try:
+        with (job/"job.log").open("w",encoding="utf-8") as log:
+            child=subprocess.Popen([str(python),str(worker),str(input_path)],shell=False,stdout=log,stderr=subprocess.STDOUT,env=env,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+            try:
+                last=None
+                deadline=time.monotonic()+1800
+                while child.poll() is None:
+                    if cancelled and cancelled():raise RuntimeError("Cancelled local image worker")
+                    if time.monotonic()>deadline:raise RuntimeError("Local image worker exceeded 30-minute limit")
+                    if progress:
+                        try:
+                            d=json.loads((job/"progress.json").read_text(encoding="utf-8"))
+                            step=int(d.get("step",0))
+                            if step!=last:progress(step,req["steps"]);last=step
+                        except (OSError,ValueError):pass
+                    time.sleep(.25)
+            finally:
+                if child.poll() is None:
+                    if os.name=="nt":
+                        try:subprocess.run(["taskkill.exe","/PID",str(child.pid),"/T","/F"],capture_output=True,timeout=10,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+                        except (OSError,subprocess.TimeoutExpired):pass
+                    if child.poll() is None:
+                        child.terminate()
+                        try:child.wait(timeout=10)
+                        except subprocess.TimeoutExpired:child.kill();child.wait(timeout=10)
+        png=job/"image.png"
+        if child.returncode!=0 or not png.is_file():
+            try:detail=json.loads((job/"progress.json").read_text(encoding="utf-8")).get("error","")
+            except (OSError,ValueError):detail=""
+            raise RuntimeError(f"Local {req['backend']} worker failed (exit {child.returncode}). {detail} Log: {job/'job.log'}")
+        with Image.open(png) as im:
+            if max(im.size)>2048:raise ValueError("Worker returned oversized image")
+            result=im.convert("RGB")
+        ok=True
+        return result
+    finally:
+        if ok:shutil.rmtree(job,ignore_errors=True)
+        else:
+            for path in (input_path,job/"image.png"):
+                try:path.unlink(missing_ok=True)
+                except OSError:pass

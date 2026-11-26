@@ -173,16 +173,22 @@ class GenParams(BaseModel):
 def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_image, ip_scale, post,
          control_image=None, cn_scale=0.8, cn_dir=None, gen_size=1024, kind="sprite", art_style="pixel"):
     try:
+        # Bound retained raw images before generation, regardless of UI settings.
+        if not 1<=n<=6 or not 128<=gen_size<=1024 or n*gen_size*gen_size>6_400_000:
+            raise ValueError("Generation batch exceeds image budget")
         outs = gen.generate(p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
                             control_image, cn_scale, cn_dir, kind, art_style=art_style) if art_style != "pixel" else gen.generate(
                                 p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
                                 control_image, cn_scale, cn_dir, kind)
+    except ValueError as e:
+        raise HTTPException(400,str(e))
     except Exception as e:
         hint = " - out of GPU memory: lower 'Generation size', set Variations to 1, close other GPU apps" if "out of memory" in str(e).lower() else ""
         raise HTTPException(500, f"{type(e).__name__}: {e}{hint}")
     results = []
     for raw, s in outs:
-        sprite, info = post(raw)
+        try:sprite, info = post(raw)
+        except ValueError as e:raise HTTPException(400,str(e))
         info["seed"] = s
         info["art_style"] = art_style
         if control_image is not None:
@@ -457,6 +463,8 @@ def rig_reference_frames(b: ReferenceFrames):
     redraw=None
     if b.method=="ai" and b.count>2:
         ckpt,lora_dir=_paths(b.checkpoint)
+        if mf.identify(ckpt) not in ("sdxl","unknown"):
+            raise HTTPException(400,"AI endpoint in-betweens currently require SDXL inpainting; crossfade is model independent")
         gen.set_sampler(b.sampler)
         def redraw(guide,t,i):
             def run(image,mask,ref):
@@ -1592,14 +1600,14 @@ def terrain_export(b: TerrainBody):
 # ---------------- generation queue + history ----------------
 def _exec_job(kind, params, inputs, progress):
     """Runs one queued job (called by the queue's worker thread). Returns the list of results."""
-    gen.PROGRESS = progress
+    gen._job_context.progress = progress
     gen._job_context.cancelled = getattr(progress,"cancelled",None)
     try:
         if kind == "generate":
             return _do_generate(GenParams(**params))["results"]
         return _do_reference(inputs["ref"], inputs.get("pose"), params)["results"]
     finally:
-        gen.PROGRESS = None
+        gen._job_context.progress = None
         gen._job_context.cancelled = None
 
 
