@@ -669,3 +669,12 @@ Use the following template for each future change (replace placeholders with act
 
 - `engine/modular_assets.py` reduces extraction temporary arrays, avoids duplicate validation and adds conservative clipping warning (`168e42f312aa`); API preflight and error handling (`a7dd075f3d0c`); UI freshness checks, image release and review timing (`55e0e34a7310`); regression tests (`7fe38d0eeddd`).
 - No measured speedup or GPU/desktop acceptance. Heuristic fit and nonsemantic extraction limitations remain. CPU CI pending. [Phase notes](phases/PHASE61MG.md); manual checklist updated. Phase 62 packaging remains on hold.
+
+### 2026-11-26T22:36:09Z — 61M-G integration
+
+- PR #75 passed CPU validation run 45904396866 and merged at `054c55806cd3`.
+
+### 2026-11-27 (Manila) — Phase 61N-A: Generate prompt audit and body-base fix
+
+- Confirmed actual knight/blue armor/red cape input defaults and hidden costume phrases in three style presets. Neutral style phrases (`1decf8eec220`), dedicated mannequin prompt and anti-clothing negatives (`adfbe7e23310`), Generate API flag (`dca0d8f5df8b`), UI neutral defaults and project setting (`8bfc51958217`), prompt tests (`a1632d385a8c`) and API routing regressions added.
+- Existing saved prompts are preserved; no model policies changed. Model output quality not verified; CI pending. [Phase notes](phases/PHASE61NA.md). Next 61N-B final prompt visibility, C existing Art Style selector additions, D integration checks. Packaging on hold.
