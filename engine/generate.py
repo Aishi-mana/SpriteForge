@@ -26,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "instruction_edit":
+        return "blurry, watermark, text, duplicate character, unintended changes"
     if kind in PORTRAIT_FRAMINGS:
         return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", " + PORTRAIT_FRAMINGS[kind][1]
     if kind == "character_art":
@@ -88,6 +90,8 @@ PORTRAIT_FRAMINGS = {
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "instruction_edit":
+        return user_prompt
     if kind in PORTRAIT_FRAMINGS:
         return f"{styles.PRESETS[art_style]}, character portrait, {user_prompt}, {PORTRAIT_FRAMINGS[kind][0]}, single character, centered, plain flat solid {bg} background"
     if kind == "character_art":
