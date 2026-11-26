@@ -81,6 +81,10 @@ def capture_generate(*a,**k):
     return fake_generate(*a,**k)
 M.gen.generate=capture_generate
 try:
+    preview=M.generate_prompt_preview(M.GenParams(prompt="front view",negative="extra exclusion",checkpoint="",body_base=True,art_style="anime",bg="magenta"))
+    ok(preview["kind"]=="body_base" and preview["positive"]==M.gen.build_prompt("front view","magenta","body_base","anime"),"CPU prompt preview without checkpoint")
+    ok(preview["negative"]=="extra exclusion, "+M.gen.negative_for("body_base","anime"),"preview includes actual combined negatives")
+    ok(preview["style_text"]==M.styles.PRESETS["anime"] and "costume" not in preview["style_text"],"style text remains independent of outfit")
     M.generate_ep(M.GenParams(prompt="front view",checkpoint="sd_xl_base_1.0.safetensors",body_base=True,art_style="anime",gen_size=640,seed=7))
     ok(calls[-1]==("body_base","front view","anime"),"Generate routes mannequin mode to dedicated prompt kind")
     M.generate_ep(M.GenParams(prompt="blue armor",checkpoint="sd_xl_base_1.0.safetensors",seed=7))
