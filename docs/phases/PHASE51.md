@@ -1,0 +1,3 @@
+# Phase 51 — Advanced pixel editor (initial tools)
+
+The existing pixel editor now supports an internal selection clipboard (Ctrl+A/C/X/V), 90-degree rotation within the existing canvas, lighten/darken, one-pixel orthogonal outlines, vertical and combined symmetry, and brush wrapping for seamless tile edges. Copy/paste is internal to the editor, with transparent pixels skipped. Undo history is limited to approximately 64 MiB or 60 snapshots (at least one snapshot). Existing apply/export remains flattened PNG. Layers, masks and native layered persistence are not implemented in this increment. Verify selection, rotation, symmetry, wrapping and undo in the desktop application.
