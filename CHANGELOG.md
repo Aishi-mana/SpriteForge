@@ -274,3 +274,15 @@ Architecture-aware text generation and checkpoint-specific LoRA compatibility la
 Phase 28 follow-up: shared Comfy Desktop standalone NetaYume/Qwen Rapid backends, model-specific defaults and references, SDXL cache release and owned local-worker cancellation. No server or duplicate model downloads.
 
 Phase 28 follow-up: allow both installed Qwen Rapid v23 checkpoint filenames through the shared standalone model picker and loader; no extra model copies.
+
+## Phase 29 — reference-led character consistency
+Separate master-image direction workflow, identity/view prompts, Qwen/Neta/SDXL reference routing, shared framing/palette, per-view regeneration and locks, project persistence and HD direction memory budget. Tests added; live validation pending.
+
+## Phase 30 — Character identity and appearance locking
+Feature-specific reference guidance, temporary target unlocks, separate full-body pose/outfit/expression/hair variants, master/candidate comparison and persistence. Tests added; live verification pending.
+
+## Phase 31 — Modular character customization
+Non-destructive CPU layer stack, transparent body/outfit/hair/accessory import and swaps, per-layer transforms, composite PNG, reusable ZIP recipe and source assets, project persistence and Reference/Animate handoff. Tests added; browser validation pending.
+
+## Phase 32 — AI-assisted modular asset generation
+Reference-led isolated outfit, footwear, hair and accessory candidates, transparent finishing, approximate fitting, raw/asset/composite review and explicit layer acceptance. Existing model/memory policy and modular recipes retained. Tests added; GPU validation pending.
