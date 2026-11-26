@@ -678,3 +678,16 @@ Use the following template for each future change (replace placeholders with act
 
 - Confirmed actual knight/blue armor/red cape input defaults and hidden costume phrases in three style presets. Neutral style phrases (`1decf8eec220`), dedicated mannequin prompt and anti-clothing negatives (`adfbe7e23310`), Generate API flag (`dca0d8f5df8b`), UI neutral defaults and project setting (`8bfc51958217`), prompt tests (`a1632d385a8c`) and API routing regressions added.
 - Existing saved prompts are preserved; no model policies changed. Model output quality not verified; CI pending. [Phase notes](phases/PHASE61NA.md). Next 61N-B final prompt visibility, C existing Art Style selector additions, D integration checks. Packaging on hold.
+
+### 2026-11-26T23:26:29Z — 61N-A integration
+
+- PR #76 passed CPU validation run 45910461870 and merged at `7b76e807df84`.
+
+### 2026-11-27 (Manila) — Phase 61N-B: prompt transparency
+
+- Shared engine positive/negative assembly (`017c082d194e`), CPU preview endpoint and shared mode resolution (`eb90446070c5`), Generate inspection/copy UI (`b4150cd35c23`), CPU prompt and endpoint regressions (`e531239660f6`, `d9861a32a21f`).
+- Style remains independent of subject content. Snapshot preview is engine text before model tokenization; no GPU or desktop acceptance verified. CI pending. [Phase notes](phases/PHASE61NB.md). Next 61N-C existing Style selector; packaging on hold.
+
+### 2026-11-27 (Manila) — 61N-B validation correction
+
+- CPU run 45911091109 failed on Windows and Ubuntu in the isolated queue JavaScript harness; API and styles passed. Prompt preview listener registration was inside the extracted queue block; moved DOM listener setup outside it to avoid executing browser-only initialization in the fake DOM. Revalidation pending.
