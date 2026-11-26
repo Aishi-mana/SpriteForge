@@ -1,5 +1,7 @@
 """Frame-indexed custom skeleton rotation tracks and bounded clip rendering."""
 import math
+import hashlib
+import json
 from . import modular
 
 MAX_KEYS=512
@@ -52,7 +54,14 @@ def pose(profile,frame):
     clip=profile["timeline"]
     return {**profile,"bones":[{**b,"angle":sample(clip["tracks"].get(b["id"],[]),frame,b["angle"])} for b in profile["bones"]]}
 
-def render(image,profile,padding=32,preview=True,frame=None):
+def fingerprint(image,profile,pad):
+    h=hashlib.sha256(b'SpriteForge-custom-cleanup-v1\0')
+    h.update(json.dumps([image.size,pad,profile],sort_keys=True,separators=(',',':')).encode('utf-8'))
+    h.update(image.tobytes())
+    return h.hexdigest()
+
+
+def render(image,profile,padding=32,preview=True,frame=None,include_bones=False):
     from . import custom_skeleton as cs,custom_skin
     profile=cs.validate(profile)
     if "timeline" not in profile:raise ValueError("Create a custom animation timeline first")
@@ -72,10 +81,13 @@ def render(image,profile,padding=32,preview=True,frame=None):
     if weighted:
         _,segments=cs.transforms(profile,im.size)
         binding=custom_skin.build_weights(profile,im.size,segments)
-    frames=[]
+    frames=[];joints=[]
     for i in indices:
-        rendered,_=cs.render(im,pose(profile,i),pad,binding=binding,frame=i)
+        rendered,points=cs.render(im,pose(profile,i),pad,binding=binding,frame=i)
         frames.append(rendered)
+        if include_bones:joints.append(points)
     # Fixed rest root-head pivot, independent of each frame's pose.
     pivot=(round(profile["root_head"][0]*w)+pad,round(profile["root_head"][1]*h)+pad)
-    return frames,{"name":clip["name"],"fps":clip["fps"],"loop":clip["loop"],"size":list(frames[0].size),"pivot":list(pivot),"indices":indices}
+    meta={"name":clip["name"],"fps":clip["fps"],"loop":clip["loop"],"size":list(frames[0].size),"pivot":list(pivot),"indices":indices,"fingerprint":fingerprint(im,profile,pad)}
+    if include_bones:meta["joints"]=joints
+    return frames,meta
