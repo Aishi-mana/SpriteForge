@@ -23,9 +23,14 @@ NEGATIVE_TILE = ("3d, realistic, photo, blurry, gradient, soft shading, text, wa
                  "character, person, single object, centered object, lighting gradient")
 NEGATIVE_PROP = "3d, realistic, photo, blurry, gradient, soft shading, text, watermark, multiple objects, cropped, frame, character, hands"
 KINDS_PROP = ("prop", "icon", "ui")
+BODY_BASE_NEGATIVE = ("armor, cape, cloak, scarf, robe, shirt, trousers, skirt, coat, jacket, "
+                      "gloves, boots, shoes, belt, jewelry, weapon, accessories, costume, clothing, "
+                      "cast shadow, cropped feet, multiple views")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "body_base":
+        return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", " + BODY_BASE_NEGATIVE
     if kind == "instruction_edit":
         return "blurry, watermark, text, duplicate character, unintended changes"
     if kind in PORTRAIT_FRAMINGS:
@@ -90,6 +95,11 @@ PORTRAIT_FRAMINGS = {
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "body_base":
+        detail = (", " + user_prompt.strip()) if user_prompt.strip() else ""
+        return (f"{styles.PRESETS[art_style]}, smooth featureless mannequin body template for modular game sprites"
+                f"{detail}, clean continuous body silhouette, bare mannequin surface, no garments or equipment, "
+                f"single full body, head to toe visible, centered, plain flat solid {bg} background")
     if kind == "instruction_edit":
         return user_prompt
     if kind in PORTRAIT_FRAMINGS:
