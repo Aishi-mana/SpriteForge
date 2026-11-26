@@ -292,3 +292,6 @@ Independent rigid and auto-split bone layers, reusable body-only skeleton profil
 
 ## Phase 34 — Modular soft deformation and secondary motion
 Opt-in soft elbow/knee meshes for auto-split garment layers, independent spring-chain attachments, per-layer anchor/segments/flutter/stiffness/damping, motion presets, recipe persistence and CPU memory bounds. Rigid defaults preserved. Tests added; live validation pending.
+
+## Phase 35 — Independent animated layer export
+Synchronized transparent body/equipment sheets, optional hidden alternatives and individual frames, shared untrimmed rectangles/feet pivot/timing, manifest draw order and default visibility, assembled reconstruction, unique export directories and bounded memory. Existing assembled export retained. Tests added; runtime validation pending.

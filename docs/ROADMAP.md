@@ -31,7 +31,7 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 ## Candidate next features
 
-1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Next: independent animated layer export, improved occlusion and per-layer weights.
+1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Next: improved occlusion, per-layer weights and runtime equipment integration.
 2. **Character improvements:** precise masked editing, semantic asset extraction, garment fitting, improved multiview conditioning and per-clip secondary motion presets.
 3. **First-run setup wizard / model manager:** validate local model/runtime components, optional IP-Adapter/ControlNet setup, dependency checks and assistant model configuration.
 4. **Pixel editor extras:** layers, copy/paste, tile mode, outline/shade tools and palette ramps.
