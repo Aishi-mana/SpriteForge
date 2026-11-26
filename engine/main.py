@@ -1559,6 +1559,9 @@ class InstructionEditParams(BaseModel):
     lora_weight: float = 1.0
 
 
+    mask: Optional[str] = None
+
+
 @app.post("/api/character/instruction_edit")
 def character_instruction_edit(p: InstructionEditParams):
     from . import instruction_edit
