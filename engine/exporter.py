@@ -1,6 +1,6 @@
 """Export animation packs: one sprite sheet + atlas for any number of clips, with engine-ready files.
 Every frame shares a feet-anchored pivot, so clips line up in the engine without per-clip offsets."""
-import json, math, re
+import json, math, re, hashlib, zipfile, tempfile
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -134,6 +134,7 @@ UNITY_CS = '''// SpriteForge importer. Select the *_unity.json file in the Proje
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public static class SpriteForgeImporter
@@ -185,6 +186,7 @@ public static class SpriteForgeImporter
             if (s != null) sprites[s.name] = s;
         }
 
+        var generated = new List<AnimationClip>();
         foreach (var a in data.animations)
         {
             var clip = new AnimationClip { frameRate = a.fps };
@@ -200,6 +202,29 @@ public static class SpriteForgeImporter
             var clipPath = dir + "/" + a.name + ".anim";
             AssetDatabase.DeleteAsset(clipPath);
             AssetDatabase.CreateAsset(clip, clipPath);
+            generated.Add(clip);
+        }
+        // Create a controller and a prefab only at unused paths, preserving edited assets.
+        if (generated.Count > 0 && data.animations[0].frames.Count > 0)
+        {
+            var stem = Path.GetFileNameWithoutExtension(data.image);
+            var controllerPath = AssetDatabase.GenerateUniqueAssetPath(dir + "/" + stem + ".controller");
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            var machine = controller.layers[0].stateMachine;
+            foreach (var clip in generated)
+            {
+                var state = machine.AddState(clip.name);
+                state.motion = clip;
+                if (machine.defaultState == null) machine.defaultState = state;
+            }
+            var go = new GameObject(stem);
+            try
+            {
+                go.AddComponent<SpriteRenderer>().sprite = sprites[data.animations[0].frames[0].name];
+                go.AddComponent<Animator>().runtimeAnimatorController = controller;
+                PrefabUtility.SaveAsPrefabAsset(go, AssetDatabase.GenerateUniqueAssetPath(dir + "/" + stem + ".prefab"));
+            }
+            finally { Object.DestroyImmediate(go); }
         }
         AssetDatabase.SaveAssets();
         Debug.Log("SpriteForge: imported " + metas.Count + " sprites and " + data.animations.Count + " clips from " + jsonPath);
@@ -207,6 +232,59 @@ public static class SpriteForgeImporter
 }
 #endif
 '''
+
+
+def _validate_atlas(atlas):
+    """Check atlas bounds, frame identity, timing and tag coverage."""
+    frames = list(atlas["frames"].values())
+    w, h = atlas["meta"]["size"]["w"], atlas["meta"]["size"]["h"]
+    if not frames or w <= 0 or h <= 0:
+        raise ValueError("Empty atlas")
+    for f in frames:
+        r = f["frame"]
+        if r["x"] < 0 or r["y"] < 0 or r["w"] <= 0 or r["h"] <= 0 or r["x"] + r["w"] > w or r["y"] + r["h"] > h:
+            raise ValueError("Frame outside atlas")
+        if f["duration"] <= 0:
+            raise ValueError("Invalid frame duration")
+        if not all(0 <= f["pivot"][k] <= 1 for k in ("x", "y")):
+            raise ValueError("Invalid frame pivot")
+    expected = 0
+    names = set()
+    for tag in atlas["meta"]["frameTags"]:
+        if tag["name"] in names or tag["from"] != expected or not tag["from"] <= tag["to"] < len(frames):
+            raise ValueError("Invalid atlas frame tags")
+        names.add(tag["name"])
+        expected = tag["to"] + 1
+    if expected != len(frames):
+        raise ValueError("Incomplete atlas frame tags")
+
+
+def _package(d, name, files, entries, atlas):
+    """Package only this export's generated files; never stale files from earlier exports."""
+    paths = list(files)
+    for e in entries:
+        for i in range(len(e["frames"])):
+            p = f"frames/{e['name']}/{name}_{e['name']}_{i:02d}.png"
+            if (d / p).is_file():
+                paths.append(p)
+    records = []
+    for p in paths:
+        raw = (d / p).read_bytes()
+        records.append({"path": p, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
+    manifest = {"format": "spriteforge-export", "version": 1, "validation": "atlas bounds, frame timing and tag coverage", "frames": len(atlas["frames"]), "files": records}
+    manifest_name = f"{name}_manifest.json"
+    (d / manifest_name).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    bundle_name = f"{name}_game_assets.zip"
+    with tempfile.NamedTemporaryFile(dir=d, suffix=".tmp", delete=False) as temp:
+        tmp = Path(temp.name)
+    try:
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED, compresslevel=3) as z:
+            for p in paths + [manifest_name]:
+                z.write(d / p, p)
+        tmp.replace(d / bundle_name)
+    finally:
+        tmp.unlink(missing_ok=True)
+    return [manifest_name, bundle_name]
 
 
 def export_pack(entries, opts, name, root):
@@ -220,6 +298,10 @@ def export_pack(entries, opts, name, root):
     o["columns"] = max(1, min(int(o["columns"]), 64))
     name = _safe(name)
     entries = [dict(e, name=_safe(e["name"], "anim"), frames=list(e["frames"])) for e in entries]
+    if not entries or any(not e["frames"] or not 1 <= e["fps"] <= 1000 for e in entries):
+        raise ValueError("Export requires nonempty clips and valid FPS")
+    if len({e["name"] for e in entries}) != len(entries):
+        raise ValueError("Clip names collide after sanitization")
     if o["uniform"]:
         _align_and_crop(entries, o["crop"])
     else:
@@ -256,7 +338,11 @@ def export_pack(entries, opts, name, root):
         atlas["meta"]["frameTags"].append({"name": e["name"], "from": gi_of[(ai, 0)], "to": gi_of[(ai, n - 1)],
                                            "direction": "forward", "loop": bool(e["loop"]), "fps": e["fps"]})
     atlas["meta"]["pivot"] = {"x": entries[0]["pivot"][0], "y": entries[0]["pivot"][1]}
+    _validate_atlas(atlas)
     (d / f"{name}_atlas.json").write_text(json.dumps(atlas, indent=2))
+    array_atlas = {**atlas, "frames": [{"filename": key, **value} for key, value in atlas["frames"].items()]}
+    (d / f"{name}_aseprite.json").write_text(json.dumps(array_atlas, indent=2))
+    files.append(f"{name}_aseprite.json")
     files.append(f"{name}_atlas.json")
     # ---- Godot 4 ----
     if o["godot"]:
@@ -302,8 +388,9 @@ def export_pack(entries, opts, name, root):
     if o["unity"]:
         readme += ["UNITY", f"  Copy {sheet_name}, {name}_unity.json and SpriteForgeImporter.cs into Assets/ (script into an Editor folder or anywhere).",
                    f"  Select {name}_unity.json, then Assets > SpriteForge > Import Sprite Sheet. It slices the sprites (pivot = feet,",
-                   f"  {o['ppu']} pixels per unit) and creates one .anim clip per animation next to the sheet.", ""]
+                   f"  {o['ppu']} pixels per unit) and creates one .anim clip per animation, an Animator Controller and a prefab next to the sheet.", ""]
     readme += ["ASEPRITE / PHASER / OTHERS", f"  {name}_atlas.json is an Aseprite-style JSON hash (frames, frameTags with loop and fps, pivot)."]
     (d / "README.txt").write_text("\n".join(readme))
     files.append("README.txt")
+    files += _package(d, name, files, entries if o["frames"] else [], atlas)
     return {"dir": str(d), "files": files, "sheet": [W, H], "cell": [cw, ch], "pivot": [px, py], "frames": len(pos)}
