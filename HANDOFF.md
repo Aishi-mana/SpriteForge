@@ -1,6 +1,6 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub implementation baseline `351d4a132543`, Phase 61K-F, merged 2026-11-26T19:03:23Z.  
+**Snapshot:** GitHub implementation baseline `6ab3ade814fc`, Phase 61K-G, merged 2026-11-26T19:15:41Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (private).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
@@ -26,7 +26,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 - Engine: `python -m engine.main`, bound to `127.0.0.1` (default port 8765).
 - UI edits take effect on reload; Python edits require restart. Rust/Tauri changes require `spriteforge.bat rebuild`.
 - With no models or GPU, many algorithm/API tests can run, but a full GPU acceptance test cannot.
-- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest implementation PR #59 passed run 130. This does not establish GPU or desktop acceptance.
+- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest implementation PR #61 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45881683504). This does not establish GPU or desktop acceptance.
 - Run [Manual testing checklist](docs/TESTING_CHECKLIST.md) for hardware and Godot/Tiled validation.
 
 ## Features and confidence as recorded in previous phase notes
@@ -41,7 +41,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 | 21 | Blob/edge terrain sets | Delivered; Godot/Tiled painting not confirmed |
 | 22 | Corner/multi-terrain, animated tiles, solid collision, AI seam repair | Delivered; real SDXL and Godot/Tiled behaviour not confirmed |
 
-These are **historical reports**, not new test results. Details: [Changelog](CHANGELOG.md) and [phase notes](docs/phases/). Later phases through 61K-F are documented in the living diary.
+These are **historical reports**, not new test results. Details: [Changelog](CHANGELOG.md) and [phase notes](docs/phases/). Later phases through 61K-G are documented in the living diary.
 
 ## Implementation map and pitfalls
 
@@ -62,7 +62,7 @@ See [Repository workflow](docs/REPOSITORY_WORKFLOW.md) for a follow-up cleanup p
 
 ## What's next
 
-1. Phase 61K-G: integration and performance validation of reference editing, source masks, staged assets and resource controls.
+1. Phase 61K-A–G implementation is merged; execute the manual reference-editing acceptance checklist and measure GPU resource usage.
 2. Target Windows GPU and desktop acceptance; native engine import checks remain outstanding.
 3. Phase 62 packaging is on hold.
 4. Review tracked runtime data separately, after backups.
