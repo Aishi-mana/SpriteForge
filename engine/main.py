@@ -1568,6 +1568,45 @@ def character_artwork(p: CharacterArtParams):
                 gen_size=p.gen_size, kind="character_art", art_style=art_style)
 
 
+class CharacterSpriteParams(CharacterArtParams):
+    conversion: str = "ai"
+    lock_master_palette: bool = True
+    size: int = 64
+
+
+@app.post("/api/character/sprite")
+def character_sprite(p: CharacterSpriteParams):
+    from . import character_sprite as cs, local_runtime as lr
+    if not p.reference or p.conversion not in ("ai","direct") or p.view not in CHARACTER_VIEWS:
+        raise HTTPException(400,"Choose a master, conversion mode and view")
+    if not 1 <= p.n <= 3 or p.gen_size not in (640,768,896,1024):
+        raise HTTPException(400,"Invalid sprite generation budget")
+    style = _art_style(p.art_style)
+    if not 16 <= p.size <= 256 or not 4 <= p.colors <= 64 or not 256 <= p.hd_size <= 1024:
+        raise HTTPException(400,"Invalid sprite size or color count")
+    try:
+        ref = _dec_img(p.reference)
+        if max(ref.size)>1024:
+            raise ValueError("Master exceeds 1024 px")
+        pal = cs.palette_from_art(ref,p.colors,p.bg_tol) if style=="pixel" and p.lock_master_palette else None
+        def post(raw):
+            return cs.finish(raw,style,p.size if style=="pixel" else p.hd_size,p.colors,pal,p.bg_tol)
+        if p.conversion=="direct":
+            im,info=post(ref)
+            info.update(seed=None,art_style=style)
+            return {"results":[{"raw":b64(ref),"sprite":b64(im),"info":info}]}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    except Exception:
+        raise HTTPException(400,"Invalid master artwork")
+    ckpt,lora_dir=_paths(p.checkpoint)
+    gen.set_sampler(p.sampler)
+    ip=ref if lr.route(ckpt) else gen.prep_reference(ref,p.bg)
+    prompt=_identity_prompt(p)+", "+CHARACTER_VIEWS[p.view]+", neutral standing game sprite, readable silhouette, entire body visible"
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
+                max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind="sprite",art_style=style)
+
+
 class FramedPortraitParams(CharacterArtParams):
     framing: str = "bust"
     aspect: str = "1:1"
