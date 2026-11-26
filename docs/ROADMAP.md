@@ -31,3 +31,5 @@ Phase 29: reference-led multi-view character workflow, project master image, app
 Phase 30: per-feature reference-guidance locks and independent character appearance variants, master/candidate comparison and project persistence. Exact region-level editing and modular layer extraction remain future work. No tile/terrain changes.
 
 Phase 31: modular character layer compositor, portable recipes, manual alignment/order and swap/export workflows. AI garment/hair extraction, fitting and independently rigged layers remain follow-ups. Tile/terrain deferred.
+
+Phase 32: AI-assisted modular asset candidates using existing character reference runtimes, isolated asset prompts, border keying and approximate body-relative fitting, review/accept into the non-destructive layer stack. Semantic extraction, exact garment fitting and independent bone-following remain follow-ups.
