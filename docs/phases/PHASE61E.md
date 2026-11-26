@@ -1,0 +1,3 @@
+# Phase 61E — Artwork to sprite
+
+In Portrait > Artwork to sprite, approve master artwork first. Select AI redraw or direct conversion, pixel/HD style, size and palette options. AI uses the shared character description, identity, view and generation settings with a reference-compatible checkpoint. Direct conversion does not require a model and does not change pose or view. Pixel palette locking extracts a bounded foreground palette from the master. Background removal is color-based. Approve a candidate, save the project, then use Animate sprite or Sprite → Reference. Approved sprite and master persist independently. AI directional batch production, exact identity fidelity and real GPU verification are outstanding.
