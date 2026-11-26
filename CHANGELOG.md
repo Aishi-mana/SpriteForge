@@ -310,3 +310,6 @@ Thread-local generation state, worker cancellation and scratch cleanup, bounded 
 
 ## Phase 40 — Custom skeleton and bone hierarchy editor
 Custom connected bone trees, editable endpoints/parent/name/rotation, humanoid/quadruped/winged/chain starters, portable JSON presets, project persistence and rigid CPU pose preview/export. Existing rigs preserved. CI validation pending.
+
+## Phase 41 — Multi-bone skinning and weight painting
+Optional custom-rig weighted mesh, automatic nearest-four binding, normalized manual influences for any bone, selected-bone heatmap and undo/reset, project/preset persistence, shared CPU triangle renderer. Rigid default retained. Feature branch CPU CI enabled; validation pending.
