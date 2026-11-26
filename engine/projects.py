@@ -1,6 +1,7 @@
 """Project save/load: one folder per character under <app>/projects/<name>/
    project.json (all settings + rig + skeleton), ref.png, anim.png, sprites/*.png (saved results)."""
-import base64, io, json, re, shutil, time
+import base64, io, json, re, shutil, time, tempfile, zipfile, stat
+from threading import RLock
 from pathlib import Path
 from PIL import Image
 
@@ -173,6 +174,11 @@ def validate_clips(value, profile):
 
 
 def save(root, name, data):
+    with _PROJECT_LOCK:
+        return _save(root, name, data)
+
+
+def _save(root, name, data):
     from . import modular, custom_skeleton, custom_cleanup, scenes
     scene=data.get('scene')
     clean_scene=scenes.validate(scene)[0] if scene is not None else None
@@ -221,7 +227,8 @@ def load(root, name):
 
 
 def delete(root, name):
-    shutil.rmtree(_dir(root, name, True))
+    with _PROJECT_LOCK:
+        shutil.rmtree(_dir(root, name, True))
 
 
 def add_sprite(root, name, data_url):
@@ -244,3 +251,106 @@ def delete_sprite(root, name, sid):
     f = _dir(root, name, True) / "sprites" / (re.sub(r"[^0-9_]", "", sid) + ".png")
     if f.exists():
         f.unlink()
+
+
+# Phase 57: portable, bounded project archives. Never extract arbitrary ZIP paths.
+_PROJECT_LOCK = RLock()
+_BUNDLE_LIMIT = 128 * 1024 * 1024
+_BUNDLE_FILES = 2048
+_BUNDLE_PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_. -]{0,79}")
+
+def _allowed_member(name):
+    parts = name.split("/")
+    if any(not _BUNDLE_PART.fullmatch(p) or p.endswith((".", " ")) for p in parts):
+        return False
+    if len(parts) == 1:
+        return name == "project.json" or bool(re.fullmatch(r"[A-Za-z0-9_]+\.png", name))
+    if len(parts) == 2 and parts[0] in ("sprites", "portrait", "tileset"):
+        return bool(re.fullmatch(r"[A-Za-z0-9_-]+\.(png|json)", parts[1]))
+    if len(parts) == 3 and parts[0] == "results":
+        return bool(re.fullmatch(r"[A-Za-z0-9_-]+", parts[1]) and re.fullmatch(r"[A-Za-z0-9_-]+\.(png|json)", parts[2]))
+    return False
+
+def _bundle(root, name):
+    src = _dir(root, name, True)
+    if not (src / "project.json").is_file():
+        raise ProjectError("Save the project first")
+    buf = io.BytesIO()
+    total = count = 0
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED, compresslevel=3) as z:
+        for p in sorted(src.rglob("*")):
+            if p.is_symlink():
+                raise ProjectError("Project contains a symbolic link")
+            if not p.is_file():
+                continue
+            rel = p.relative_to(src).as_posix()
+            if not _allowed_member(rel):
+                continue
+            total += p.stat().st_size
+            count += 1
+            if total > _BUNDLE_LIMIT or count > _BUNDLE_FILES:
+                raise ProjectError("Project exceeds portable bundle limit")
+            z.write(p, rel)
+    if len(buf.getbuffer()) > _BUNDLE_LIMIT:
+        raise ProjectError("Bundle exceeds size limit")
+    return buf.getvalue()
+
+def bundle(root, name):
+    with _PROJECT_LOCK:
+        return _bundle(root, name)
+
+def _restore(root, name, raw):
+    dest = _dir(root, name)
+    if dest.exists():
+        raise ProjectError("Destination already exists; choose a new name")
+    if not isinstance(raw, bytes) or len(raw) > _BUNDLE_LIMIT:
+        raise ProjectError("Bundle exceeds size limit")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="sf-import-", dir=dest.parent.parent) as stage:
+        temp = Path(stage) / "project"
+        temp.mkdir()
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            entries = z.infolist()
+            if len(entries) > _BUNDLE_FILES or sum(i.file_size for i in entries) > _BUNDLE_LIMIT:
+                raise ProjectError("Bundle exceeds extraction limit")
+            seen = set()
+            for i in entries:
+                key = i.filename.casefold()
+                if not _allowed_member(i.filename) or key in seen or i.is_dir() or stat.S_ISLNK(i.external_attr >> 16):
+                    raise ProjectError("Unsupported or duplicate bundle member")
+                seen.add(key)
+                data = z.read(i)
+                p = temp / i.filename
+                p.parent.mkdir(parents=True, exist_ok=True)
+                if p.suffix == ".png":
+                    with Image.open(io.BytesIO(data)) as im:
+                        if im.format != "PNG" or im.width * im.height > 16_000_000:
+                            raise ProjectError("Invalid bundle image")
+                        im.verify()
+                else:
+                    json.loads(data)
+                p.write_bytes(data)
+        doc = json.loads((temp / "project.json").read_bytes())
+        if not isinstance(doc, dict) or doc.get("version") != 1:
+            raise ProjectError("Unsupported project version")
+        from . import custom_skeleton, custom_cleanup, modular, scenes
+        profile = custom_skeleton.validate(doc["custom_skeleton"]) if doc.get("custom_skeleton") is not None else None
+        validate_clips(doc.get("custom_clips"), profile)
+        if doc.get("scene") is not None: scenes.validate(doc["scene"])
+        if doc.get("modular") is not None: modular.validate(doc["modular"])
+        custom_cleanup.validate_saved(doc.get("custom_cleanup"))
+        doc["name"] = dest.name
+        doc["saved_at"] = time.time()
+        (temp / "project.json").write_text(json.dumps(doc), encoding="utf-8")
+        if dest.exists():
+            raise ProjectError("Destination already exists")
+        temp.rename(dest)
+    return {"name": dest.name}
+
+def restore_bundle(root, name, raw):
+    with _PROJECT_LOCK:
+        return _restore(root, name, raw)
+
+def duplicate(root, source, destination):
+    with _PROJECT_LOCK:
+        return _restore(root, destination, _bundle(root, source))
