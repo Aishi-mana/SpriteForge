@@ -61,10 +61,10 @@ def is_hd(sprite):
     return max(sprite.size) > 160
 
 
-def assign_parts(sprite, joints, overrides=None):
+def assign_parts(sprite, joints, overrides=None, hd=None):
     """Label every opaque pixel with a bone index (-1 = transparent): nearest weighted bone segment, then manual paint."""
     arr = np.asarray(sprite.convert("RGBA"))
-    opaque = arr[..., 3] >= (1 if is_hd(sprite) else 128)
+    opaque = arr[..., 3] >= (1 if (is_hd(sprite) if hd is None else hd) else 128)
     H, W = opaque.shape
     ys, xs = np.mgrid[0:H, 0:W]
     P = np.stack([xs + .5, ys + .5], -1).astype(np.float32)
@@ -349,10 +349,10 @@ def _custom_pose(keys, t, rest, pad, ss):
 
 
 def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=False):
+           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=None):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
-    hd = is_hd(sprite) or force_hd
+    hd = is_hd(sprite) if force_hd is None else bool(force_hd)
     softness = float(softness)
     if not math.isfinite(softness) or not 0 <= softness <= 100:
         raise ValueError("Joint softness must be 0-100")
@@ -365,7 +365,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     pad = pad if pad > 0 else int(round(CLIP_PAD.get(anim, .25) * max(W0, H0)))
     if hd and (W0 + 2 * pad) * (H0 + 2 * pad) * max(1, frames) > 48_000_000:
         raise ValueError('HD clip exceeds pixel budget; reduce frames, source size or padding')
-    lab = assign_parts(sprite, joints, overrides)
+    lab = assign_parts(sprite, joints, overrides, hd=hd)
     arr = np.asarray(sprite).copy()
     if not hd:
         arr[arr[..., 3] < 128] = 0
@@ -451,6 +451,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     # Each modular asset is independently transformed in rest-canvas coordinates.
     # Render relative to the body stack: behind layers first, front layers last.
     attached = []
+    palette_parts=[cols] if not hd else []
     for asset, bone, behind in attachments or []:
         asset = asset.convert("RGBA")
         if asset.size != sprite.size:raise ValueError("Attachment canvas must match body canvas")
@@ -458,8 +459,9 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         aa=np.asarray(asset).copy()
         if not hd:
             aa[aa[...,3]<128]=0;aa[...,3]=np.where(aa[...,3]>=128,255,0)
+        if not hd:palette_parts.append(np.unique(aa[aa[...,3]>0][:,:3],axis=0))
         if bone=="auto":
-            labels=assign_parts(Image.fromarray(aa),joints)
+            labels=assign_parts(Image.fromarray(aa),joints,hd=hd)
             masks_=[(nm,labels==BONE_IDX[nm]) for nm in z_order(near)]
         else:masks_=[(bone,aa[...,3]>0)]
         parts_=[]
@@ -480,7 +482,10 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 canvas=Image.alpha_composite(canvas,tl)
         return canvas
     # Preserve accessory colors rather than quantizing them to the body palette.
-    if attached:use_pal=False;keys=None
+    if attached and not hd:
+        cols=np.unique(np.concatenate(palette_parts,axis=0),axis=0)
+        use_pal=0<len(cols)<=64
+        keys=((cols[:,0].astype(np.int64)<<16)|(cols[:,1].astype(np.int64)<<8)|cols[:,2].astype(np.int64)) if use_pal else None
     out, jframes = [], []
     for fi in range(n):  # pass 3: draw
         T, Wm = poses[fi]

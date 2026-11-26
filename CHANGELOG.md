@@ -286,3 +286,6 @@ Non-destructive CPU layer stack, transparent body/outfit/hair/accessory import a
 
 ## Phase 32 — AI-assisted modular asset generation
 Reference-led isolated outfit, footwear, hair and accessory candidates, transparent finishing, approximate fitting, raw/asset/composite review and explicit layer acceptance. Existing model/memory policy and modular recipes retained. Tests added; GPU validation pending.
+
+## Phase 33 — Modular layer rigging and bone attachment
+Independent rigid and auto-split bone layers, reusable body-only skeleton profile, modular animation preview/export, preserved project and ZIP attachments, bounded CPU memory. Existing flattened animation remains available. Tests added; live validation pending.

@@ -56,7 +56,7 @@ def render(recipe,anim,count=8,facing="right",near="r",weapon="r",amp=1.,pad=0,o
     if pixels*count>32_000_000:raise ValueError("Modular clip exceeds frame memory budget; lower size, frames or padding")
     # Each auto-partitioned layer may allocate up to ten surfaces; cap aggregate supersampled work.
     parts=sum(len(rig.BONES) if bone=="auto" else 1 for _,bone,_ in attachments)
-    ss=1 if rig.is_hd(body) else 2
+    ss=2 if clean["pixel"] else 1
     if pixels*ss*ss*(parts+len(rig.BONES))>32_000_000:raise ValueError("Too many visible bone layers for this canvas; hide alternatives or reduce size")
     return rig.render(body,joints,[],anim,count,facing,near,weapon,amp,pad,overlap,ss,
                       softness=softness,attachments=attachments,force_hd=not clean["pixel"])
