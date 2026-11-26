@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup
 
 
 def _art_style(value):
@@ -1094,9 +1094,53 @@ def custom_timeline_export(body: dict=Body(...)):
         if not isinstance(options,dict):raise ValueError("Invalid export options")
         # Fixed untrimmed canvas and rest root pivot, shared across every frame.
         options=dict(options,crop=False,uniform=True,smooth=not body["profile"].get("pixel",True))
+        frames=custom_cleanup.apply(frames,meta,body.get("cleanup"))
         entry={**meta,"frames":frames}
         return exporter.export_pack([entry],options,meta["name"],ROOT)
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/cleanup_mask")
+def custom_cleanup_mask(body: dict=Body(...)):
+    try:
+        frame,mask,opts,meta=custom_cleanup.prepare(body)
+        return {"original":b64(frame),"mask":b64(Image.fromarray(mask.astype("uint8")*255,"L")),
+                "fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"pixels":int(mask.sum())}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/cleanup")
+def custom_cleanup_frame(body: dict=Body(...)):
+    try:
+        from .custom_skeleton import number
+        ckpt,lora_dir=_paths(body.get("checkpoint"))
+        model=mf.describe(ckpt)
+        if model["family"]!="sdxl" or model.get("backend"):
+            raise ValueError("Selective cleanup needs a verified SDXL inpainting-compatible checkpoint; Qwen/NetaYume do not expose mask inpainting")
+        lora=body.get("lora","")
+        if not isinstance(lora,str):raise ValueError("Invalid LoRA")
+        mf.check_lora(ckpt,lora_dir,lora)
+        lw=number(body.get("lora_weight",1),0,2,"LoRA weight")
+        strength=number(body.get("strength",.35),.15,.75,"cleanup strength")
+        steps=modular.integer(body.get("steps",20),8,40,"cleanup steps")
+        guidance=number(body.get("cfg",5),1,12,"cleanup CFG")
+        seed=modular.integer(body.get("seed",0),0,2**31-1,"cleanup seed")
+        size=modular.integer(body.get("size",768),512,1024,"inference size")
+        if size not in (512,768,1024):raise ValueError("Choose 512, 768 or 1024 inference size")
+        prompt=body.get("prompt","");negative=body.get("negative","")
+        if not isinstance(prompt,str) or not isinstance(negative,str) or max(len(prompt),len(negative))>2000:
+            raise ValueError("Invalid cleanup prompt")
+        frame,mask,opts,meta=custom_cleanup.prepare(body)
+        pixel=body["profile"].get("pixel",True)
+        style="pixel" if pixel else body.get("art_style","custom")
+        if style not in styles.PRESETS or (not pixel and style=="pixel"):style="custom"
+        gen.set_sampler(body.get("sampler","euler_a"))
+        text="preserve same character identity, costume, pose, proportions, colors and linework; repair local joint seams and malformed folds"
+        if prompt.strip():text+=", "+prompt.strip()
+        out,info=custom_cleanup.cleanup(frame,mask,opts,gen.inpaint,ckpt,lora,lw,lora_dir,text,negative,strength,steps,guidance,seed,size,pixel,style)
+        return {"sprite":b64(out),"original":b64(frame),"fingerprint":meta["fingerprint"],"frame":meta["indices"][0],"info":info}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(500,"Cleanup failed: "+str(e))
 
 
 @app.post("/api/custom_skeleton/ik")
