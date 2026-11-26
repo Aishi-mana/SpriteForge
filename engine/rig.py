@@ -352,6 +352,8 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
            pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=None, layer_sink=None):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
+    if max(W0,H0)>1024 or not 1<=frames<=64 or not 0<=pad<=200 or not 1<=ss<=4 or not 0<=overlap<=12:
+        raise ValueError("Invalid rig dimensions, frames, padding or supersampling")
     hd = is_hd(sprite) if force_hd is None else bool(force_hd)
     softness = float(softness)
     if not math.isfinite(softness) or not 0 <= softness <= 100:
@@ -365,6 +367,8 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     pad = pad if pad > 0 else int(round(CLIP_PAD.get(anim, .25) * max(W0, H0)))
     if hd and (W0 + 2 * pad) * (H0 + 2 * pad) * max(1, frames) > 48_000_000:
         raise ValueError('HD clip exceeds pixel budget; reduce frames, source size or padding')
+    if (W0+2*pad)*(H0+2*pad)*ss*ss*len(BONES)>48_000_000:
+        raise ValueError("Rig surface budget exceeded; reduce padding or supersampling")
     lab = assign_parts(sprite, joints, overrides, hd=hd)
     arr = np.asarray(sprite).copy()
     if not hd:
