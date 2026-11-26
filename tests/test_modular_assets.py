@@ -31,8 +31,8 @@ try:A.register_asset(asset,{**info,"x":-1},body.size);ok(False,"invalid registra
 except ValueError:ok(True,"invalid registration rejected")
 # Body-derived guides retain the original canvas and follow asymmetric silhouettes.
 shaped=Image.new("RGBA",(80,100))
-shaped.paste((80,100,120,255),(30,5,50,29))
-shaped.paste((80,100,120,255),(10,29,55,45))
+shaped.paste((80,100,120,255),(30,5,50,30))
+shaped.paste((80,100,120,255),(10,30,55,45))
 shaped.paste((80,100,120,255),(32,45,48,75))
 shaped.paste((80,100,120,255),(35,75,58,96))
 marks=A.body_landmarks(shaped)
