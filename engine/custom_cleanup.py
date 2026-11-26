@@ -45,6 +45,7 @@ def mask_for(frame,points,opts):
 
 def prepare(body):
     from . import custom_timeline
+    if body.get("frame") is None:raise ValueError("Choose one cleanup frame")
     frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32),
                                        frame=body.get("frame"),include_bones=True)
     if len(frames)!=1:raise ValueError("Cleanup requires one frame index")

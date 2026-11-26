@@ -319,3 +319,6 @@ Custom rig frame-indexed bone rotation tracks, linear/ease/step interpolation, c
 
 ## Phase 43 — Inverse kinematics and foot locking
 Two-bone analytic IK, adjustable bend/strength limits, draggable targets and residual preview, target keyframes and fixed contact ranges, shared rigid/weighted pose and timeline rendering, saved constraints. Existing manual and modular rigs retained. CPU validation pending.
+
+## Phase 44 — AI-assisted animation cleanup
+Custom timeline per-frame masked SDXL inpaint, posed-joint and manual mask selection, alpha/palette safeguards, original/candidate/accepted comparison, accepted frame persistence and fingerprint-checked playback/export. Qwen/Neta reference backends not exposed as masked inpainting. CPU CI pending.
