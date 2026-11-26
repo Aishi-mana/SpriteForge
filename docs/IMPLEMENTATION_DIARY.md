@@ -687,3 +687,7 @@ Use the following template for each future change (replace placeholders with act
 
 - Shared engine positive/negative assembly (`017c082d194e`), CPU preview endpoint and shared mode resolution (`eb90446070c5`), Generate inspection/copy UI (`b4150cd35c23`), CPU prompt and endpoint regressions (`e531239660f6`, `d9861a32a21f`).
 - Style remains independent of subject content. Snapshot preview is engine text before model tokenization; no GPU or desktop acceptance verified. CI pending. [Phase notes](phases/PHASE61NB.md). Next 61N-C existing Style selector; packaging on hold.
+
+### 2026-11-27 (Manila) — 61N-B validation correction
+
+- CPU run 45911091109 failed on Windows and Ubuntu in the isolated queue JavaScript harness; API and styles passed. Prompt preview listener registration was inside the extracted queue block; moved DOM listener setup outside it to avoid executing browser-only initialization in the fake DOM. Revalidation pending.
