@@ -1,0 +1,3 @@
+# Phase 61B — Multi-framing portraits
+
+Open Portrait > Multi-framing portraits. Select face, bust, half-body or full-body framing, approved master or text, and 1:1, 3:4 or 2:3 output aspect. Uses Phase 61A style, resolution and variation controls. Output aspect pads a square generation rather than using native rectangular diffusion. PNG and Save asset actions retain individual portraits. Square pixel portraits can become expression bases; adjust the mask manually. HD and rectangular expression inpainting and manual cropping remain deferred. Reference consistency and framing depend on the model. Real GPU verification pending.
