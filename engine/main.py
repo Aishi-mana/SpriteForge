@@ -1562,6 +1562,9 @@ class InstructionEditParams(BaseModel):
     mask: Optional[str] = None
 
 
+    locks: Optional[List[str]] = None
+
+
 @app.post("/api/character/instruction_edit")
 def character_instruction_edit(p: InstructionEditParams):
     from . import instruction_edit
