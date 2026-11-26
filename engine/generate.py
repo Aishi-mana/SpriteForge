@@ -314,3 +314,52 @@ def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strengt
             gc.collect()
             torch.cuda.empty_cache()
             raise
+
+
+def resource_status(torch_module=None):
+    """Read process allocator and device-wide memory without loading a model."""
+    from importlib.metadata import version, PackageNotFoundError
+    versions = {}
+    for name in ("torch", "diffusers", "accelerate", "transformers", "safetensors"):
+        try:
+            versions[name] = version(name)
+        except PackageNotFoundError:
+            versions[name] = None
+    key = _cache.get("key")
+    result = {"busy": _lock.locked(), "cached": _cache.get("pipe") is not None,
+              "checkpoint": Path(key[0]).name if key else None,
+              "dependencies": versions, "cuda": False, "memory": None}
+    try:
+        if torch_module is None:
+            import torch as torch_module
+        cuda = torch_module.cuda
+        if cuda.is_available():
+            free, total = cuda.mem_get_info(0)
+            result.update(cuda=True, device=cuda.get_device_name(0),
+                          memory={"free": int(free), "total": int(total),
+                                  "allocated": int(cuda.memory_allocated(0)),
+                                  "reserved": int(cuda.memory_reserved(0))})
+    except Exception as exc:
+        result["warning"] = type(exc).__name__ + ": " + str(exc)
+    result["recommended_size"] = 640 if not result["memory"] or result["memory"]["total"] <= 8 * 2**30 else 768
+    return result
+
+
+def release_resources(unload=False, torch_module=None):
+    """Do not mutate cached pipelines while generation or inpainting owns the lock."""
+    if not _lock.acquire(blocking=False):
+        raise RuntimeError("AI generation is busy; retry after the current operation finishes")
+    try:
+        if unload:
+            _cache.update(key=None, pipe=None, cn_name=None)
+        gc.collect()
+        try:
+            if torch_module is None:
+                import torch as torch_module
+            if torch_module.cuda.is_available():
+                torch_module.cuda.empty_cache()
+        except ImportError:
+            pass
+    finally:
+        _lock.release()
+    return resource_status(torch_module)
