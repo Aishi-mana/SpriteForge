@@ -57,7 +57,8 @@ def render(image,profile,padding=32,preview=True,frame=None):
     profile=cs.validate(profile)
     if "timeline" not in profile:raise ValueError("Create a custom animation timeline first")
     clip=profile["timeline"]
-    if not clip["tracks"]:raise ValueError("Add at least one bone keyframe")
+    if not clip["tracks"] and not any(c["enabled"] and (c["keys"] or c["locks"]) for c in profile.get("ik",[])):
+        raise ValueError("Add at least one bone or IK keyframe, or foot lock")
     im=modular.decode(image)
     pad=modular.integer(padding,0,256,"padding")
     indices=list(range(clip["count"])) if frame is None else [modular.integer(frame,0,clip["count"]-1,"preview frame")]
@@ -73,7 +74,7 @@ def render(image,profile,padding=32,preview=True,frame=None):
         binding=custom_skin.build_weights(profile,im.size,segments)
     frames=[]
     for i in indices:
-        rendered,_=cs.render(im,pose(profile,i),pad,binding=binding)
+        rendered,_=cs.render(im,pose(profile,i),pad,binding=binding,frame=i)
         frames.append(rendered)
     # Fixed rest root-head pivot, independent of each frame's pose.
     pivot=(round(profile["root_head"][0]*w)+pad,round(profile["root_head"][1]*h)+pad)

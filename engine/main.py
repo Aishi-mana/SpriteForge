@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik
 
 
 def _art_style(value):
@@ -1096,6 +1096,21 @@ def custom_timeline_export(body: dict=Body(...)):
         options=dict(options,crop=False,uniform=True,smooth=not body["profile"].get("pixel",True))
         entry={**meta,"frames":frames}
         return exporter.export_pack([entry],options,meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/ik")
+def custom_skeleton_ik(body: dict=Body(...)):
+    try:
+        p=custom_skeleton.validate(body.get("profile"))
+        size=(modular.integer(body.get("width"),1,1024,"source width"),modular.integer(body.get("height"),1,1024,"source height"))
+        frame=body.get("frame")
+        if frame is not None:
+            if "timeline" not in p:raise ValueError("Create a timeline first")
+            frame=modular.integer(frame,0,p["timeline"]["count"]-1,"IK frame")
+            p=custom_timeline.pose(p,frame)
+        solved,points,reports=custom_ik.solve(p,size,frame)
+        return {"bones":points,"chains":reports,"angles":{b["id"]:b["angle"] for b in solved["bones"]}}
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
