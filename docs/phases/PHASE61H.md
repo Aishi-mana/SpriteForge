@@ -1,0 +1,5 @@
+# Phase 61H — Character Studio integration
+
+Character endpoints now share input budgets and bounded PNG reference decoding. Native workers receive original RGBA references; SDXL uses adapter preparation. Portrait padding preserves exact aspect ratios and opaque backgrounds within 1024 pixels. Character generation starts at 640 px; resource preset also sets character variations to one. Shared buttons are disabled during character jobs; project load checks active jobs again after retrieval. Replacing master artwork clears pending sprite candidates, retains approved assets for review, and replacing expression bases requires confirmation. Integration regression tests use synthetic images and mocked generation, including identity, gesture, sprite and project persistence.
+
+Not verified: actual GPU VRAM, image fidelity, desktop interactions, external worker performance, native rectangular diffusion, hard identity locks, and server-side cancellation of synchronous character requests. Existing resource release remains available; no hardware performance guarantees. Phase 62 packaging remains on hold.

@@ -1518,6 +1518,202 @@ def llm_chat(b: ChatBody):
 
 
 # ---------------- portraits ----------------
+class CharacterArtParams(GenParams):
+    identity: Optional[dict] = None
+    view: str = "front"
+    reference: Optional[str] = None
+    reference_strength: float = 0.65
+    art_style: str = "anime"
+    gen_size: int = 640
+    remove_bg: bool = False
+
+
+def _character_reference(data, ckpt=None, bg="white"):
+    """Bound decoding before allocating pixels; preserve native worker reference composition."""
+    from . import local_runtime as lr
+    if not isinstance(data,str) or len(data)>8_000_000 or not data.startswith("data:image/png;base64,"):
+        raise HTTPException(400,"Expected a PNG reference under 8 MB encoded")
+    try:
+        raw=base64.b64decode(data.split(",",1)[1],validate=True)
+        with Image.open(io.BytesIO(raw)) as im:
+            if im.format!="PNG" or max(im.size)>1024 or min(im.size)<1:
+                raise ValueError("Reference must be PNG, at most 1024 px per side")
+            ref=im.convert("RGBA")
+        if not ref.getchannel("A").getbbox():
+            raise ValueError("Reference has no visible foreground")
+    except Exception as e:
+        raise HTTPException(400,"Invalid character reference: "+str(e))
+    if ckpt is None or lr.route(ckpt):
+        return ref
+    return gen.prep_reference(ref,bg)
+
+
+def _character_budget(p):
+    if not 1<=p.n<=3 or p.gen_size not in (640,768,896,1024):
+        raise HTTPException(400,"Choose 1–3 variations and a supported generation size")
+    if not 1<=p.steps<=100 or not 0<=p.cfg<=30 or not 0<=p.reference_strength<=1 or not 0<=p.bg_tol<=255:
+        raise HTTPException(400,"Invalid character generation settings")
+    if not 16<=p.size<=256 or not 4<=p.colors<=64 or not 256<=p.hd_size<=1024:
+        raise HTTPException(400,"Invalid character output size or color count")
+    if len(p.prompt)>4000 or len(p.negative)>4000:
+        raise HTTPException(400,"Character prompt is too long")
+
+
+def _identity_prompt(p):
+    from . import character_identity
+    try:
+        return character_identity.prompt(p.identity, p.prompt)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+CHARACTER_VIEWS = {"front": "front view, facing viewer", "side": "side profile, facing right",
+                   "back": "rear view, facing away", "three_quarter": "three-quarter view"}
+
+
+@app.post("/api/character/artwork")
+def character_artwork(p: CharacterArtParams):
+    if p.view not in CHARACTER_VIEWS or not p.prompt.strip():
+        raise HTTPException(400, "Choose a valid view and describe the character")
+    _character_budget(p)
+    ckpt, lora_dir = _paths(p.checkpoint)
+    art_style = _art_style(p.art_style)
+    gen.set_sampler(p.sampler)
+    ip = _character_reference(p.reference,ckpt,p.bg) if p.reference else None
+    if art_style == "pixel":
+        post = lambda raw: px.pixelize(raw, "canvas", max(64,min(p.size,256)), max(4,min(p.colors,64)), "none", p.remove_bg, p.bg_tol, remove_shadow=False)
+    else:
+        post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
+    prompt = _identity_prompt(p) + ", " + CHARACTER_VIEWS[p.view] + ", neutral relaxed standing pose"
+    return _run(ckpt, lora_dir, p.lora, p.lora_weight, prompt, p.negative, p.steps, p.cfg, p.seed,
+                p.bg, p.n, ip, max(0,min(p.reference_strength,1)), post,
+                gen_size=p.gen_size, kind="character_art", art_style=art_style)
+
+
+class CharacterSpriteParams(CharacterArtParams):
+    conversion: str = "ai"
+    lock_master_palette: bool = True
+    size: int = 64
+
+
+@app.post("/api/character/sprite")
+def character_sprite(p: CharacterSpriteParams):
+    from . import character_sprite as cs, local_runtime as lr
+    if not p.reference or p.conversion not in ("ai","direct") or p.view not in CHARACTER_VIEWS:
+        raise HTTPException(400,"Choose a master, conversion mode and view")
+    _character_budget(p)
+    style = _art_style(p.art_style)
+    if not 16 <= p.size <= 256 or not 4 <= p.colors <= 64 or not 256 <= p.hd_size <= 1024:
+        raise HTTPException(400,"Invalid sprite size or color count")
+    try:
+        ref = _character_reference(p.reference)
+        pal = cs.palette_from_art(ref,p.colors,p.bg_tol) if style=="pixel" and p.lock_master_palette else None
+        def post(raw):
+            return cs.finish(raw,style,p.size if style=="pixel" else p.hd_size,p.colors,pal,p.bg_tol)
+        if p.conversion=="direct":
+            im,info=post(ref)
+            info.update(seed=None,art_style=style)
+            return {"results":[{"raw":b64(ref),"sprite":b64(im),"info":info}]}
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    except Exception:
+        raise HTTPException(400,"Invalid master artwork")
+    ckpt,lora_dir=_paths(p.checkpoint)
+    gen.set_sampler(p.sampler)
+    ip=ref if lr.route(ckpt) else gen.prep_reference(ref,p.bg)
+    prompt=_identity_prompt(p)+", "+CHARACTER_VIEWS[p.view]+", neutral standing game sprite, readable silhouette, entire body visible"
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
+                max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind="sprite",art_style=style)
+
+
+class FramedPortraitParams(CharacterArtParams):
+    framing: str = "bust"
+    aspect: str = "1:1"
+
+
+def _portrait_aspect(img, aspect, transparent=True, bg="white"):
+    ratios = {"1:1": (1,1), "3:4": (3,4), "2:3": (2,3)}
+    if aspect not in ratios:
+        raise ValueError("Unsupported portrait aspect")
+    x,y = ratios[aspect]
+    w,h = img.size
+    # Preserve the complete composition; pad rather than clip limbs.
+    unit = max((w+x-1)//x, (h+y-1)//y)
+    if unit*max(x,y)>1024:
+        unit=1024//max(x,y)
+        img=img.copy()
+        img.thumbnail((unit*x,unit*y),Image.Resampling.LANCZOS)
+        w,h=img.size
+    target = (unit*x,unit*y)
+    out = Image.new("RGBA",target,(0,0,0,0) if transparent else (*gen.BG_RGB.get(bg,(255,255,255)),255))
+    if transparent:
+        out.paste(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
+    else:
+        out.alpha_composite(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
+    return out
+
+
+@app.post("/api/character/portrait")
+def framed_portrait(p: FramedPortraitParams):
+    kind = "portrait_" + p.framing
+    if kind not in gen.PORTRAIT_FRAMINGS or p.aspect not in ("1:1","3:4","2:3") or not p.prompt.strip():
+        raise HTTPException(400,"Choose valid framing, aspect and character description")
+    _character_budget(p)
+    ckpt,lora_dir = _paths(p.checkpoint)
+    art_style = _art_style(p.art_style)
+    gen.set_sampler(p.sampler)
+    ip = _character_reference(p.reference,ckpt,p.bg) if p.reference else None
+    def post(raw):
+        if art_style == "pixel":
+            im,info = px.pixelize(raw,"canvas",max(64,min(p.size,256)),max(4,min(p.colors,64)),"none",p.remove_bg,p.bg_tol,remove_shadow=False)
+        else:
+            im,info = styles.finish(raw,p.hd_size,p.remove_bg,p.bg_tol)
+        im = _portrait_aspect(im,p.aspect,p.remove_bg,p.bg)
+        if max(im.size)>1024:
+            im.thumbnail((1024,1024),Image.Resampling.NEAREST if art_style=="pixel" else Image.Resampling.LANCZOS)
+        info.update(size=list(im.size),framing=p.framing,aspect=p.aspect)
+        return im,info
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,_identity_prompt(p),p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
+                max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind=kind,art_style=art_style)
+
+
+class CharacterGestureParams(FramedPortraitParams):
+    expression: str = "happy"
+    gesture: str = "neutral"
+    custom: str = ""
+
+
+CHARACTER_GESTURES = {
+    "neutral": "relaxed neutral posture",
+    "wave": "friendly wave with one raised hand",
+    "point": "pointing with one hand",
+    "crossed": "arms crossed",
+    "thinking": "thoughtful hand near chin",
+    "celebrate": "celebratory raised arms",
+    "defensive": "defensive ready stance",
+    "bow": "respectful bow",
+}
+
+
+@app.post("/api/character/gesture")
+def character_gesture(p: CharacterGestureParams):
+    if p.expression not in portrait.EXPRESSIONS and p.expression != "neutral":
+        raise HTTPException(400, "Unknown expression")
+    if p.gesture not in CHARACTER_GESTURES or len(p.custom) > 300:
+        raise HTTPException(400, "Invalid gesture or custom description")
+    if p.gesture != "neutral" and p.framing not in ("half", "full"):
+        raise HTTPException(400, "Choose half-body or full-body framing for gestures")
+    if not p.reference:
+        raise HTTPException(400, "An approved character reference is required")
+    description = ", ".join(v for v in (p.prompt, portrait.EXPRESSIONS.get(p.expression, "neutral expression"),
+                                      CHARACTER_GESTURES[p.gesture], p.custom.strip()) if v)
+    fields = p.model_dump()
+    fields["prompt"] = description
+    return framed_portrait(FramedPortraitParams(**fields))
+
+
 @app.post("/api/portrait/base")
 def portrait_base(ref: Optional[UploadFile] = File(None), prompt: str = Form(""), negative: str = Form(""),
                   checkpoint: str = Form(...), lora: str = Form(""), lora_weight: float = Form(1.0),
