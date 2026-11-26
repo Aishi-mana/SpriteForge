@@ -27,7 +27,7 @@ for change in (dict(n=4),dict(steps=101),dict(reference_strength=2),dict(colors=
     except HTTPException as e:
         ok(e.status_code==400,"invalid budget rejected")
 def fake_run(*args,**kwargs):
-    post=args[12]
+    post=args[13]
     img,info=post(im)
     info.update(art_style=kwargs["art_style"])
     return {"results":[{"sprite":png_uri(img),"info":info}],"prompt":args[4]}
