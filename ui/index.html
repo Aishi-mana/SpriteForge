@@ -336,7 +336,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <details open><summary><b>AI-assisted asset generation</b></summary>
 <label>Generate asset category</label><select id="maCategory"><option value="outfit">Outfit</option><option value="footwear">Footwear</option><option value="hair_front">Front hair</option><option value="hair_back">Back hair</option><option value="accessory">Accessory</option><option value="other">Other</option></select>
 <label>Asset description</label><textarea id="maDescription" maxlength="1200" placeholder="Blue traveling coat, gold buttons, matching the character's anime style"></textarea>
-<label>Reference image</label><select id="maSource"><option value="body">Visible body base</option><option value="composite">Current assembled character</option></select>
+<label><input type="checkbox" id="maRegistered" checked> Fixed-canvas layer (body reference, approximate fit)</label><div class="mut">Keeps the recipe canvas and origin; inspect anatomical alignment before adding.</div><label>Reference image (legacy fit only)</label><select id="maSource"><option value="body">Visible body base</option><option value="composite">Current assembled character</option></select>
 <label>Character viewing angle</label><select id="maView"><option value="front">Front</option><option value="side">Side</option><option value="back">Back</option><option value="three-quarter">Three-quarter</option></select>
 <label>Key background</label><select id="maBg"><option value="magenta">Magenta</option><option value="green">Green</option><option value="white">White</option></select>
 <label>Reference influence (Neta / SDXL)</label><input id="maInfluence" type="number" min=".2" max=".8" step=".05" value=".4">
@@ -2011,7 +2011,7 @@ function maInvalidate(){maShow()}
 function maShow(){const c=MA.candidate,stale=!!c&&(MA.stamp!==maStamp()||c.replace!==$('maReplace').checked);
  $('maGo').disabled=MA.busy||!MD.recipe.layers.some(l=>l.category==='body'&&l.visible&&l.opacity>0)||MD.recipe.layers.length>=24;
  show('maCard',!!c);
- if(c){$('maAsset').src=c.layer.image;$('maPreview').src=c.preview;$('maRaw').src=c.raw;$('maAsset').style.imageRendering=MD.recipe.pixel?'pixelated':'auto';$('maPreview').style.imageRendering=MD.recipe.pixel?'pixelated':'auto';$('maInfo').textContent=c.layer.category+' · '+c.info.size.join('×')+' px · seed '+c.info.seed+(stale?' · recipe or replacement setting changed; regenerate before adding.':' · approximate placement; inspect for unwanted character parts.');$('maAccept').disabled=MA.busy||stale}
+ if(c){$('maAsset').src=c.layer.image;$('maPreview').src=c.preview;$('maRaw').src=c.raw;$('maAsset').style.imageRendering=MD.recipe.pixel?'pixelated':'auto';$('maPreview').style.imageRendering=MD.recipe.pixel?'pixelated':'auto';$('maInfo').textContent=c.layer.category+' · '+c.info.size.join('×')+' px · seed '+c.info.seed+(stale?' · recipe or replacement setting changed; regenerate before adding.':(c.info.registration==='fixed_canvas'?' · fixed canvas, origin 0,0; anatomical fit still requires review.':' · approximate placement; inspect for unwanted character parts.'));$('maAccept').disabled=MA.busy||stale}
 }
 function maDiscard(){MA.candidate=null;MA.stamp=null;maShow()}
 async function maGenerate(){if(MA.busy)return;await plCall(async()=>{
@@ -2020,7 +2020,7 @@ async function maGenerate(){if(MA.busy)return;await plCall(async()=>{
  if(!MD.recipe.layers.some(l=>l.category==='body'&&l.visible&&l.opacity>0))throw Error('Add a visible body base first');
  if(MD.recipe.layers.length>=24)throw Error('Remove a layer before generating another');
  const stamp=maStamp(),epoch=MD.epoch,replace=$('maReplace').checked;
- const params={recipe:JSON.parse(stamp),category:$('maCategory').value,description:desc,source:$('maSource').value,view:$('maView').value,replace_category:replace,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,art_style:$('artstyle').value||'anime',gen_size:+$('hdgen').value||768,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,sampler:$('sampler').value,negative:$('neg').value,bg:$('maBg').value,ip_scale:+$('maInfluence').value,colors:+$('tpcolors').value||24,bg_tol:+$('maTol').value||40};
+ const params={recipe:JSON.parse(stamp),category:$('maCategory').value,description:desc,source:$('maSource').value,fixed_canvas:$('maRegistered').checked,view:$('maView').value,replace_category:replace,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,art_style:$('artstyle').value||'anime',gen_size:+$('hdgen').value||768,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,sampler:$('sampler').value,negative:$('neg').value,bg:$('maBg').value,ip_scale:+$('maInfluence').value,colors:+$('tpcolors').value||24,bg_tol:+$('maTol').value||40};
  MA.busy=true;maShow();$('status').textContent='Generating one isolated modular asset…';
  try{const d=await api('/api/modular/generate_asset',{...J,body:JSON.stringify(params)});if(epoch!==MD.epoch){$('status').textContent='Recipe changed during generation; candidate discarded';return}MA.candidate={...d,replace};MA.stamp=stamp;$('status').textContent='Asset candidate ready. Review before adding.'}
  finally{MA.busy=false;maShow()}
