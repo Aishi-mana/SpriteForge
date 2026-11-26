@@ -572,3 +572,8 @@ Use the following template for each future change (replace placeholders with act
 - `engine/alpha_cleanup.py` adds boundary-only partial alpha cutoff, optional estimated matte reversal with bounded gain, hard-color default and full-erasure guard (`a3e1c7267bd9`). API settings (`02e0308b5edd`), current-preview refinement button and counts (`d42519d7e75d`), regression tests (`f0af1b6fe944`).
 - Decisions: no opaque recoloring or resampling, no automatic matte inference, no model dependency; estimated matte correction can miscorrect already-unmatted pixels. Existing manual preview retained and undo supported.
 - [Phase notes](phases/PHASE61LD.md); CI and desktop acceptance pending. Stacked on corrected 61L-C. Next: 61L-E protected areas and pixel preservation. 61M queued; Phase 62 packaging on hold.
+
+### 2026-11-27 (Manila) — Phase 61L-E: protected regions
+
+- `engine/alpha_cleanup.py` restores exact operation-input RGBA under a same-size binary mask (`176b3cd3acf6`); API accepts optional protection PNG (`29817f3af7e5`). `ui/index.html` adds paint/unpaint, cyan overlay, mask-aware manual tools and mask-inclusive undo (`f34ad76fbb37`). Python/JS regressions added (`8f6746262c9a`, `66dbaedfd6c6`).
+- Protection is session-local, automatic compositing is post-process (not a segmentation barrier), and locks preserve current operation input rather than recovering earlier erasures. Browser partial-alpha rounding remains. [Phase notes](phases/PHASE61LE.md). CI and desktop acceptance pending, stacked on 61L-D. Next 61L-F workspace integration. 61M queued; Windows packaging on hold.
