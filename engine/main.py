@@ -1610,6 +1610,41 @@ def framed_portrait(p: FramedPortraitParams):
                 max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind=kind,art_style=art_style)
 
 
+class CharacterGestureParams(FramedPortraitParams):
+    expression: str = "happy"
+    gesture: str = "neutral"
+    custom: str = ""
+
+
+CHARACTER_GESTURES = {
+    "neutral": "relaxed neutral posture",
+    "wave": "friendly wave with one raised hand",
+    "point": "pointing with one hand",
+    "crossed": "arms crossed",
+    "thinking": "thoughtful hand near chin",
+    "celebrate": "celebratory raised arms",
+    "defensive": "defensive ready stance",
+    "bow": "respectful bow",
+}
+
+
+@app.post("/api/character/gesture")
+def character_gesture(p: CharacterGestureParams):
+    if p.expression not in portrait.EXPRESSIONS and p.expression != "neutral":
+        raise HTTPException(400, "Unknown expression")
+    if p.gesture not in CHARACTER_GESTURES or len(p.custom) > 300:
+        raise HTTPException(400, "Invalid gesture or custom description")
+    if p.gesture != "neutral" and p.framing not in ("half", "full"):
+        raise HTTPException(400, "Choose half-body or full-body framing for gestures")
+    if not p.reference:
+        raise HTTPException(400, "An approved character reference is required")
+    description = ", ".join(v for v in (p.prompt, portrait.EXPRESSIONS.get(p.expression, "neutral expression"),
+                                      CHARACTER_GESTURES[p.gesture], p.custom.strip()) if v)
+    fields = p.model_dump()
+    fields["prompt"] = description
+    return framed_portrait(FramedPortraitParams(**fields))
+
+
 @app.post("/api/portrait/base")
 def portrait_base(ref: Optional[UploadFile] = File(None), prompt: str = Form(""), negative: str = Form(""),
                   checkpoint: str = Form(...), lora: str = Form(""), lora_weight: float = Form(1.0),
