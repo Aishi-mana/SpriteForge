@@ -1519,12 +1519,21 @@ def llm_chat(b: ChatBody):
 
 # ---------------- portraits ----------------
 class CharacterArtParams(GenParams):
+    identity: Optional[dict] = None
     view: str = "front"
     reference: Optional[str] = None
     reference_strength: float = 0.65
     art_style: str = "anime"
     gen_size: int = 768
     remove_bg: bool = False
+
+
+def _identity_prompt(p):
+    from . import character_identity
+    try:
+        return character_identity.prompt(p.identity, p.prompt)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 CHARACTER_VIEWS = {"front": "front view, facing viewer", "side": "side profile, facing right",
@@ -1553,7 +1562,7 @@ def character_artwork(p: CharacterArtParams):
         post = lambda raw: px.pixelize(raw, "canvas", max(64,min(p.size,256)), max(4,min(p.colors,64)), "none", p.remove_bg, p.bg_tol, remove_shadow=False)
     else:
         post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol)
-    prompt = p.prompt + ", " + CHARACTER_VIEWS[p.view] + ", neutral relaxed standing pose"
+    prompt = _identity_prompt(p) + ", " + CHARACTER_VIEWS[p.view] + ", neutral relaxed standing pose"
     return _run(ckpt, lora_dir, p.lora, p.lora_weight, prompt, p.negative, p.steps, p.cfg, p.seed,
                 p.bg, p.n, ip, max(0,min(p.reference_strength,1)), post,
                 gen_size=p.gen_size, kind="character_art", art_style=art_style)
@@ -1606,7 +1615,7 @@ def framed_portrait(p: FramedPortraitParams):
             im.thumbnail((1024,1024),Image.Resampling.NEAREST if art_style=="pixel" else Image.Resampling.LANCZOS)
         info.update(size=list(im.size),framing=p.framing,aspect=p.aspect)
         return im,info
-    return _run(ckpt,lora_dir,p.lora,p.lora_weight,p.prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,_identity_prompt(p),p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
                 max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind=kind,art_style=art_style)
 
 
