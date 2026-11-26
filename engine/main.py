@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets
 
 
 def _art_style(value):
@@ -894,6 +894,7 @@ def dirs_generate(ref: Optional[UploadFile] = File(None), dirs: str = Form(...),
 class CharacterView(BaseModel):
     reference: str
     view: str
+    locks: Optional[List[str]] = None
     description: str = ""
     checkpoint: str
     lora: str = ""
@@ -925,7 +926,7 @@ def character_view(b: CharacterView):
         if art!="pixel" and b.size!=256: raise ValueError("HD direction canvas is limited to 256 px")
         anchor=character.decode_reference(b.reference)
         if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
-        prompt=character.view_prompt(b.view,b.description)
+        prompt=character.view_prompt(b.view,b.description,b.locks)
         if len(b.negative)>1800: raise ValueError("Negative prompt too long")
         ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
         seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
@@ -937,6 +938,118 @@ def character_view(b: CharacterView):
         sprite=_dec_img(result["sprite"])
         return {**result,"dir":b.view,"seed":seed,"joints":rig.autoplace(sprite),"overrides":[]}
     except ValueError as e: raise HTTPException(400,str(e))
+
+
+class CharacterVariation(CharacterView):
+    view: str = "S"  # variation does not force a camera angle
+    target: str = "outfit"
+    change: str
+    lock_palette: bool = False
+
+
+@app.post("/api/character/variation")
+def character_variation(b: CharacterVariation):
+    """Generate an independent candidate from the immutable master."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    art=_art_style(b.art_style)
+    try:
+        if not mf.describe(ckpt)["reference"]: raise ValueError("Select a model with image-reference support")
+        if b.size not in ((32,48,64,96,128) if art=="pixel" else (256,512,768,1024)):
+            raise ValueError("Unsupported output size")
+        prompt,locks=character.variation_prompt(b.description,b.target,b.change,b.locks)
+        if len(b.negative)>1800: raise ValueError("Negative prompt too long")
+        anchor=character.decode_reference(b.reference)
+        if anchor.getchannel("A").getextrema()[0]<255: anchor=character.content(anchor)
+        ref=anchor if lr.route(ckpt) else gen.prep_reference(anchor,b.bg)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        # Do not force the old low-colour palette when the selected change can introduce new colours.
+        palette_safe=b.lock_palette and b.target in ("pose","expression")
+        neg=", ".join(x for x in (b.negative,"multiple characters, duplicate figures, text, cropped feet, scenery") if x)
+        result=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,neg,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                    ref,max(0.,min(b.ip_scale,1.)),lambda raw:character.finish_variation(raw,anchor,art,b.size,b.colors,palette_safe,b.bg_tol),
+                    gen_size=max(512,min(b.gen_size,1024))//64*64,art_style=art)["results"][0]
+        result["info"].update(target=b.target,change=b.change,locks=locks,checkpoint=b.checkpoint,
+                              reference_method=lr.route(ckpt) or "sdxl_ip_adapter",lock_mode="reference_guidance")
+        return result
+    except ValueError as e: raise HTTPException(400,str(e))
+
+
+class ModularAsset(BaseModel):
+    recipe: dict
+    category: str
+    description: str
+    view: str = "front"
+    source: str = "body"
+    replace_category: bool = True
+    checkpoint: str
+    lora: str = ""
+    lora_weight: float = 1.0
+    art_style: str = "anime"
+    gen_size: int = 768
+    steps: int = 20
+    cfg: float = 4.0
+    seed: int = -1
+    sampler: str = "euler_a"
+    negative: str = ""
+    bg: str = "magenta"
+    ip_scale: float = .4
+    colors: int = 24
+    bg_tol: int = 40
+
+
+@app.post("/api/modular/generate_asset")
+def modular_generate_asset(b: ModularAsset):
+    """One isolated asset, fitted to the body; never mutates a project or recipe."""
+    from . import local_runtime as lr
+    ckpt,lora_dir=_paths(b.checkpoint)
+    try:
+        if not mf.describe(ckpt)["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
+        prompt=modular_assets.prompt(b.category,b.description,b.view)
+        if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
+        if len(b.negative)>1800:raise ValueError("Negative prompt too long")
+        recipe,images,ref,bb=modular_assets.reference(b.recipe,b.source)
+        if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
+        art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
+        rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
+        # A square RGB reference preserves the full character silhouette for all three runtimes.
+        ref=gen.prep_reference(ref,b.bg,canvas=512)
+        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+        gen.set_sampler(b.sampler)
+        res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                 ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
+                 gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
+        info=res["info"]
+        layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
+               "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
+        # Validate the resulting recipe budget before presenting an addable candidate.
+        modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
+        preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
+        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
+        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/render")
+def modular_render(body: dict = Body(...)):
+    try:return {"sprite":modular.png_uri(modular.render(body))}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/validate")
+def modular_validate(body: dict = Body(...)):
+    try:return modular.validate(body)[0]
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/modular/export")
+def modular_export(body: dict = Body(...)):
+    try:
+        data=modular.bundle(body)
+        return StreamingResponse(io.BytesIO(data),media_type="application/zip",
+                                 headers={"Content-Disposition":'attachment; filename="character_layers.zip"'})
+    except ValueError as e:raise HTTPException(400,str(e))
 
 
 # ---------------- diagnostics ----------------
