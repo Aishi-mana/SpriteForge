@@ -289,3 +289,6 @@ Reference-led isolated outfit, footwear, hair and accessory candidates, transpar
 
 ## Phase 33 — Modular layer rigging and bone attachment
 Independent rigid and auto-split bone layers, reusable body-only skeleton profile, modular animation preview/export, preserved project and ZIP attachments, bounded CPU memory. Existing flattened animation remains available. Tests added; live validation pending.
+
+## Phase 34 — Modular soft deformation and secondary motion
+Opt-in soft elbow/knee meshes for auto-split garment layers, independent spring-chain attachments, per-layer anchor/segments/flutter/stiffness/damping, motion presets, recipe persistence and CPU memory bounds. Rigid defaults preserved. Tests added; live validation pending.
