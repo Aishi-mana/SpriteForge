@@ -349,7 +349,7 @@ def _custom_pose(keys, t, rest, pad, ss):
 
 
 def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", near="r", weapon="r", amp=1.0,
-           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=None):
+           pad=0, overlap=1, ss=4, secondary=None, view="side", keyframes=None, softness=0, attachments=None, force_hd=None, layer_sink=None):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
     hd = is_hd(sprite) if force_hd is None else bool(force_hd)
@@ -456,7 +456,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
         a=np.zeros((CH,CW,4),np.uint8);a[pad:pad+H0,pad:pad+W0][mask]=aa[mask]
         im=Image.fromarray(a)
         return im if ss==1 else im.resize((CW*ss,CH*ss),Image.Resampling.NEAREST)
-    for entry in attachments or []:
+    for attachment_index,entry in enumerate(attachments or []):
         asset,bone,behind=entry[:3]
         motion=entry[3] if len(entry)>3 else {"mode":"rigid"}
         asset=asset.convert("RGBA")
@@ -476,7 +476,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 pa=np.array([(M@A_hi)[:2]/ss for M in base])
                 rel=_simulate(pt,psi,pa,anim,anim not in ONE_SHOT,F,H0,motion)
                 surfaces=[asset_surface(aa,m) if m.any() else None for m in layer_motion.spring_masks(pt,overlap)]
-                attached.append((behind,bone,"spring",(pt,rel,surfaces)))
+                attached.append((attachment_index,behind,bone,"spring",(pt,rel,surfaces)))
                 continue
         mesh_by,children={},set()
         if bone=="auto":
@@ -492,34 +492,41 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 child,mesh=mesh_by[nm]
                 parts_.append((nm,"mesh",(child,mesh)))
             elif mask.any():parts_.append((nm,"image",asset_surface(aa,mask)))
-        attached.append((behind,bone,"parts",parts_))
+        attached.append((attachment_index,behind,bone,"parts",parts_))
     def draw_attachments(canvas,behind,T,Wm,fi):
         def matrix(nm):return T if nm=="root" else T@Wm[nm]
         def draw(im,M):
             inv=np.linalg.inv(M)
             return im.transform(im.size,Image.AFFINE,tuple(inv[:2].flatten()),resample=Image.Resampling.BICUBIC if hd else Image.Resampling.NEAREST)
-        for back,bone,kind,payload in attached:
+        for index,back,bone,kind,payload in attached:
             if back!=behind:continue
+            target=Image.new('RGBA',canvas.size) if layer_sink is not None else canvas
             if kind=="spring":
                 pt,rel,surfaces=payload
                 M=matrix(bone)
                 for i,im in enumerate(surfaces):
                     p=(pt["pivots"][i]+pad)*ss
                     M=M@_rot(p[0],p[1],rel[fi,i])
-                    if im is not None:canvas=Image.alpha_composite(canvas,draw(im,M))
+                    if im is not None:target=Image.alpha_composite(target,draw(im,M))
             else:
                 for nm,kind_,data in payload:
                     if kind_=="mesh":
                         child,mesh=data
                         tl=softmesh.deform(mesh,matrix(nm),matrix(child),pad,ss,canvas.size,hd)
                     else:tl=draw(data,matrix(nm))
-                    canvas=Image.alpha_composite(canvas,tl)
+                    target=Image.alpha_composite(target,tl)
+            if layer_sink is not None:
+                layer_sink(index,fi,isolated_frame(target))
+            else:canvas=target
         return canvas
     # Preserve accessory colors rather than quantizing them to the body palette.
     if attached and not hd:
         cols=np.unique(np.concatenate(palette_parts,axis=0),axis=0)
         use_pal=0<len(cols)<=64
         keys=((cols[:,0].astype(np.int64)<<16)|(cols[:,1].astype(np.int64)<<8)|cols[:,2].astype(np.int64)) if use_pal else None
+    def isolated_frame(im):
+        # Untrimmed transparent cells; nearest sampling prevents cross-layer palette bleed.
+        return im if ss==1 else im.resize((CW,CH),Image.Resampling.NEAREST)
     out, jframes = [], []
     for fi in range(n):  # pass 3: draw
         T, Wm = poses[fi]
@@ -551,8 +558,9 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
             inv = np.linalg.inv(mats[key])
             tl = layers[key].transform(layers[key].size, Image.AFFINE, tuple(inv[:2].flatten()), resample=Image.Resampling.BICUBIC if hd else Image.NEAREST)
             canvas = Image.alpha_composite(canvas, tl)
+        if layer_sink is not None:layer_sink(-1,fi,isolated_frame(canvas))
         canvas=draw_attachments(canvas,False,T,Wm,fi)
-        out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
+        if layer_sink is None:out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
     ank = ((joints["l_ankle"][0] + joints["r_ankle"][0]) / 2 + pad, max(joints["l_ankle"][1], joints["r_ankle"][1]) + pad)
     return out, {"size": (CW, CH), "pad": pad, "pivot": [round(ank[0], 1), round(ank[1], 1)], "joints": jframes,
                  "secondary": [pt["name"] for pt in parts], "render_mode": "hd" if hd else "pixel", "softness": softness}

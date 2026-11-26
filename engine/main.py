@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export
 
 
 def _art_style(value):
@@ -1070,6 +1070,20 @@ def modular_export_animation(b: ModularAnimation):
         frames,meta=_modular_clip(b)
         entries=[{"name":b.anim,"fps":max(1,min(60,b.fps)),"loop":b.anim not in rig.ONE_SHOT,"frames":frames,"pivot":tuple(meta["pivot"])}]
         return exporter.export_pack(entries,dict(b.options,smooth=meta["render_mode"]=="hd"),b.name,ROOT)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+class ModularLayerExport(ModularAnimation):
+    columns: int = 8
+    include_hidden: bool = True
+    individual: bool = False
+
+
+@app.post("/api/modular/export_layers")
+def modular_export_layers(b: ModularLayerExport):
+    try:
+        return layer_export.export(b.recipe,b.anim,b.count,b.fps,b.facing,b.near,b.weapon,b.amp,b.pad,b.softness,b.name,ROOT,
+                                   b.columns,b.include_hidden,b.individual)
     except ValueError as e:raise HTTPException(400,str(e))
 
 
