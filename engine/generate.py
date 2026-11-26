@@ -26,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "modular_asset":
+        return "person, mannequin, face, skin, hands, body, scenery, cast shadow, text, watermark, cropped item, duplicate items, blurry"
     if kind == "sprite" and art_style != "pixel":
         return styles.HD_NEGATIVE
     """Default negative prompt per generation kind (sprite, tile, prop/icon/ui; everything else = portrait-style)."""
@@ -62,6 +64,8 @@ def _apply_sampler(pipe):
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "modular_asset":
+        return f"{styles.PRESETS[art_style]}, {user_prompt}, isolated game customization asset, plain flat solid {bg} background"
     if kind == "sprite" and art_style != "pixel":
         return f"{styles.PRESETS[art_style]}, {user_prompt}, single character, full body, centered, plain flat solid {bg} background"
     if kind == "portrait":
