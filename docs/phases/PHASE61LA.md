@@ -1,0 +1,3 @@
+# Phase 61L-A — Magic background eraser
+
+Optional CPU color-based exterior segmentation in existing Alpha Cleanup. Auto samples supported nearby border colors; explicit background uses its color key. Four-connected flood from canvas edges through matching and transparent pixels; retained RGBA is unchanged, no feathering or resizing. Rejects a fully erased result. Existing modes remain unchanged. Preview, reset and apply use the existing dialog. Choose Auto or an explicit key and adjust tolerance. This is not semantic segmentation: connected foreground colors may be lost, enclosed pockets and cast shadows need later phases. Regression coverage added; CI and desktop acceptance pending. Phase 61M exact-fit modular generation follows 61L; Phase 62 remains on hold.

@@ -4,7 +4,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True):
-    if mode not in ("edge","smart","all","manual"):
+    if mode not in ("edge","smart","all","manual","magic"):
         raise ValueError("Unknown cleanup mode")
     im=image.convert("RGBA")
     a=np.array(im)
@@ -22,6 +22,8 @@ def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True):
         if len(background)!=3 or any(not 0<=v<=255 for v in background):
             raise ValueError("Invalid background color")
         bg=np.array(background,dtype=np.float32)
+    if mode=="magic":
+        return _magic(im,a,rgb,bg,tol,background is None)
     distance=np.max(np.abs(rgb-bg),axis=2)
     visible=alpha>0
     candidate=(distance<=tol)&visible
@@ -60,3 +62,44 @@ def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True):
         a[:,:,3][rim]=np.minimum(alpha[rim],np.rint(alpha[rim]*factor[rim]).astype(np.uint8))
     a[a[:,:,3]==0,:3]=0
     return Image.fromarray(a),{"removed":int(mask.sum()),"pockets":len(pockets),"background":[int(round(v)) for v in bg]}
+
+
+def _magic(im,a,rgb,bg,tol,auto):
+    """Conservative exterior segmentation with locally sampled border colors.
+
+    No recoloring, resampling, feathering or GPU inference. Interior pockets
+    deliberately remain untouched in this mode.
+    """
+    alpha=a[:,:,3]
+    visible=alpha>0
+    distance=np.max(np.abs(rgb-bg),axis=2)
+    candidate=visible & (distance<=tol)
+    if auto:
+        border=np.concatenate((a[0],a[-1],a[:,0],a[:,-1]))
+        samples=border[border[:,3]>=250,:3]
+        # Only extend the dominant key with sufficiently supported nearby
+        # shades; do not learn arbitrary foreground colors from the border.
+        if len(samples):
+            keys,counts=np.unique(samples//16,axis=0,return_counts=True)
+            for key,count in zip(keys,counts):
+                if count<max(4,len(samples)*.03):
+                    continue
+                shade=samples[(samples//16==key).all(1)].mean(0)
+                if np.max(np.abs(shade-bg))<=min(100,tol*1.5):
+                    candidate |= visible & (np.max(np.abs(rgb-shade),axis=2)<=max(3,tol*.5))
+    # Flood only from the image boundary through candidate or clear pixels.
+    # Unlike legacy smart mode, an isolated transparent interior hole is
+    # not sufficient evidence to erase adjacent opaque details.
+    traversable=candidate | ~visible
+    seeds=np.zeros_like(visible)
+    seeds[0,:]=traversable[0,:]
+    seeds[-1,:]=traversable[-1,:]
+    seeds[:,0]=traversable[:,0]
+    seeds[:,-1]=traversable[:,-1]
+    mask=ndi.binary_propagation(seeds,mask=traversable)&candidate
+    info={"removed":int(mask.sum()),"pockets":0,"background":[int(round(v)) for v in bg]}
+    if visible.any() and not (visible & ~mask).any():
+        info.update(removed=0,note="Magic eraser would remove every visible pixel; lower tolerance or use manual cleanup.")
+        return im,info
+    a[mask]=0
+    return Image.fromarray(a),info
