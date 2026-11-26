@@ -392,3 +392,136 @@ Dedicated full-length artwork generation, view selection, master approval and pr
 
 Four portrait framings with master reference, padded aspect ratios, pixel/HD output, asset saving and compatible pixel expression handoff. CPU regression tests and documentation included.
 
+### Phase 61C — Emotional portraits and gestures
+
+- Opened: 2026-11-26T17:19:57Z; merged: 2026-11-26T17:29:31Z (UTC).
+- [PR #46](https://github.com/Aishi-mana/SpriteForge/pull/46); merge commit `4cb4ac9ae795`.
+- Recorded scope and verification at submission:
+
+Adds 13 emotional states, eight gesture presets and custom description, using approved master reference and framing controls. Preserves existing masked expression workflow. Stacked on 61B; retarget to main after 61B merges.
+
+### Phase 61D — Shared character identity and outfit profiles
+
+- Opened: 2026-11-26T17:30:30Z; merged: 2026-11-26T17:34:45Z (UTC).
+- [PR #47](https://github.com/Aishi-mana/SpriteForge/pull/47); merge commit `82bcc3cd5a21`.
+- Recorded scope and verification at submission:
+
+Validated project-scoped identity, eight named outfits, descriptive locks and shared prompt conditioning for artwork, portraits and gestures. Includes regression tests and documentation.
+
+### Phase 61E — Artwork-to-sprite conversion
+
+- Opened: 2026-11-26T17:32:28Z; merged: 2026-11-26T17:38:32Z (UTC).
+- [PR #48](https://github.com/Aishi-mana/SpriteForge/pull/48); merge commit `a601ed98a7ad`.
+- Recorded scope and verification at submission:
+
+Direct CPU and reference-conditioned AI conversion, pixel/HD output, extracted palette locking, approved sprite persistence and animation handoff. Stacked on Phase 61D.
+
+### Phase 61F — Character pose and animation workflow
+
+- Opened: 2026-11-26T17:34:26Z; merged: 2026-11-26T17:38:39Z (UTC).
+- [PR #49](https://github.com/Aishi-mana/SpriteForge/pull/49); merge commit `159ba68f6f2f`.
+- Recorded scope and verification at submission:
+
+Approved sprite handoff into standard/custom rig, reference pose presets, action clip selection and starter export pack. Confirmed source replacement clears stale clips; stale auto-placement responses ignored. Includes UI regression tests. Stacked on 61E.
+
+### Phase 61G — Unified Character Studio dashboard
+
+- Opened: 2026-11-26T17:39:30Z; merged: 2026-11-26T17:43:47Z (UTC).
+- [PR #50](https://github.com/Aishi-mana/SpriteForge/pull/50); merge commit `b9d5814636c4`.
+- Recorded scope and verification at submission:
+
+Dedicated workspace with identity and pipeline status, stage shortcuts, linked image previews, project gallery filtering and PNG downloads. Includes UI regression tests and docs. No new asset database; existing tools remain available.
+
+### Phase 61H — Character Studio integration and resource safeguards
+
+- Opened: 2026-11-26T17:48:33Z; merged: 2026-11-26T17:56:29Z (UTC).
+- [PR #51](https://github.com/Aishi-mana/SpriteForge/pull/51); merge commit `84eca7dfc988`.
+- Recorded scope and verification at submission:
+
+Bounded reference decoding and generation parameters, native worker routing, exact portrait aspect and alpha handling, conservative defaults, shared job controls and asset guards. Synthetic lifecycle regression tests and limitations documented. Windows packaging unchanged.
+
+### Phase 61I — Dedicated body base and modular dressing
+
+- Opened: 2026-11-26T18:05:36Z; merged: 2026-11-26T18:09:24Z (UTC).
+- [PR #52](https://github.com/Aishi-mana/SpriteForge/pull/52); merge commit `e4e37dfb8d50`.
+- Recorded scope and verification at submission:
+
+CPU-only featureless mannequin generator with body build, proportions, approximate views, pose, resolution and color controls. Independent project persistence, transparent PNG download, Modular body layer handoff and Character Studio shortcut. Regression tests and documented limits.
+
+### Phase 61J — Enclosed background removal and alpha repair
+
+- Opened: 2026-11-26T18:13:35Z; merged: 2026-11-26T18:17:15Z (UTC).
+- [PR #53](https://github.com/Aishi-mana/SpriteForge/pull/53); merge commit `3302a40225da`.
+- Recorded scope and verification at submission:
+
+Shared color-key pocket detection, selected HD background key, result-card alpha preview with manual selection, regression coverage and documentation.
+
+### Phase 61K-A — Multi-model reference instruction editing
+
+- Opened: 2026-11-26T18:24:35Z; merged: 2026-11-26T18:40:01Z (UTC).
+- [PR #54](https://github.com/Aishi-mana/SpriteForge/pull/54); merge commit `aa8c44adc23a`.
+- Recorded scope and verification at submission:
+
+Native Qwen instruction route, Neta image-to-image and SDXL full-canvas inpaint adapters. Shared validated endpoint, alpha cleanup, source canvas control and non-destructive preview/accept/discard interface. Mocked routing and API regression tests. Real GPU evaluation and protected-region compositing remain outstanding.
+
+### Phase 61K-B — Regional masking and protected pixels
+
+- Opened: 2026-11-26T18:41:05Z; merged: 2026-11-26T18:45:42Z (UTC).
+- [PR #55](https://github.com/Aishi-mana/SpriteForge/pull/55); merge commit `ca0052fadfef`.
+- Recorded scope and verification at submission:
+
+Source-resolution mask painting, protection, inversion and exact RGBA compositing across supported editors. SDXL native mask forwarding, validated mask input, protected pixel regression tests and documented limitations.
+
+### Phase 61K-C — Character identity preservation controls
+
+- Opened: 2026-11-26T18:47:14Z; merged: 2026-11-26T18:56:33Z (UTC).
+- [PR #56](https://github.com/Aishi-mana/SpriteForge/pull/56); merge commit `4839b4053fdc`.
+- Recorded scope and verification at submission:
+
+Configurable identity guidance keys and UI presets across Qwen, Neta and SDXL instruction editing. Explicit unlock semantics, validation, metadata and regression tests. Existing exact regional compositing retained. GPU and desktop verification outstanding.
+
+### Phase 61K-D — Quick character editing presets
+
+- Opened: 2026-11-26T18:49:13Z; merged: 2026-11-26T18:56:45Z (UTC).
+- [PR #57](https://github.com/Aishi-mana/SpriteForge/pull/57); merge commit `931cddaab591`.
+- Recorded scope and verification at submission:
+
+Ten editable instruction templates, suggested identity locks, masking hints and conditional canvas expansion. Regression tests registered. Stacked on 61K-C pending validation; retarget to main after PR #56 merges.
+
+### Phase 61K-E — Edit history, undo redo and comparison
+
+- Opened: 2026-11-26T18:50:37Z; merged: 2026-11-26T18:56:55Z (UTC).
+- [PR #58](https://github.com/Aishi-mana/SpriteForge/pull/58); merge commit `83454a6c0080`.
+- Recorded scope and verification at submission:
+
+Session-local bounded revision snapshots, original restore, undo/redo, comparison and revision PNG export. New edits discard redo branch and invalidate stale template rig data. Regression tests registered. Stacked on 61K-D pending dependency validation.
+
+### Phase 61K-F — Character Studio and Modular editing integration
+
+- Opened: 2026-11-26T18:59:33Z; merged: 2026-11-26T19:03:23Z (UTC).
+- [PR #59](https://github.com/Aishi-mana/SpriteForge/pull/59); merge commit `351d4a132543`.
+- Recorded scope and verification at submission:
+
+Integrate approved artwork, sprite, body base, modular layer and composite editing through staged candidates. Reuse revision history, explicit approvals, modular layer import and PNG export. Source identity and project reload guards; registered regression tests. Real desktop and GPU validation outstanding.
+
+## Validation and correction events
+
+- 2026-11-26T18:49:35Z — 61K-C Ubuntu CPU validation failed in `test_instruction_identity.py`: the test expected the word hairstyle to be absent from the entire prompt, although it was part of the requested edit. 61K-D inherited the same failure; preset tests passed.
+- 2026-11-26T18:52:38Z to 18:52:44Z — Corrected assertion on all three dependent branches (61K-C, D, E): distinguish requested changes from preservation guidance, verify exact forwarded prompt; commits `a286e07`, `0353193`, `5d7161c`. No production feature removed. CPU validation runs [124](https://github.com/Aishi-mana/SpriteForge/actions/runs/45879368318), [125](https://github.com/Aishi-mana/SpriteForge/actions/runs/45879373753), [126](https://github.com/Aishi-mana/SpriteForge/actions/runs/45879377540) succeeded before merging.
+- 2026-11-26T19:03:23Z (2026-11-27 03:03:23 Manila) — 61K-F merged after [CPU validation 130](https://github.com/Aishi-mana/SpriteForge/actions/runs/45880211164) succeeded. Latest implementation merge: `351d4a132543`. 61K-G integration testing and optimization is next. Phase 62 packaging remains on hold. Real GPU editing, desktop interactions and native engine imports are not certified by CPU validation.
+
+## New entries
+
+Use the following template for each future change (replace placeholders with actual values).
+
+### YYYY-MM-DDTHH:MM:SS+00:00 — Phase / feature
+
+- Purpose:
+- Implementation and affected files:
+- Design decisions / compatibility:
+- Tests and observed results:
+- Failures / fixes:
+- PR and commit:
+- Status and remaining limitations:
+- Next action:
+
