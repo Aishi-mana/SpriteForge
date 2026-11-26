@@ -1,12 +1,12 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61L-D on main (CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61L-F on main (CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## Current priorities (2026-11-26 UTC)
 
 - Phase 61K-G: merged and CPU validated; manual reference-editing acceptance and measured GPU performance remain outstanding.
 - Real Windows GPU, desktop interaction and native engine acceptance remain outstanding; prioritize Qwen, NetaYume and SDXL editing, mask alignment and project round trips.
-- Phase 61L — Magic Background Eraser & Alpha Refinement: A conservative exterior segmentation (merged); B cast shadow removal (merged); C wand/erase/restore (merged); D edge refinement (merged); E protection and pixel preservation (pending validation); F workspace integration (pending validation); G testing and performance.
+- Phase 61L — Magic Background Eraser & Alpha Refinement: A conservative exterior segmentation (merged); B cast shadow removal (merged); C wand/erase/restore (merged); D edge refinement (merged); E protection and pixel preservation (merged); F workspace integration (merged); G testing and performance (implemented on feature branch, validation pending).
 - Phase 61M — Exact-Fit Modular Asset Generation (after 61L): generate isolated hair, outfits, armor and accessories against a fixed unclothed character sprite base; identical source canvas, origin, pose and proportions; preserve base pixels, support front/back layer order, transparent export, alignment validation and manual correction. Generative exact fit is a target, not a verified guarantee.
 - Phase 62 Windows packaging is on hold.
 - See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-G.
