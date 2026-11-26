@@ -68,4 +68,25 @@ try:
     ok(out.tobytes()==isolated.tobytes() and raw.tobytes()==edited.tobytes(),"mocked Qwen extraction route")
 finally:
     instruction_edit.run_edit=original_run
+# Shared extraction backend routing, including SDXL native guide mask.
+try:
+    calls=[]
+    def fake_shared(source,model,ckpt,lora_dir,**kw):
+        calls.append(kw)
+        candidate=edited.copy()
+        if kw.get("mask"):
+            mask=instruction_edit.decode_mask(kw["mask"],source.size)
+            candidate=instruction_edit.protected_composite(source,candidate,mask)
+        return candidate,{"seed":1,"backend":instruction_edit.capability(model)}
+    instruction_edit.run_edit=fake_shared
+    out,raw,meta=A.edit_asset(shaped,hair_mask,{"supported":True,"backend":"neta"},"neta","","outfit","coat","front",tolerance=30)
+    ok(out.tobytes()==isolated.tobytes() and "mask" not in calls[-1],"Neta registered extraction uses unmasked edit")
+    out,raw,meta=A.edit_asset(shaped,hair_mask,{"supported":True,"family":"sdxl"},"sdxl","","hair_front","hair","front",tolerance=30)
+    ok(bool(calls[-1].get("mask")) and out.getpixel((35,50))[3]==0 and meta["placement"]["outside_guide"]==0,"SDXL native mask limits extraction to guide")
+    out,raw,meta=A.edit_asset(shaped,hair_mask,{"supported":True,"backend":"qwen"},"qwen","","outfit","coat","front",tolerance=30)
+    ok(out.tobytes()==isolated.tobytes(),"shared adapter preserves Qwen behavior")
+    try:A.edit_asset(shaped,hair_mask,{"supported":False},"unsupported","","outfit","coat","front");ok(False,"unsupported backend rejected")
+    except ValueError:ok(True,"unsupported backend rejected")
+finally:
+    instruction_edit.run_edit=original_run
 done("test_modular_assets")

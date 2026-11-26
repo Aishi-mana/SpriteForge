@@ -629,3 +629,16 @@ Use the following template for each future change (replace placeholders with act
 
 - `engine/modular_assets.py` adds fixed-coordinate difference extraction and guarded Qwen instruction route (`16c50e127e90`); API opt-in (`c4c4786c9781`), Modular controls (`38d411b3a112`), mocked extraction regressions (`3c311c59d647`).
 - Design: preserve input body, no post-extraction scaling, advisory guide, explicit candidate approval. Pixel differencing is not semantic extraction; model drift and same-color regions remain risks. CI, real inference and desktop testing pending. Stacked on corrected PR #70. [Phase notes](phases/PHASE61MC.md). Next 61M-D; packaging on hold.
+
+### 2026-11-26T20:33:59Z — 61M-B integration
+
+- PR #70 passed CPU validation run 45890421263 and merged at `05349829fac9`.
+
+### 2026-11-26T20:34:06Z — 61M-C integration
+
+- PR #71 passed CPU validation run 45890532322 and merged at `45adf7fac76d`.
+
+### 2026-11-27 (Manila) — Phase 61M-D: multi-backend extraction
+
+- Shared adapter for Qwen, NetaYume, SDXL with SDXL guide masking (`330b8d3c88fb`); API capability routing and strength mapping (`8c1af8f40b2f`); Modular UI (`3100d78e8fce`); mocked regressions (`b515fe7624bd`).
+- SDXL uses a restrictive guide, Qwen/Neta use advisory guides. Explicit legacy fitting fallback, no automatic retry. Difference extraction remains nonsemantic; actual inference quality and desktop behavior unverified. CI pending. [Phase notes](phases/PHASE61MD.md). Next 61M-E; packaging on hold.

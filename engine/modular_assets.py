@@ -220,3 +220,20 @@ def qwen_asset(body,guide,model,ckpt,lora_dir,category,description,view,**settin
         keep_canvas=True,remove_bg=True,**settings)
     layer,info=extract_edit(body,edited,guide,settings.get("tolerance",30))
     return layer,edited,{**meta,**info}
+
+
+def edit_asset(body,guide,model,ckpt,lora_dir,category,description,view,**settings):
+    """Use the existing instruction backend, with native guide masking for SDXL."""
+    from . import instruction_edit
+    backend=instruction_edit.capability(model)
+    if not backend:
+        raise ValueError("Select a supported Qwen, NetaYume or SDXL editing checkpoint")
+    if backend=="qwen_instruction":
+        return qwen_asset(body,guide,model,ckpt,lora_dir,category,description,view,**settings)
+    if backend=="sdxl_inpaint":
+        settings["mask"]=modular.png_uri(guide)
+    edited,meta=instruction_edit.run_edit(body,model,ckpt,lora_dir,
+        instruction=qwen_asset_instruction(category,description,view),locks=["body","pose","style"],
+        keep_canvas=True,remove_bg=True,**settings)
+    layer,info=extract_edit(body,edited,guide,settings.get("tolerance",30))
+    return layer,edited,{**meta,**info}

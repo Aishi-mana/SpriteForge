@@ -1016,9 +1016,11 @@ def modular_generate_asset(b: ModularAsset):
     ckpt,lora_dir=_paths(b.checkpoint)
     try:
         model=mf.describe(ckpt)
-        if b.extraction and (not b.fixed_canvas or model.get("backend")!="qwen"):
-            raise ValueError("Extraction requires fixed canvas and Qwen Rapid")
-        if not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
+        from . import instruction_edit
+        backend=instruction_edit.capability(model)
+        if b.extraction and (not b.fixed_canvas or not backend):
+            raise ValueError("Extraction requires fixed canvas and a supported instruction editing checkpoint")
+        if not b.extraction and not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
         prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,b.description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
@@ -1034,10 +1036,11 @@ def modular_generate_asset(b: ModularAsset):
             mf.check_lora(ckpt,lora_dir,b.lora)
             seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
             gen.set_sampler(b.sampler)
-            asset,edited,info=modular_assets.qwen_asset(ref,guide,model,ckpt,lora_dir,b.category,b.description,b.view,
+            asset,edited,info=modular_assets.edit_asset(ref,guide,model,ckpt,lora_dir,b.category,b.description,b.view,
                 size=min((640,768,896,1024),key=lambda v:abs(v-b.gen_size)),bg=b.bg,
                 tolerance=max(1,min(100,b.bg_tol)),pixel=recipe["pixel"],steps=max(1,min(50,b.steps)),
-                cfg=max(1,min(15,b.cfg)),seed=seed,negative=b.negative,lora=b.lora,lora_weight=b.lora_weight)
+                cfg=max(1,min(15,b.cfg)),seed=seed,negative=b.negative,lora=b.lora,lora_weight=b.lora_weight,
+                strength=max(.2,min(.75,1-b.ip_scale)))
             info["landmarks"]=landmarks
             res={"sprite":modular.png_uri(asset),"raw":modular.png_uri(edited)}
         else:
@@ -1059,7 +1062,7 @@ def modular_generate_asset(b: ModularAsset):
         # Validate the resulting recipe budget before presenting an addable candidate.
         modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
         preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
-        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
+        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=backend if b.extraction else (lr.route(ckpt) or "sdxl_ip_adapter"))
         return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info,"placement_mask":modular.png_uri(guide) if guide is not None else None}
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(409,str(e))
