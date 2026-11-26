@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton
 
 
 def _art_style(value):
@@ -1052,6 +1052,26 @@ class ModularAnimation(BaseModel):
     softness: float = 0
     name: str = "modular_character"
     options: dict = {}
+
+
+@app.get("/api/custom_skeleton/preset")
+def custom_skeleton_preset(kind: str="humanoid"):
+    try:return custom_skeleton.preset(kind)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/validate")
+def custom_skeleton_validate(body: dict=Body(...)):
+    try:return custom_skeleton.validate(body)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/custom_skeleton/pose")
+def custom_skeleton_pose(body: dict=Body(...)):
+    try:
+        image,points=custom_skeleton.render(body.get("image"),body.get("profile"),body.get("padding",32))
+        return {"sprite":b64(image),"size":list(image.size),"bones":points}
+    except (ValueError,AttributeError,TypeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/modular/rig")
