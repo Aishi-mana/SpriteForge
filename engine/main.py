@@ -1559,6 +1559,57 @@ def character_artwork(p: CharacterArtParams):
                 gen_size=p.gen_size, kind="character_art", art_style=art_style)
 
 
+class FramedPortraitParams(CharacterArtParams):
+    framing: str = "bust"
+    aspect: str = "1:1"
+
+
+def _portrait_aspect(img, aspect):
+    ratios = {"1:1": (1,1), "3:4": (3,4), "2:3": (2,3)}
+    if aspect not in ratios:
+        raise ValueError("Unsupported portrait aspect")
+    x,y = ratios[aspect]
+    w,h = img.size
+    # Preserve the complete composition; pad rather than clip limbs.
+    unit = max((w+x-1)//x, (h+y-1)//y)
+    target = (unit*x,unit*y)
+    out = Image.new("RGBA",target)
+    out.paste(img.convert("RGBA"),((target[0]-w)//2,(target[1]-h)//2))
+    return out
+
+
+@app.post("/api/character/portrait")
+def framed_portrait(p: FramedPortraitParams):
+    kind = "portrait_" + p.framing
+    if kind not in gen.PORTRAIT_FRAMINGS or p.aspect not in ("1:1","3:4","2:3") or not p.prompt.strip():
+        raise HTTPException(400,"Choose valid framing, aspect and character description")
+    if not 1 <= p.n <= 3 or p.gen_size not in (640,768,896,1024):
+        raise HTTPException(400,"Choose 1–3 variations and a supported generation size")
+    ckpt,lora_dir = _paths(p.checkpoint)
+    art_style = _art_style(p.art_style)
+    gen.set_sampler(p.sampler)
+    ip = None
+    if p.reference:
+        try:
+            ref = _dec_img(p.reference)
+            if max(ref.size)>1024: raise ValueError("Reference exceeds 1024 px")
+            ip = gen.prep_reference(ref,p.bg)
+        except Exception as e:
+            raise HTTPException(400,"Invalid reference: "+str(e))
+    def post(raw):
+        if art_style == "pixel":
+            im,info = px.pixelize(raw,"canvas",max(64,min(p.size,256)),max(4,min(p.colors,64)),"none",p.remove_bg,p.bg_tol,remove_shadow=False)
+        else:
+            im,info = styles.finish(raw,p.hd_size,p.remove_bg,p.bg_tol)
+        im = _portrait_aspect(im,p.aspect)
+        if max(im.size)>1024:
+            im.thumbnail((1024,1024),Image.Resampling.NEAREST if art_style=="pixel" else Image.Resampling.LANCZOS)
+        info.update(size=list(im.size),framing=p.framing,aspect=p.aspect)
+        return im,info
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,p.prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,p.n,ip,
+                max(0,min(p.reference_strength,1)),post,gen_size=p.gen_size,kind=kind,art_style=art_style)
+
+
 @app.post("/api/portrait/base")
 def portrait_base(ref: Optional[UploadFile] = File(None), prompt: str = Form(""), negative: str = Form(""),
                   checkpoint: str = Form(...), lora: str = Form(""), lora_weight: float = Form(1.0),
