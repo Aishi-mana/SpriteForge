@@ -142,6 +142,36 @@ class Manager:
             self.cv.notify_all()
         return self._summary(job)
 
+    def add_batch(self, entries, batch_id, batch_name):
+        """Publish prevalidated generation jobs together while the worker is locked."""
+        if not isinstance(entries,list) or not 1<=len(entries)<=24:
+            raise JobError("Choose 1–24 characters")
+        with self.cv:
+            if sum(j["status"]=="queued" for j in self._all())+len(entries)>MAX_QUEUED:
+                raise JobError("Not enough queue capacity for this batch")
+            added=[]
+            try:
+                for e in entries:
+                    ui=copy.deepcopy(e.get("ui") or {})
+                    ui["__batch"]={"id":batch_id,"name":batch_name,"index":e["index"],"character":e["name"]}
+                    added.append(self.add("generate",e["params"],ui))
+            except Exception:
+                for item in added:self._remove(item["id"])
+                raise
+            return added
+
+    def batches(self):
+        """Group retained jobs by batch and row, keeping latest attempt for each row."""
+        with self.cv:
+            groups={}
+            for j in sorted(self._all(),key=lambda j:(j["created"],j["id"])):
+                b=(j.get("ui") or {}).get("__batch")
+                if not isinstance(b,dict) or not isinstance(b.get("id"),str) or not isinstance(b.get("index"),int):continue
+                g=groups.setdefault(b["id"],{"id":b["id"],"name":b.get("name","batch"),"created":j["created"],"rows":{}})
+                g["rows"][b["index"]]={**self._summary(j), "index":b["index"],"character":b.get("character","character")}
+            return sorted([{**g,"rows":sorted(g["rows"].values(),key=lambda r:r["index"])} for g in groups.values()],
+                          key=lambda g:g["created"],reverse=True)
+
     def cancel(self, jid):
         """Cancel a waiting job. A running job cannot be interrupted mid-image: its results are discarded when it ends."""
         with self.cv:

@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup, custom_retarget, scenes
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library, custom_skeleton, custom_timeline, custom_ik, custom_cleanup, custom_retarget, scenes, production
 
 
 def _art_style(value):
@@ -1825,6 +1825,57 @@ def _job(fn, *a, **k):
         return fn(*a, **k)
     except jobs.JobError as e:
         raise HTTPException(400, str(e))
+
+
+@app.post("/api/production/enqueue")
+def production_enqueue(body: dict=Body(...)):
+    import uuid
+    try:
+        name,entries=production.plan(body)
+        for entry in entries:
+            p=GenParams(**entry["params"])
+            ckpt,loras=_paths(p.checkpoint);mf.check_lora(ckpt,loras,p.lora)
+            _art_style(p.art_style)
+            if not 1<=p.steps<=100 or not 0<=p.cfg<=30 or not 0<=p.lora_weight<=2:
+                raise ValueError("Invalid batch inference settings")
+            if not 16<=p.size<=1024 or not 16<=p.hd_size<=1024 or not 512<=p.gen_size<=1024:
+                raise ValueError("Invalid batch image size")
+            entry["params"]=p.model_dump() if hasattr(p,"model_dump") else vars(p)
+            ui=body.get("ui") or {}
+            if not isinstance(ui,dict):raise ValueError("Invalid UI snapshot")
+            entry["ui"]={**ui,"prompt":p.prompt,"seed":str(p.seed),"n1":"1"}
+        batch_id=uuid.uuid4().hex
+        return {"id":batch_id,"jobs":_jobmgr().add_batch(entries,batch_id,name)}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.get("/api/production/batches")
+def production_batches():
+    return {"batches":_jobmgr().batches()}
+
+
+@app.post("/api/production/export")
+def production_export(body: dict=Body(...)):
+    try:return production.animation(ROOT,body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/production/create_project")
+def production_create_project(body: dict=Body(...)):
+    try:
+        name=projects.safe_name(body.get("name"))
+        # Never replace an existing project; mkdir is exclusive.
+        j=_jobmgr().get(body.get("job"))
+        if j["status"]!="done" or not j["results"]:raise ValueError("Choose a finished generation job")
+        idx=modular.integer(body.get("index",0),0,len(j["results"])-1,"result index")
+        path=projects._dir(ROOT,name);path.mkdir(parents=True,exist_ok=False)
+        try:
+            return projects.save(ROOT,name,{"images":{"customrig":j["results"][idx]["sprite"],"ref":j["results"][idx]["sprite"]},"settings":j.get("ui",{}),"tab":13})
+        except Exception:
+            import shutil
+            shutil.rmtree(path,ignore_errors=True);raise
+    except FileExistsError:raise HTTPException(400,"Project already exists; choose a different name")
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/queue/add")

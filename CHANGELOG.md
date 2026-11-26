@@ -331,3 +331,6 @@ Scene tab with baked custom timeline snapshots, saved project and actor bundle i
 
 ## Phase 47 — Visual effects, magic and particles
 Eight procedural effect presets, bounded seeded emitters, color/size/timing/depth and actor-pivot offsets, scene-integrated render and standalone transparent spritesheets, scene persistence. CPU CI pending.
+
+## Phase 48 — Batch character production
+Production tab, reusable character recipe JSON, sequential single-worker generation jobs with resolved seeds, persistent grouped status/retry and new-project creation, sequential non-destructive batch animation export with retarget review gates. CPU CI pending.
