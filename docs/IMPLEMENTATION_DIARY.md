@@ -647,3 +647,8 @@ Use the following template for each future change (replace placeholders with act
 
 - `engine/modular_assets.py` adds optional profile prompts, depth, attachment and expanded placement guides (`c1388fad9431`); API integration (`aa9702ec64c1`), Modular profile selection and attachment retention (`04762ce1814e`), CPU regressions (`1e88f6518c0c`).
 - Existing recipe categories retained; category replacement still hides all matching layers. Expanded masks remain bounded by canvas, hand placement is heuristic, occluded rear surfaces are not reconstructed. CI and hardware acceptance pending; stacked on 61M-D. [Phase notes](phases/PHASE61ME.md). Next 61M-F. Packaging on hold.
+
+### 2026-11-27 (Manila) — Phase 61M-F: candidate cleanup and alignment
+
+- `engine/modular_assets.py` adds validated non-destructive candidate review, transformed placement metrics and registered export (`9b8af0418657`); API endpoint (`2c168ea8d0cb`); Modular UI cleanup, manual transforms, reset, preview and export (`e07c574b540c`, `acda8336e988`); CPU regressions (`405dddede84a`).
+- Decisions: explicit review before accepting, reuse existing Alpha Cleanup, numeric transforms, no recipe mutation during review. Partial clipping and browser alpha rounding remain possible. CI and hardware acceptance pending; stacked on 61M-E. [Phase notes](phases/PHASE61MF.md). Next 61M-G. Windows packaging remains on hold.

@@ -290,3 +290,25 @@ def specialized_guide(body,category,profile="auto",hand="right"):
     mask=Image.new("L",body.size,0)
     mask.paste(255,rect)
     return rect,mask,marks
+
+
+def review_candidate(recipe,layer,replace_category=True,guide=None):
+    clean,images,body,_=reference(recipe,"body")
+    if not isinstance(layer,dict) or layer.get("category") not in REGIONS:
+        raise ValueError("Candidate must be a detachable asset")
+    combined,decoded=modular.validate({**clean,"layers":clean["layers"]+[layer]})
+    candidate=combined["layers"][-1]
+    source=decoded[-1]
+    if not source.getchannel("A").getbbox():
+        raise ValueError("Candidate has no visible pixels")
+    # Render the transformed layer alone, using the same compositor as acceptance.
+    placed=modular.composite({**clean,"layers":[candidate]},[source])
+    if not placed.getchannel("A").getbbox():
+        raise ValueError("Candidate is completely outside the canvas or invisible")
+    info={"size":list(source.size),"placed_bounds":list(placed.getchannel("A").getbbox()),
+          "review_required":True}
+    if guide is not None:
+        if guide.size!=body.size:
+            raise ValueError("Placement mask must match recipe canvas")
+        info["placement"]=placement_review(placed,guide.convert("L"))
+    return candidate,candidate_preview(clean,images,candidate,replace_category),placed,info

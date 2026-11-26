@@ -106,4 +106,22 @@ rear.paste((255,0,0,255),(0,20,32,60))
 rear_layer={"name":"Wing","category":"accessory","image":M.png_uri(rear),"x":0,"y":0,"scale":100,"opacity":100,"visible":True,"flip":False,"attachment":"torso","occlusion":{"depth":"behind","bones":[]}}
 back_preview=A.candidate_preview(clean,images,rear_layer,False)
 ok(back_preview.getpixel((20,30))==body.getpixel((20,30)) and back_preview.getpixel((2,30))==(255,0,0,255),"rear profile depth respects body")
+# Review applies transforms without changing the recipe or candidate source.
+import copy
+before=copy.deepcopy(recipe)
+source_layer=copy.deepcopy(rear_layer)
+adjusted={**rear_layer,"x":5,"y":3,"scale":100,"opacity":100}
+guide=Image.new("L",body.size,255)
+row,assembled,placed,review=A.review_candidate(recipe,adjusted,False,guide)
+ok(recipe==before and rear_layer==source_layer,"review leaves approved recipe and original candidate unchanged")
+ok(placed.size==body.size and placed.getpixel((5,23))==(255,0,0,255),"registered export bakes reviewed placement")
+ok(assembled.getpixel((20,30))==body.getpixel((20,30)) and assembled.getpixel((5,23))==(255,0,0,255),"review retains behind-body occlusion")
+ok(review["placement"]["outside_guide"]==0 and row["x"]==5,"review recalculates guide statistics")
+try:A.review_candidate(recipe,{**adjusted,"x":2048},False);ok(False,"off-canvas candidate rejected")
+except ValueError:ok(True,"off-canvas candidate rejected")
+try:A.review_candidate(recipe,{**adjusted,"category":"body"},False);ok(False,"body replacement rejected")
+except ValueError:ok(True,"body replacement rejected")
+from engine import main
+response=main.modular_review_asset(main.ModularCandidateReview(recipe=recipe,layer=adjusted,replace_category=False,placement_mask=M.png_uri(guide)))
+ok(M.decode(response["registered"]).tobytes()==placed.tobytes(),"review endpoint registered export")
 done("test_modular_assets")
