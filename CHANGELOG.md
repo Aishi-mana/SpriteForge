@@ -298,3 +298,6 @@ Synchronized transparent body/equipment sheets, optional hidden alternatives and
 
 ## Phase 36 — Runtime character assembly and equipment
 Godot 4 and Unity desktop modular runtime components bundled with layer exports; synchronized playback, clip switching, equipment visibility and category swaps, saved loadouts, recipe fingerprint compatibility checks and setup guide. Engine execution pending.
+
+## Phase 37 — Advanced layer occlusion and manual bone weight editing
+Per-layer two-bone weighted meshes and bounded paint strokes, brush canvas with undo/reset, explicit depth and animated body-bone alpha masks, persistence and consistent independent export ordering. Rigid/soft/spring modes preserved. Tests added; live validation pending.

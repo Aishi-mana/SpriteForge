@@ -1,6 +1,6 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 36 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 37 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## First: verify the newest delivered features
 
@@ -31,7 +31,7 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 ## Candidate next features
 
-1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Phase 36 bundles Godot 4 and Unity desktop runtime components for synchronized clip playback, equipment choices and loadout persistence (engine validation pending). Next: improved occlusion, per-layer weights and runtime integration testing.
+1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Phase 36 bundles Godot 4 and Unity desktop runtime components for synchronized clip playback, equipment choices and loadout persistence (engine validation pending). Phase 37 adds optional manual two-bone weight painting, explicit depth overrides and selected body-part occlusion baked into exported layers (validation pending). Next: multi-bone weighting, inter-layer occlusion and runtime integration testing.
 2. **Character improvements:** precise masked editing, semantic asset extraction, garment fitting, improved multiview conditioning and per-clip secondary motion presets.
 3. **First-run setup wizard / model manager:** validate local model/runtime components, optional IP-Adapter/ControlNet setup, dependency checks and assistant model configuration.
 4. **Pixel editor extras:** layers, copy/paste, tile mode, outline/shade tools and palette ramps.
