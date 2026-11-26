@@ -42,6 +42,9 @@ ok(JSON.stringify(T.qDiff([A, B]).sort()) == '["cfg","steps"]' && T.qDiff([A, A]
 
 const g = T.genParams(); ok(g.steps === 25 && g.lora_weight === 0.9 && g.n === 2 && g.seed === -1 && g.rmbg === undefined && g.remove_bg === true && g.clean === false && g.palette === 'none' && g.size === 64, 'generate params have real numbers/booleans (not strings)');
 set({artstyle:'anime',hdsize:'768',hdgen:'1024'}); ok(T.genParams().art_style==='anime' && T.genParams().hd_size===768 && T.refParams().art_style==='anime','HD style settings travel with both job types'); set({artstyle:'pixel'});
+const artSelector=html.match(/<select id="artstyle"[^>]*>([\s\S]*?)<\/select>/)[1];
+for(let heads=2;heads<=7;heads++){const style='head_'+heads;ok(artSelector.includes('value="'+style+'"'),'existing art selector has '+style);set({artstyle:style,genBodyBase:true});ok(T.genParams().art_style===style&&T.genParams().body_base===true,'Generate preserves '+style+' with body base enabled')}
+set({artstyle:'pixel',genBodyBase:false});
 const r = T.refParams(); ok(r.ip_scale === 0.7 && r.n === 3 && r.canvas === 128 && r.gen_size === 768 && r.lock_palette === true && r.match_size === false && r.cn_scale === 0.8 && typeof r.cfg == 'number', 'reference params have real numbers/booleans');
 
 (async () => {
