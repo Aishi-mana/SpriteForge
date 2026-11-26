@@ -10,6 +10,13 @@ PRESETS = {
     "super_chibi": "super-deformed cartoon chibi, oversized head, compact proportions",
     "soft_chibi": "soft pastel chibi illustration, gentle shading, rounded shapes",
     "premium_chibi": "polished RPG chibi illustration, refined linework, clean shading",
+    # Head count means total standing height divided by head height, not head count.
+    "head_2": "super-deformed chibi illustration, total standing height approximately twice head height, very large head, compact torso and short limbs",
+    "head_3": "chibi illustration, total standing height approximately three times head height, large head, compact torso and limbs",
+    "head_4": "stylized chibi illustration, total standing height approximately four times head height, moderately oversized head, balanced compact limbs",
+    "head_5": "semi-chibi illustration, total standing height approximately five times head height, moderately stylized head and longer limbs",
+    "head_6": "stylized anime illustration, total standing height approximately six times head height, balanced torso and elongated limbs",
+    "head_7": "anime illustration, total standing height approximately seven times head height, natural stylized head-to-body ratio and long limbs",
     "custom": "stylized character illustration",
 }
 HD_NEGATIVE = "blurry, low quality, watermark, text, cropped, multiple characters, extra limbs, malformed hands, pixel art"

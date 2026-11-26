@@ -81,6 +81,11 @@ def capture_generate(*a,**k):
     return fake_generate(*a,**k)
 M.gen.generate=capture_generate
 try:
+    for heads in range(2,8):
+        style="head_"+str(heads)
+        for body_base in (False,True):
+            preview=M.generate_prompt_preview(M.GenParams(prompt="standing",checkpoint="",body_base=body_base,art_style=style))
+            ok(preview["art_style"]==style and preview["positive"].startswith(M.styles.PRESETS[style]),"proportion preview "+style+" "+str(body_base))
     preview=M.generate_prompt_preview(M.GenParams(prompt="front view",negative="extra exclusion",checkpoint="",body_base=True,art_style="anime",bg="magenta"))
     ok(preview["kind"]=="body_base" and preview["positive"]==M.gen.build_prompt("front view","magenta","body_base","anime"),"CPU prompt preview without checkpoint")
     ok(preview["negative"]=="extra exclusion, "+M.gen.negative_for("body_base","anime"),"preview includes actual combined negatives")

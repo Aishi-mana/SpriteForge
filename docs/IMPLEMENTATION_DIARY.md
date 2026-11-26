@@ -691,3 +691,8 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — 61N-B validation correction
 
 - CPU run 45911091109 failed on Windows and Ubuntu in the isolated queue JavaScript harness; API and styles passed. Prompt preview listener registration was inside the extracted queue block; moved DOM listener setup outside it to avoid executing browser-only initialization in the fake DOM. Revalidation pending.
+
+### 2026-11-27 (Manila) — Phase 61N-C: head-height style presets
+
+- Six neutral style mappings (`afc4d5ed2374`) and existing Art Style selector group (`5c6595d04b16`); CPU prompt, API preview and queue UI tests (`548c25f7054b`, `e559fce50d61`, `ffd172f0b2d2`).
+- All legacy style IDs preserved. New styles use existing HD finishing and shared style settings; no independent proportion dropdown or automatic anatomy enforcement. No model inference or desktop verification; CI pending. Stacked on corrected PR #77. [Phase notes](phases/PHASE61NC.md). Next 61N-D; packaging on hold.
