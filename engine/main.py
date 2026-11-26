@@ -1540,6 +1540,46 @@ def alpha_cleanup_ep(p: AlphaCleanupParams):
     return {"sprite":b64(out),"info":info}
 
 
+class InstructionEditParams(BaseModel):
+    image: str
+    checkpoint: str
+    instruction: str
+    negative: str = ""
+    size: int = 768
+    bg: str = "green"
+    tolerance: int = 30
+    pixel: bool = False
+    strength: float = .45
+    steps: int = 4
+    cfg: float = 1
+    seed: int = 0
+    remove_bg: bool = True
+    keep_canvas: bool = True
+    lora: str = ""
+    lora_weight: float = 1.0
+
+
+@app.post("/api/character/instruction_edit")
+def character_instruction_edit(p: InstructionEditParams):
+    from . import instruction_edit
+    if not p.instruction.strip() or len(p.instruction)>1800 or len(p.negative)>1800:
+        raise HTTPException(400,"Enter an edit instruction of at most 1800 characters")
+    if p.size not in (640,768,896,1024) or p.bg not in gen.BG_RGB or not 1<=p.tolerance<=100 or not .2<=p.strength<=.75 or not 1<=p.steps<=50 or not 1<=p.cfg<=15 or not 0<=p.seed<2**31 or not 0<=p.lora_weight<=2:
+        raise HTTPException(400,"Invalid editing settings")
+    source=_character_reference(p.image)
+    ckpt,lora_dir=_paths(p.checkpoint)
+    model=mf.describe(ckpt)
+    try:
+        mf.check_lora(ckpt,lora_dir,p.lora)
+        gen.set_sampler("euler_a")
+        out,info=instruction_edit.edit(source,model,ckpt,lora_dir,**p.model_dump(exclude={"image","checkpoint"}))
+        return {"sprite":b64(out),"info":info}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+    except Exception as e:
+        raise HTTPException(500,"Instruction edit failed: "+str(e))
+
+
 class BodyBaseParams(BaseModel):
     build: str = "androgynous"
     proportions: str = "anime"
