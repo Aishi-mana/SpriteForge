@@ -27,4 +27,9 @@ for name in styles.PRESETS:
     ok("armor" not in generate.negative_for("sprite",name),"regular negatives unchanged "+name)
 ok("featureless mannequin" in generate.build_prompt("",kind="body_base"),"blank mannequin description supported")
 ok("blue armor" in generate.build_prompt("blue armor"),"explicitly requested ordinary gear preserved")
+for style in styles.PRESETS:
+    for kind in ("sprite","body_base","tile","prop","icon","ui"):
+        positive,negative=generate.prompt_pair("neutral subject","extra exclusion","magenta",kind,style)
+        ok(positive==generate.build_prompt("neutral subject","magenta",kind,style) and negative=="extra exclusion, "+generate.negative_for(kind,style),"prompt pair parity "+style+" "+kind)
+ok(generate.prompt_pair("subject")[1]==generate.NEGATIVE,"blank user negative adds no stray delimiter")
 done("test_styles")
