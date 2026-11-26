@@ -13,15 +13,28 @@ The UI is served by the engine: edit `ui/index.html` and reload (Ctrl+R in the b
 ## Tests (no GPU, no network)
 
 ```
-python tests/run_all.py          # 435+ checks, ~1 minute; needs numpy, pillow, scipy (+ node for the JS tests)
+python tests/run_all.py          # Python checks; needs numpy, pillow, scipy (+ Node.js for the JS tests)
 python tests/test_rig.py         # or any single file
 ```
 - `tests/_common.py`: helpers (`ok`, `done`, synthetic sprites `synth_sprite()` / `hero_sprite()`, `Up` fake upload, `install_fastapi_stubs()`).
 - **Models are faked**: `engine.generate.inpaint` / `.generate` are replaced by functions with the *same positional signature* that paint predictable pixels (see `test_templates.py`, `test_api.py`).
   When you change a model-call signature, update the fakes.
 - `test_api.py` calls endpoint **functions directly**. Without fastapi/pydantic installed, tiny stubs are installed (`install_fastapi_stubs`); with them installed the same tests run against the real classes. The helper `A(fn, **kw)` fills unspecified Form/File params from a defaults table.
-- `tests/js/*.js` extract code from `ui/index.html` (the PXE block, the editor block, the option helpers) and run it under `node` against a fake DOM/canvas. `test_ui.py` also checks that every `$('id')` exists and the script parses.
+- `tests/js/*.js` extract code from `ui/index.html` (the PXE block, the editor block, the option helpers) and run it under `node` against a fake DOM/canvas. `test_ui.py` also checks that every `$('id')` exists and the script parses **when Node.js is installed**. Without Node.js, those JS checks are skipped; install Node.js for a complete local run.
 - What tests cannot cover: real SDXL output quality, VRAM use, speed, the real browser / Tauri window, Godot/Unity import. See `TESTING_CHECKLIST.md`.
+
+## GitHub workflow
+
+The default branch is `main` in [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge). Use a short-lived feature or fix branch and a pull request; keep the code, tests, docs and `CHANGELOG.md` in the same change where relevant. Review the diff before merging. The old phase ZIPs and root `PHASE*.md` files are historical delivery artifacts; use `docs/phases/` for their canonical notes instead of creating more duplicate root notes.
+
+Before opening a PR:
+
+1. Run `python tests/run_all.py` from the repository root and report whether Node.js was present; a clean result without Node.js does **not** exercise browser-side JS tests.
+2. When modifying `ui/index.html`, run the UI/parser checks and inspect any new IDs. For GPU/Tauri/export changes, record manual testing separately using `docs/TESTING_CHECKLIST.md`.
+3. Inspect `git status` and `git diff --stat` to ensure only intended source/docs files are staged. Do not include `config.json`, local logs, `diagnostics.txt`, generated `history/`, project data, exports, caches, or model weights.
+4. Include what was tested, what requires Windows/GPU/Godot/Tiled verification, and whether a Tauri rebuild is necessary (`spriteforge.bat rebuild` for Rust-side changes).
+
+**Important:** some runtime artifacts are already tracked in this Git snapshot; merely adding them to `.gitignore` will not untrack them. See [Repository workflow](REPOSITORY_WORKFLOW.md) for safe cleanup steps.
 
 ## Adding things
 
@@ -37,7 +50,7 @@ add it to the UI `anim` select, `ANIM_DEF`, the `CLIPS` array, and a test that i
 
 **An export format**: extend `exporter.export_pack` (it receives per-entry frames + pivot and the layout plan); add an option to `xopts()` in the UI and a checkbox; test regions/pivots.
 
-**Patching `ui/index.html`** (it is ~125 KB, long lines): use a small Python script with `assert old in text` + `str.replace(old, new, 1)`, then re-run `tests/test_ui.py`. Never replace a substring that is part of a larger token (an `async function` once became `async const`).
+**Patching `ui/index.html`** (it is a large single-file UI with long lines): use a small Python script with `assert old in text` + `str.replace(old, new, 1)`, then re-run `tests/test_ui.py`. Never replace a substring that is part of a larger token (an `async function` once became `async const`).
 After any edit: the script must parse (`node --check`), and every `$('id')` must exist.
 
 ## Lessons learned (things that bit us)
@@ -52,10 +65,11 @@ After any edit: the script must parse (`node --check`), and every `$('id')` must
 8. **8 GB VRAM**: UNet + ControlNet together OOM -> sequential offload; reference (IP-Adapter) pipelines fit with model offload. Drop the cached pipeline after any failure.
 9. **Side/overlapping views break nearest-bone assignment** (arms over torso): supply exact overrides (dummies know them) or let the user paint.
 10. **Clean upscales can be detected at half the true grid** (sub-harmonic): prefer the largest multiple that keeps ~all the edge energy.
-11. **The build sandbox has no GPU/network, and can reset** (files vanish; only delivered zips survive - it happened twice). Keep every change in a deliverable; the full-project zip is the source of truth.
+11. **Work from the Git repository, not historical ZIP transfers.** Commit changes on a branch, review them via PR, and never assume an automated test run verifies real GPU/image quality or application rendering.
 12. Untested-on-hardware code (model loading, IP-Adapter, ControlNet, inpaint) is where first-run errors appear: log clearly, return readable errors, and let Diagnostics expose them.
 
-## Release convention used so far
+## Delivery conventions
 
-Each change = a zip of **only the changed/new files** + a `PHASEn.md` note (later moved to `docs/phases/`), named `spriteforge_phaseN_topic.zip`, delivered to the user, who unzips over the project and relaunches.
-Hotfixes: `spriteforge_phaseN.1_HOTFIX-...`. `config.json` is never shipped (it holds the user's paths). Rust changes need `spriteforge.bat rebuild`.
+**Now:** GitHub branch -> reviewed PR -> merge to `main`, with relevant documentation and tests updated together. A GitHub commit does not replace required real-device tests.
+
+**Historical (Phases 1-22):** changes were distributed as partial ZIPs (`spriteforge_phaseN_topic.zip`, sometimes `phaseN.1_HOTFIX-...`) with `PHASE*.md` notes. Those remain historical records; do not assume ZIPs are the current source of truth. Never bundle user-specific `config.json` or generated files. Changes to `src-tauri/` require `spriteforge.bat rebuild`.
