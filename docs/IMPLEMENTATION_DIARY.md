@@ -603,3 +603,11 @@ Use the following template for each future change (replace placeholders with act
 
 - Engine component lookup and reduced redundant buffers, accurate protected halo count (`08ce3b1ab921`); API validates mask dimensions early and guards empty output (`f33459bdf68c`). UI reuses buffers, bounds history and canvas size, coalesces brush redraws and reports preview duration (`9b0daf09e614`).
 - Pipeline/max-canvas and JS history regressions added (`07dc75fb5d07`, `007b800f045a`). CI pending. No measured performance improvements or desktop verification; browser partial-alpha RGB rounding remains. [Phase notes](phases/PHASE61LG.md); manual checklist expanded. Next 61M after validation and merge. Phase 62 on hold.
+
+### 2026-11-26T20:04:57Z — 61L-G integration
+
+- PR #68 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45887047432) and merged at `26c3a6d3454f`. All 61L implementations merged. Desktop acceptance, measured memory/time and partial-alpha canvas rounding remain outstanding.
+
+### 2026-11-27 (Manila) — Phase 61M-A: fixed-canvas registration
+
+- `engine/modular_assets.py` adds body-conditioned prompt and full-canvas placement of fitted RGBA (`9714f33ab2c0`); API opt-in (`fe1b3e0ad296`); Modular UI default fixed-canvas with legacy fallback (`3eafd1574be7`); regression tests (`cac871abd780`). Source body and recipe not mutated. Existing approximate anatomical fitting remains; no semantic extraction or real inference verified. CI pending. [Phase notes and planned B–G](phases/PHASE61MA.md). Windows packaging stays on hold.
