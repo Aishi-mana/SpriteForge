@@ -39,6 +39,11 @@ def deform(mesh, upper_matrix, lower_matrix, pad, ss, size, hd):
     a = xy @ upper_matrix[:2,:2].T + upper_matrix[:2,2]
     b = xy @ lower_matrix[:2,:2].T + lower_matrix[:2,2]
     dst = a*(1-weight[...,None])+b*weight[...,None]
+    return rasterize(tex,uv,dst,size,hd)
+
+
+def rasterize(tex,uv,dst,size,hd):
+    """Shared textured triangle renderer; uv and dst use pixel-edge coordinates."""
     W,H=size
     out=np.zeros((H,W,4),np.uint8)
     th,tw=tex.shape[:2]

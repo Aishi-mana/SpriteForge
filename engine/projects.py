@@ -156,12 +156,17 @@ def list_projects(root):
 
 
 def save(root, name, data):
-    from . import modular
+    from . import modular, custom_skeleton, custom_cleanup, scenes
+    scene=data.get('scene')
+    clean_scene=scenes.validate(scene)[0] if scene is not None else None
+    clean_cleanup=custom_cleanup.validate_saved(data.get('custom_cleanup'))
+    profile=data.get("custom_skeleton")
+    clean_profile=custom_skeleton.validate(profile) if profile is not None else None
     recipe=data.get("modular")
     clean_recipe=modular.validate(recipe)[0] if recipe is not None else None
     d = _dir(root, name)
     images = data.get("images") or {}
-    keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant")
+    keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig")
     # Reject malformed input before replacing any image from an existing project.
     staged={key:_decode_png(images[key]) for key in keys if images.get(key)}
     d.mkdir(parents=True, exist_ok=True)
@@ -175,7 +180,7 @@ def save(root, name, data):
     _save_portrait(d, data.get("portrait"))
     _save_tileset(d, data.get("tileset"))
     doc = {"version": 1, "name": d.name, "saved_at": time.time(),
-           "settings": data.get("settings", {}), "modular": clean_recipe, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
+           "settings": data.get("settings", {}), "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_cleanup": clean_cleanup, "scene": clean_scene, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
            "anim_params": data.get("anim_params", {}), "tab": data.get("tab", 1), "palette": data.get("palette"), "template": data.get("template"), "directions": data.get("directions"),
            "has_ref": (d / "ref.png").exists(), "has_anim": (d / "anim.png").exists()}
     tmp = d / "project.json.tmp"
@@ -193,7 +198,7 @@ def load(root, name):
     doc["results"] = _load_results(d)
     doc["portrait"] = _load_portrait(d)
     doc["tileset"] = _load_tileset(d)
-    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant")}
+    doc["images"] = {k: _encode(d / f"{k}.png") if (d / f"{k}.png").exists() else None for k in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig")}
     return doc
 
 
