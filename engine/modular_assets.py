@@ -108,3 +108,78 @@ def register_asset(asset,info,canvas):
     return layer,{**info,"size":[W,H],"x":0,"y":0,"asset_bounds":list(layer.getchannel("A").getbbox()),
                   "registration":"fixed_canvas","fit_method":"approximate_region",
                   "review_required":True}
+
+
+def body_landmarks(body):
+    """Estimate horizontal silhouette bands in original canvas coordinates.
+
+    These are geometric hints, not detected joints or a pose estimator.
+    """
+    mask=np.asarray(body.convert("RGBA"))[:,:,3]>=32
+    ys,xs=np.nonzero(mask)
+    if not len(xs):
+        raise ValueError("Body reference is empty")
+    x,y,r,b=int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)
+    h=b-y
+    def band(lo,hi):
+        t=y+min(h-1,int(h*lo))
+        bot=max(t+1,min(b,y+int(np.ceil(h*hi))))
+        yy,xx=np.nonzero(mask[t:bot])
+        if not len(xx):
+            return [x,t,r,bot]
+        return [int(xx.min()),int(yy.min()+t),int(xx.max()+1),int(yy.max()+t+1)]
+    return {"body":[x,y,r,b],"head":band(0,.27),"shoulders":band(.27,.44),
+            "waist":band(.44,.62),"legs":band(.62,.86),"feet":band(.86,1),
+            "method":"silhouette_bands","review_required":True}
+
+
+def placement_guide(body,category):
+    """Return a permissive, canvas-aligned placement guide; never clip an asset."""
+    if category not in REGIONS:
+        raise ValueError("Invalid asset category")
+    marks=body_landmarks(body)
+    W,H=body.size
+    x,y,r,b=marks["body"]
+    h=b-y
+    pad=max(1,round(h*.04))
+    def union(*keys):
+        rects=[marks[k] for k in keys]
+        return (min(v[0] for v in rects),min(v[1] for v in rects),
+                max(v[2] for v in rects),max(v[3] for v in rects))
+    if category=="hair_front":
+        rect=union("head")
+    elif category=="hair_back":
+        rect=union("head","shoulders","waist")
+    elif category=="outfit":
+        rect=union("shoulders","waist","legs")
+    elif category=="footwear":
+        rect=union("feet")
+    else:
+        rect=tuple(marks["body"])
+    l,t,rr,bb=rect
+    rect=(max(0,l-pad),max(0,t-pad),min(W,rr+pad),min(H,bb+pad))
+    # Nonrectangular mask follows silhouette row extents with garment allowance.
+    src=np.asarray(body.convert("RGBA"))[:,:,3]>=32
+    guide=np.zeros((H,W),dtype=np.uint8)
+    for row in range(rect[1],rect[3]):
+        near=src[max(0,row-pad):min(H,row+pad+1)]
+        cols=np.flatnonzero(near.any(axis=0))
+        if len(cols):
+            left=max(rect[0],int(cols[0])-pad)
+            right=min(rect[2],int(cols[-1])+pad+1)
+        else:
+            left,right=rect[0],rect[2]
+        if right>left:
+            guide[row,left:right]=255
+    return rect,Image.fromarray(guide),marks
+
+
+def placement_review(asset,guide):
+    if asset.size!=guide.size:
+        raise ValueError("Placement guide must match registered canvas")
+    visible=np.asarray(asset.convert("RGBA"))[:,:,3]>=32
+    count=int(visible.sum())
+    outside=int((visible & (np.asarray(guide)==0)).sum())
+    return {"visible_pixels":count,"outside_guide":outside,
+            "outside_fraction":round(outside/max(1,count),4),
+            "review_required":True}
