@@ -124,4 +124,39 @@ except ValueError:ok(True,"body replacement rejected")
 from engine import main
 response=main.modular_review_asset(main.ModularCandidateReview(recipe=recipe,layer=adjusted,replace_category=False,placement_mask=M.png_uri(guide)))
 ok(M.decode(response["registered"]).tobytes()==placed.tobytes(),"review endpoint registered export")
+# Stabilization: large extraction, clipping, and exact threshold equivalence.
+import numpy as np
+rng=np.random.default_rng(61)
+a=rng.integers(0,256,(128,128,4),dtype=np.uint8)
+b=rng.integers(0,256,(128,128,4),dtype=np.uint8)
+expect=(b[:,:,3]>=32)&((a[:,:,3]<32)|(np.max(np.abs(a.astype(np.int16)-b.astype(np.int16)),axis=2)>30))
+expected=np.zeros_like(b)
+expected[expect]=b[expect]
+actual,_=A.extract_edit(Image.fromarray(a),Image.fromarray(b),Image.new("L",(128,128),255),30)
+ok(actual.tobytes()==expected.tobytes(),"channelwise extraction equivalent to original RGBA threshold")
+large=Image.new("RGBA",(1024,1024))
+large.paste((90,120,150,255),(300,50,720,990))
+dressed=large.copy()
+dressed.paste((30,60,190,255),(300,350,720,650))
+_,lg,_=A.specialized_guide(large,"outfit","armor")
+asset,meta=A.extract_edit(large,dressed,lg)
+ok(asset.size==large.size and meta["placement"]["visible_pixels"]==420*300,"maximum canvas extraction remains registered")
+_,_,clipped,meta=A.review_candidate(recipe,{**rear_layer,"x":-5},False)
+ok(meta["clipping_warning"] and clipped.getchannel("A").getbbox(),"partial clipping warning without destructive rejection")
+_,_,_,meta=A.review_candidate(recipe,adjusted,False)
+ok(not meta["clipping_warning"],"in-canvas candidate does not warn")
+try:A.extract_edit(large,dressed,lg,0);ok(False,"invalid extraction tolerance rejected")
+except ValueError:ok(True,"invalid extraction tolerance rejected")
+# Validate review decodes recipe exactly once.
+original_validate=M.validate
+calls=[]
+try:
+    def count_validate(value):
+        calls.append(1)
+        return original_validate(value)
+    M.validate=count_validate
+    A.review_candidate(recipe,adjusted,False)
+    ok(len(calls)==1,"candidate review single recipe validation")
+finally:
+    M.validate=original_validate
 done("test_modular_assets")
