@@ -30,8 +30,8 @@ ok(all(f'&"{n}"' in t for n in ("idle", "jump", "hurt", "death")) and '"loop": f
 u = json.load(open(d / "K2_unity.json")); f0 = u["animations"][0]["frames"][0]; a0 = at["frames"]["K2_idle 0"]["frame"]
 ok(f0["y"] == u["height"] - a0["y"] - a0["h"] and (d / "SpriteForgeImporter.cs").exists() and (d / "README.txt").exists(), "Unity data: Y is flipped to bottom-left origin; importer script and README written")
 one = X.export_pack(entries(("walk",)), {"gif": True, "frames": True}, "One", root); ok(Path(one["dir"]).name == "One_walk" and (Path(one["dir"]) / "One_walk.gif").exists() and (Path(one["dir"]) / "frames" / "walk").exists(), "single clip -> <name>_<clip> folder with GIF and frames")
-evil = X.export_pack([{**entries(("walk",))[0], "name": "../../evil"}], {"gif": False}, "n/../x", root); ok(str(root / "exports") in str(Path(evil["dir"]).resolve()), "names are sanitised: nothing is written outside exports/")
-fr, meta = rig.render(sp, J, OV, "walk", 2, "right", "r", "r", 1, 0, 1, 2); e2 = rig.export(fr, meta, 10, "../../evil", "n/../x", root); ok(str(root / "exports") in str(Path(e2).resolve()), "legacy single-clip export is sanitised too")
+evil = X.export_pack([{**entries(("walk",))[0], "name": "../../evil"}], {"gif": False}, "n/../x", root); ok(Path(evil["dir"]).resolve().is_relative_to((root / "exports").resolve()), "names are sanitised: nothing is written outside exports/")
+fr, meta = rig.render(sp, J, OV, "walk", 2, "right", "r", "r", 1, 0, 1, 2); e2 = rig.export(fr, meta, 10, "../../evil", "n/../x", root); ok(Path(e2).resolve().is_relative_to((root / "exports").resolve()), "legacy single-clip export is sanitised too")
 
 root = tmpdir()
 img = data_url(Image.new("RGBA", (8, 8), (200, 30, 30, 255)))
