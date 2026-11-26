@@ -32,4 +32,12 @@ for style in styles.PRESETS:
         positive,negative=generate.prompt_pair("neutral subject","extra exclusion","magenta",kind,style)
         ok(positive==generate.build_prompt("neutral subject","magenta",kind,style) and negative=="extra exclusion, "+generate.negative_for(kind,style),"prompt pair parity "+style+" "+kind)
 ok(generate.prompt_pair("subject")[1]==generate.NEGATIVE,"blank user negative adds no stray delimiter")
+for heads,word in zip(range(2,8),("twice","three times","four times","five times","six times","seven times")):
+    style="head_"+str(heads)
+    text=styles.PRESETS[style]
+    ok(word+" head height" in text,"exact head-height wording "+style)
+    ok(not any(term in text for term in ("costume","armor","cape","weapon","clothing","outfit","accessories")),"no subject or outfit injection "+style)
+    for kind in ("sprite","body_base"):
+        positive,negative=generate.prompt_pair("neutral standing pose",kind=kind,art_style=style)
+        ok(positive.startswith(text) and "neutral standing pose" in positive and negative==generate.negative_for(kind,style),"proportion prompt "+kind+" "+style)
 done("test_styles")
