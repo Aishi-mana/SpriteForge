@@ -328,3 +328,6 @@ Motion bundles, ID/name mapping and manual overrides, local track transfer, prop
 
 ## Phase 46 — Multi-character animation scenes
 Scene tab with baked custom timeline snapshots, saved project and actor bundle import, static PNG props, independent timing, position tween, scale, mirror, depth and opacity; shared scene preview/playback, project and portable scene persistence, fixed-cell scene export. CPU CI pending.
+
+## Phase 47 — Visual effects, magic and particles
+Eight procedural effect presets, bounded seeded emitters, color/size/timing/depth and actor-pivot offsets, scene-integrated render and standalone transparent spritesheets, scene persistence. CPU CI pending.

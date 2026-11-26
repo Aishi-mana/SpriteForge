@@ -2,7 +2,7 @@
 import math
 import re
 from PIL import Image
-from . import modular, custom_cleanup, custom_timeline
+from . import modular, custom_cleanup, custom_timeline, vfx
 
 MAX_ACTORS=8
 MAX_ENCODED=24_000_000
@@ -68,8 +68,9 @@ def validate(value):
             visible=boolean(a.get("visible",True),"actor visibility"),start=start,end=end,
             offset=integer(a.get("offset",0),0,len(imgs)-1,"source frame offset"),
             speed=integer(a.get("speed",100),10,300,"actor speed"),behavior=behavior))
+    effects=vfx.validate(value.get("effects",[]),count,used)
     return dict(version=1,name=name(value.get("name","scene")),width=w,height=h,count=count,fps=fps,
-                loop=boolean(value.get("loop",True),"scene loop"),actors=out),decoded
+                loop=boolean(value.get("loop",True),"scene loop"),actors=out,effects=effects),decoded
 
 def from_timeline(body):
     frames,meta=custom_timeline.render(body.get("image"),body.get("profile"),body.get("padding",32))
@@ -90,9 +91,26 @@ def position(actor,frame):
     t=(frame-actor["start"])/max(1,actor["end"]-actor["start"])
     return (round(actor["x"]+(actor["end_x"]-actor["x"])*t),round(actor["y"]+(actor["end_y"]-actor["y"])*t))
 
+def composite(out,im,left,top):
+    x0,y0=max(0,left),max(0,top);x1,y1=min(out.width,left+im.width),min(out.height,top+im.height)
+    if x1>x0 and y1>y0:out.alpha_composite(im.crop((x0-left,y0-top,x1-left,y1-top)),(x0,y0))
+
+
 def compose(scene,decoded,index,cache):
     out=Image.new("RGBA",(scene["width"],scene["height"]))
-    for a in sorted(scene["actors"],key=lambda a:a["z"]):
+    by={a["id"]:a for a in scene["actors"]}
+    layers=[(a["z"],0,a) for a in scene["actors"]]+[(e["z"],1,e) for e in scene["effects"]]
+    for _,kind,a in sorted(layers,key=lambda layer:(layer[0],layer[1])):
+        if kind==1:
+            if not vfx.active(a,index):continue
+            x,y=a["x"],a["y"]
+            if a["actor"] is not None:
+                actor=by[a["actor"]]
+                if frame_index(actor,index,scene["fps"]) is None or not actor["opacity"]:continue
+                ax,ay=position(actor,index);x=ax+(-x if actor["flip"] else x);y=ay+y
+            im,(px,py)=vfx.surface(a,index)
+            composite(out,im,x-px,y-py)
+            continue
         i=frame_index(a,index,scene["fps"])
         if i is None or not a["opacity"]:continue
         key=(a["id"],i)
@@ -110,13 +128,12 @@ def compose(scene,decoded,index,cache):
         else:item=cache[key]
         im,px,py=item;x,y=position(a,index);left,top=x-px,y-py
         # Clip explicitly to the scene bounds, including negative positions.
-        x0,y0=max(0,left),max(0,top);x1,y1=min(out.width,left+im.width),min(out.height,top+im.height)
-        if x1>x0 and y1>y0:out.alpha_composite(im.crop((x0-left,y0-top,x1-left,y1-top)),(x0,y0))
+        composite(out,im,left,top)
     return out
 
 def render(value,frame=None,preview=True):
     scene,decoded=validate(value)
-    if not scene["actors"]:raise ValueError("Add at least one actor")
+    if not scene["actors"] and not scene["effects"]:raise ValueError("Add at least one actor or effect")
     indices=list(range(scene["count"])) if frame is None else [integer(frame,0,scene["count"]-1,"scene frame")]
     if scene["width"]*scene["height"]*len(indices)>(12_000_000 if preview else 32_000_000):
         raise ValueError("Scene exceeds frame budget; reduce dimensions or frame count")
@@ -124,6 +141,8 @@ def render(value,frame=None,preview=True):
                  for im in decoded[a["id"]]) for a in scene["actors"])
     # Prevent excessive repeated scaling of huge source clips.
     if work>72_000_000:raise ValueError("Scaled actors exceed CPU surface budget")
+    fxwork=sum((4*e["radius"]+8)**2*(1 if e["pixel"] else 4)*sum(vfx.active(e,i) for i in indices) for e in scene["effects"])
+    if fxwork>120_000_000:raise ValueError("Effects exceed CPU surface budget; reduce size, duration or count")
     cache={};frames=[compose(scene,decoded,i,cache) for i in indices]
     meta=dict(name=scene["name"],fps=scene["fps"],loop=scene["loop"],size=[scene["width"],scene["height"]],
               pivot=[scene["width"]//2,scene["height"]//2],indices=indices)

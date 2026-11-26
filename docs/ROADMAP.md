@@ -1,6 +1,6 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 46 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 47 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## First: verify the newest delivered features
 
@@ -55,4 +55,4 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 Clean up already-tracked runtime files (local configuration, logs, history) and duplicate root phase notes *separately* after confirming any needed user data is backed up. See [Repository workflow](REPOSITORY_WORKFLOW.md).
 
-Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Next Phase 47 visual effects, magic and particles.
+Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose preview; Phase 41 adds normalized multi-bone mesh binding and weight painting. Phase 42 adds custom rig rotation tracks, interpolation, onion skins, playback and baked clip export. Phase 43 adds analytical two-bone IK, target tracks and authored canvas-space foot contacts. Phase 44 adds selective masked SDXL cleanup and non-destructive accepted custom timeline frames. Phase 45 adds editable bone mappings, reusable motion bundles and proportional IK/contact retargeting. Phase 46 adds multi-actor scene composition, independent timing and flattened scene export. Phase 47 adds deterministic procedural VFX, actor attachments and transparent effect export. Next Phase 48 batch character production.
