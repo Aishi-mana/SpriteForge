@@ -27,6 +27,10 @@ python tests/test_rig.py         # or any single file
 
 The default branch is `main` in [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge). Use a short-lived feature or fix branch and a pull request; keep the code, tests, docs and `CHANGELOG.md` in the same change where relevant. Review the diff before merging. The old phase ZIPs and root `PHASE*.md` files are historical delivery artifacts; use `docs/phases/` for their canonical notes instead of creating more duplicate root notes.
 
+## Living implementation record
+
+Every implementation or fix PR must update [IMPLEMENTATION_DIARY.md](IMPLEMENTATION_DIARY.md) with a timestamped entry and relevant phase notes. Record files, decisions, tests, failures, limitations and references; append actual validation and merge outcomes. Keep README, roadmap and handoff current at milestone boundaries. Do not substitute a planned check for an observed result.
+
 Before opening a PR:
 
 1. Run `python tests/run_all.py` from the repository root and report whether Node.js was present; a clean result without Node.js does **not** exercise browser-side JS tests.
