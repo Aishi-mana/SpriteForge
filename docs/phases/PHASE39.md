@@ -28,3 +28,6 @@ Run validate.bat in the repo after setup. It compiles Python sources and runs al
 6. Validate legacy pixel generation, reference pose, custom keyframes, endpoint blend, templates, directions, palette/portrait/tile/terrain workflows before merging. No new tile/terrain features.
 
 Do not mark the release stable until CPU tests and relevant device/engine checks pass. CI failure must be investigated, not ignored. No measured speedup or RAM reduction is claimed.
+
+## Initial CI follow-up
+Run 45736914644 failed 4 suites on Ubuntu and 5 on Windows; modular rigging, deformation, layer export, library and stability suites passed on both. Updated the invalid mock checkpoint fixtures to use a structurally valid safetensors header, repaired Windows path containment assertions, restored the fake DOM select options in the history test, and expanded JavaScript error output. CI actions now use Node 24-compatible major versions. Production model validation remains unchanged. Rerun required before merge.

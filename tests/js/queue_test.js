@@ -6,13 +6,14 @@ let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log('FAIL', m) } 
 ok(block.length > 3000, 'the queue block is present in the page');
 
 const draws = []; const CTX = new Proxy({ drawImage: (...a) => draws.push(a) }, { get: (t, k) => (k in t ? t[k] : () => {}) });
-const els = {}; const mk = id => els[id] || (els[id] = { id, value: '', checked: false, textContent: '', innerHTML: '', style: {}, dataset: {}, className: '',
+const els = {}; const mk = id => els[id] || (els[id] = { id, value: '', checked: false, textContent: '', innerHTML: '', style: {}, dataset: {}, className: '', options: [],
   classList: { toggle() {}, add() {}, remove() {} }, getContext: () => CTX, querySelectorAll: () => [mk('qa' + Math.random()), mk('qb' + Math.random()), mk('qc' + Math.random())], querySelector: () => mk('q' + Math.random()), appendChild() {}, scrollIntoView() {} });
 const $ = id => mk(id);
 const set = (o) => Object.entries(o).forEach(([k, v]) => { const e = $(k); if (typeof v == 'boolean') e.checked = v; else e.value = v });
 set({ prompt: 'a knight', neg: 'blurry', ckpt: 'sd_xl_base_1.0.safetensors', lora: 'pixel.safetensors', lw: '0.9', steps: '25', cfg: '7', seed: '-1', bg: 'white', n1: '2', n: '3', mode: 'fixed', size: '64', colors: '16', pal: '', rmbg: true,
   tol: '40', shadow: true, pxcrisp: true, pxclean: false, pxoutline: 'none', sampler: 'euler_a', pose: 'jumping', char: 'knight', ips: '0.7', lockpal: true, matchsz: false, cns: '0.8', canvas: '128', gsize: '768', useskel: true, scl: '1', preset: 'Stand' });
 
+$('preset').options = [{value:'Stand'}];
 const calls = []; let apiQueue = [];
 const api = async (url, opt) => { calls.push({ url, body: opt && typeof opt.body == 'string' ? JSON.parse(opt.body) : (opt && opt.body ? '[form]' : null), method: opt && opt.method }); const r = apiQueue.shift(); if (r instanceof Error) throw r; return typeof r == 'function' ? r() : r };
 const J = { method: 'POST', headers: {} };
@@ -148,4 +149,4 @@ const r = T.refParams(); ok(r.ip_scale === 0.7 && r.n === 3 && r.canvas === 128 
   apiQueue = [{ dir: '/x/water_anim', frames: 6, ms: 90, sheet: [96, 16], files: ['water.png', 'water.tres'] }]; await T.anExport(); ok(calls[calls.length - 1].url == '/api/tiles/export_anim' && $('status').textContent.startsWith('Exported 6 frames (96×16 strip, 90 ms)'), 'animation export request and report');
   T.TL.src = null; $('status').textContent = ''; await T.anMake(); ok($('status').textContent.includes('workbench'), 'animation without a tile: clear message');
   console.log(fail ? fail + ' FAILED' : 'ALL PASSED'); process.exit(fail ? 1 : 0);
-})();
+})().catch(e => { console.error(e.stack || e); process.exit(1); });
