@@ -7,14 +7,14 @@ def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True,sh
     if mode not in ("edge","smart","all","manual","magic","shadow","refine"):
         raise ValueError("Unknown cleanup mode")
     im=image.convert("RGBA")
-    a=np.array(im)
-    rgb=a[:,:,:3].astype(np.float32)
-    alpha=a[:,:,3]
     tol=max(1,min(100,int(tolerance)))
     if mode=="refine":
         return refine(im,background,edge_strength,alpha_cutoff,hard_edges)
     if mode=="shadow":
         return _shadow_cleanup(im,tol,background,shadow_strength)
+    a=np.array(im)
+    rgb=a[:,:,:3].astype(np.float32)
+    alpha=a[:,:,3]
     if background is None:
         border=np.concatenate((a[0],a[-1],a[:,0],a[:,-1]))
         border=border[border[:,3]>=250,:3]
@@ -57,7 +57,10 @@ def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True,sh
             raise ValueError("Point outside image")
         k=int(labels[y,x])
         if k:selected.add(k);pockets.add(k)
-    mask=np.isin(labels,list(selected))&candidate
+    lookup=np.zeros(n+1,dtype=bool)
+    if selected:
+        lookup[list(selected)]=True
+    mask=lookup[labels]&candidate
     a[:,:,3][mask]=0
     if soft:
         rim=ndi.binary_dilation(mask)&~mask&visible
@@ -247,6 +250,8 @@ def preserve_regions(source,result,mask,info):
     changed=np.any(before!=after,axis=2)
     after[locked]=before[locked]
     info=dict(info)
+    if "decontaminated" in info:
+        info["decontaminated"]=int(((before[:,:,3]>0)&(after[:,:,3]>0)&np.any(before[:,:,:3]!=after[:,:,:3],axis=2)).sum())
     info["protected"]=int(locked.sum())
     info["protected_restored"]=int((locked&changed).sum())
     info["removed"]=int(((before[:,:,3]>0)&(after[:,:,3]==0)).sum())
