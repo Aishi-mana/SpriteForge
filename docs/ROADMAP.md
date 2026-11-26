@@ -1,6 +1,6 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 32 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 36 (validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## First: verify the newest delivered features
 
@@ -31,7 +31,7 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 
 ## Candidate next features
 
-1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Next: improved occlusion, per-layer weights and runtime equipment integration.
+1. **Phase 33 implemented (validation pending):** modular bone attachments, body-only saved rig and standard clip previews/export. Phase 34 adds opt-in soft elbow/knee garment meshes and independent spring-chain motion for flexible layers (validation pending). Phase 35 adds synchronized independent animation sheets and an engine-neutral manifest with optional hidden alternatives (validation pending). Phase 36 bundles Godot 4 and Unity desktop runtime components for synchronized clip playback, equipment choices and loadout persistence (engine validation pending). Next: improved occlusion, per-layer weights and runtime integration testing.
 2. **Character improvements:** precise masked editing, semantic asset extraction, garment fitting, improved multiview conditioning and per-clip secondary motion presets.
 3. **First-run setup wizard / model manager:** validate local model/runtime components, optional IP-Adapter/ControlNet setup, dependency checks and assistant model configuration.
 4. **Pixel editor extras:** layers, copy/paste, tile mode, outline/shade tools and palette ramps.
@@ -46,7 +46,7 @@ See the corresponding [phase notes](phases/) for scope and limitations. Regressi
 - On an **8 GB GPU**, ControlNet/skeleton mode uses CPU/sequential offload and may take minutes per image; large generation settings can still cause OOM.
 - Reference-pose and view generation may drift from the character's original identity or silhouette. The rig produces the most repeatable animation frames.
 - Rigid movement remains available; optional soft mesh elbows/knees can stretch or fold. Front/back walking is simplified and three-quarter views approximate. AI reference guidance does not guarantee identity or exact feature locks.
-- AI joint cleanup is slow and most useful for small frames; its output must be reviewed. Modular asset generation is not semantic extraction or exact garment fitting. Modular animation currently uses flattened composites, not independently rigged layers.
+- AI joint cleanup is slow and most useful for small frames; its output must be reviewed. Modular asset generation is not semantic extraction or exact garment fitting. Modular animation supports independent baked layer sheets; the runtime is not a live skeletal system.
 - Current tile collision is a full square for manually marked solid tiles; **art-derived polygons and terrain collisions are not implemented**.
 - Godot/Tiled outputs are format-tested, but **import/painting must be verified in the actual target editors**. Multi-terrain Godot painting is explicitly best effort.
 - The desktop shell targets Windows; real inference, memory use and renderer behaviour are not established by the headless unit tests.

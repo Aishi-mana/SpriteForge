@@ -15,6 +15,12 @@ d=E.export(recipe,"walk",4,10,"right","r","r",1,0,0,"test",root,columns=2,indivi
 p=Path(d["dir"]);m=json.loads((p/"manifest.json").read_text())
 ok(len(m["layers"])==3 and m["frame_count"]==4,"hidden alternative exported with same frame count")
 ok(m["layers"][2]["visible"] is False,"default visibility recorded")
+ok(len(m["character_id"])==64,"stable character fingerprint")
+ok((p/"runtime/godot/SpriteForgeCharacter.gd").is_file() and (p/"runtime/unity/SpriteForgeCharacter.cs").is_file(),"runtime scripts bundled")
+clean,_=M.validate(recipe);key=E.character_id(clean);clean["layers"][2]["visible"]=True
+ok(E.character_id(clean)==key,"equipment visibility preserves identity")
+clean["layers"][2]["x"]=2
+ok(E.character_id(clean)!=key,"asset transform changes identity")
 combined=Image.new("RGBA",tuple(d["sheet"]))
 for l in m["layers"]:
     im=Image.open(p/l["sheet"]).convert("RGBA")

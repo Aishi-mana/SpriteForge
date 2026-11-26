@@ -66,6 +66,7 @@ public sealed class SpriteForgeCharacter : MonoBehaviour {
             var m=JsonUtility.FromJson<Manifest>(File.ReadAllText(path));
             if(!Valid(m))throw new Exception("Invalid manifest");
             if(keepEquipment&&clip!=null&&(string.IsNullOrEmpty(m.character_id)||m.character_id!=clip.character_id))throw new Exception("Incompatible recipe; pass false to reset.");
+            if(keepEquipment&&clip!=null&&(m.layers.Length!=parts.Count||Array.Exists(m.layers,l=>!parts.ContainsKey(l.id))))throw new Exception("Incompatible layer set; export all alternatives for each clip.");
             if(pixelsPerUnit<=0)throw new Exception("Pixels per unit must be positive");
             foreach(var l in m.layers) {
                 var p=new Part();next.Add(l.id,p);
@@ -80,7 +81,7 @@ public sealed class SpriteForgeCharacter : MonoBehaviour {
                 }
                 p.go=new GameObject(l.id);p.go.SetActive(false);p.go.transform.SetParent(transform,false);
                 p.renderer=p.go.AddComponent<SpriteRenderer>();p.renderer.sortingLayerName=sortingLayerName;p.renderer.sortingOrder=baseSortingOrder+l.z;
-                bool old;choices[l.id]=keepEquipment&&visibility.TryGetValue(l.id,out old)?old:l.visible;
+                bool old;choices[l.id]=l.id==m.body_layer||(keepEquipment&&visibility.TryGetValue(l.id,out old)?old:l.visible);
             }
             Release(parts);parts=next;visibility=choices;clip=m;Play();return true;
         } catch(Exception e) { Release(next);Debug.LogError("SpriteForge: "+e.Message,this);return false; }
@@ -114,7 +115,7 @@ public sealed class SpriteForgeCharacter : MonoBehaviour {
         foreach(var l in clip.layers)if(l.category==category&&l.id!=clip.body_layer)visibility[l.id]=false;
         Apply();
     }
-    public void ResetEquipment() { if(clip==null)return;foreach(var l in clip.layers)visibility[l.id]=l.visible;Apply(); }
+    public void ResetEquipment() { if(clip==null)return;foreach(var l in clip.layers)visibility[l.id]=l.id==clip.body_layer||l.visible;Apply(); }
     string DefaultPath() { return Path.Combine(Application.persistentDataPath,"spriteforge_loadout.json"); }
     public bool SaveLoadout(string path=null) {
         if(clip==null||string.IsNullOrEmpty(clip.character_id))return false;

@@ -1,5 +1,7 @@
 """Synchronized modular PNG sheets, one sheet per source layer and a shared manifest."""
 import json
+import hashlib
+import shutil
 import math
 import re
 import tempfile
@@ -9,6 +11,11 @@ from . import modular, modular_rig, rig
 
 MAX_PIXELS=32_000_000
 MAX_AXIS=16384
+
+def character_id(clean):
+    # Equipment visibility is a loadout, not a character identity change.
+    rows=[{**l,"visible":l["visible"] if l["category"]=="body" else True} for l in clean["layers"]]
+    return hashlib.sha256(json.dumps({**clean,"layers":rows},sort_keys=True,separators=(",",":")).encode()).hexdigest()
 
 def export(recipe,anim,count,fps,facing,near,weapon,amp,pad,softness,name,root,columns=8,include_hidden=True,individual=False):
     clean,_=modular.validate(recipe)
@@ -50,7 +57,7 @@ def export(recipe,anim,count,fps,facing,near,weapon,amp,pad,softness,name,root,c
                        "z":z,"visible":l["visible"],"attachment":l["attachment"],"motion":l["motion"],
                        "sheet":f"layers/layer_{i:02d}.png"})
     pivot=list(meta["pivot"])
-    manifest={"version":1,"format":"spriteforge_modular_animation","animation":anim,"frame_count":count,"fps":fps,
+    manifest={"version":1,"format":"spriteforge_modular_animation","animation":anim,"character_id":character_id(clean),"frame_count":count,"fps":fps,
               "loop":anim not in rig.ONE_SHOT,"cell":{"w":w,"h":h},"sheet":{"w":sw,"h":sh,"columns":columns},
               "pivot_px":pivot,"pivot_normalized":[pivot[0]/w,pivot[1]/h],"origin":"top-left",
               "sampling":"nearest" if clean["pixel"] else "linear","alpha":"straight",
@@ -73,9 +80,13 @@ def export(recipe,anim,count,fps,facing,near,weapon,amp,pad,softness,name,root,c
                     x,y=rect["x"],rect["y"]
                     sheets[i].crop((x,y,x+w,y+h)).save(folder/f"{rect['index']:03d}.png")
         (d/"manifest.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False),encoding="utf-8")
-        (d/"README.txt").write_text("Use the same frame index for every visible layer. Draw ascending z, at the same origin minus pivot_px. Use straight-alpha blending. Toggle alternatives by layer id/category. All cells are untrimmed; transparent cells still consume a frame. assembled.png uses default visibility. Use nearest filtering for pixel art. Export all desired clips with matching recipe/order and settings. This is baked 2D animation, not a runtime skeleton.\n",encoding="utf-8")
+        runtime=Path(__file__).resolve().parent.parent/"runtime"
+        for relative in ("godot/SpriteForgeCharacter.gd","unity/SpriteForgeCharacter.cs","README.md"):
+            dest=d/"runtime"/relative
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copyfile(runtime/relative,dest)
+        (d/"README.txt").write_text("Use the same frame index for every visible layer. Draw ascending z, at the same origin minus pivot_px. Use straight-alpha blending. Toggle alternatives by layer id/category. All cells are untrimmed; transparent cells still consume a frame. assembled.png uses default visibility. Use nearest filtering for pixel art. Export all desired clips with matching recipe/order and settings. This is baked 2D animation, not a runtime skeleton. See runtime/README.md for Godot and Unity setup.\n",encoding="utf-8")
     except Exception:
-        import shutil
         shutil.rmtree(d,ignore_errors=True)
         raise
     return {"dir":str(d),"frames":count,"layers":len(layers),"sheet":[sw,sh],"cell":[w,h],"pivot":pivot}

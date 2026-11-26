@@ -67,6 +67,13 @@ func load_clip(path: String, keep_equipment: bool = true) -> bool:
 	if keep_equipment and not clip.is_empty() and (str(m.get("character_id","")).is_empty() or m.character_id!=clip.get("character_id","")):
 		push_error("SpriteForge: incompatible recipe. Pass false to reset.")
 		return false
+	if keep_equipment and not clip.is_empty():
+		if m.layers.size()!=nodes.size():
+			push_error("SpriteForge: incompatible layer set; include all alternatives in every clip.")
+			return false
+		for l in m.layers:
+			if not nodes.has(l.id):
+				return false
 	var next: Dictionary = {}
 	var choices: Dictionary = {}
 	for l in m.layers:
@@ -85,7 +92,7 @@ func load_clip(path: String, keep_equipment: bool = true) -> bool:
 		s.texture_filter=CanvasItem.TEXTURE_FILTER_NEAREST if m.get("sampling")=="nearest" else CanvasItem.TEXTURE_FILTER_LINEAR
 		s.z_index=int(l.z)
 		next[l.id]=s
-		choices[l.id]=bool(visibility.get(l.id,l.visible)) if keep_equipment else bool(l.visible)
+		choices[l.id]=true if l.id==m.body_layer else (bool(visibility.get(l.id,l.visible)) if keep_equipment else bool(l.visible))
 	for s in nodes.values():
 		remove_child(s)
 		s.queue_free()
@@ -165,7 +172,7 @@ func unequip_category(category: String) -> void:
 
 func reset_equipment() -> void:
 	for l in clip.get("layers",[]):
-		visibility[l.id]=bool(l.visible)
+		visibility[l.id]=true if l.id==clip.body_layer else bool(l.visible)
 	_apply()
 
 func save_loadout(path: String = "user://spriteforge_loadout.json") -> bool:

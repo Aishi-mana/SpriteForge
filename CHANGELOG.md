@@ -295,3 +295,6 @@ Opt-in soft elbow/knee meshes for auto-split garment layers, independent spring-
 
 ## Phase 35 — Independent animated layer export
 Synchronized transparent body/equipment sheets, optional hidden alternatives and individual frames, shared untrimmed rectangles/feet pivot/timing, manifest draw order and default visibility, assembled reconstruction, unique export directories and bounded memory. Existing assembled export retained. Tests added; runtime validation pending.
+
+## Phase 36 — Runtime character assembly and equipment
+Godot 4 and Unity desktop modular runtime components bundled with layer exports; synchronized playback, clip switching, equipment visibility and category swaps, saved loadouts, recipe fingerprint compatibility checks and setup guide. Engine execution pending.
