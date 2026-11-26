@@ -233,3 +233,21 @@ def refine(image,background=None,strength=50,cutoff=12,hard_edges=True):
     if not hard_edges and strength and background is None:
         info["note"]="Select the original background color for halo removal; alpha cutoff was applied."
     return Image.fromarray(a),info
+
+
+def preserve_regions(source,result,mask,info):
+    """Restore protected RGBA from the input to a cleanup operation."""
+    source=source.convert("RGBA")
+    result=result.convert("RGBA")
+    if mask.size!=source.size or result.size!=source.size:
+        raise ValueError("Protection mask must match source dimensions")
+    locked=np.asarray(mask.convert("L"))>=128
+    before=np.asarray(source)
+    after=np.array(result)
+    changed=np.any(before!=after,axis=2)
+    after[locked]=before[locked]
+    info=dict(info)
+    info["protected"]=int(locked.sum())
+    info["protected_restored"]=int((locked&changed).sum())
+    info["removed"]=int(((before[:,:,3]>0)&(after[:,:,3]==0)).sum())
+    return Image.fromarray(after),info
