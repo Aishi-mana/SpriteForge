@@ -990,6 +990,7 @@ class ModularAsset(BaseModel):
     description: str
     view: str = "front"
     source: str = "body"
+    fixed_canvas: bool = False
     replace_category: bool = True
     checkpoint: str
     lora: str = ""
@@ -1014,10 +1015,10 @@ def modular_generate_asset(b: ModularAsset):
     ckpt,lora_dir=_paths(b.checkpoint)
     try:
         if not mf.describe(ckpt)["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
-        prompt=modular_assets.prompt(b.category,b.description,b.view)
+        prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,b.description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
-        recipe,images,ref,bb=modular_assets.reference(b.recipe,b.source)
+        recipe,images,ref,bb=modular_assets.reference(b.recipe,"body" if b.fixed_canvas else b.source)
         if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
         art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
         rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
@@ -1029,6 +1030,9 @@ def modular_generate_asset(b: ModularAsset):
                  ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
                  gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
         info=res["info"]
+        if b.fixed_canvas:
+            registered,info=modular_assets.register_asset(modular.decode(res["sprite"]),info,(recipe["width"],recipe["height"]))
+            res["sprite"]=modular.png_uri(registered)
         layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
                "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
         # Validate the resulting recipe budget before presenting an addable candidate.
