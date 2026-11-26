@@ -152,3 +152,123 @@ Opt-in soft garment elbow/knee meshes and per-layer independent spring chains, a
 
 Synchronized transparent modular body/equipment sheets, optional hidden non-body alternatives and individual frames. Shared untrimmed grid, pivot, FPS, loop, draw order and visibility manifest; exact reconstructed assembled sheet from exported layers. Existing rig deformation and CPU budgets reused. Standard flattened export unchanged. JS syntax checked, CPU tests added but not executed. Engine-neutral baked PNG export, not runtime skeletal rig.
 
+### Phase 36: runtime character assembly and equipment system
+
+- Opened: 2026-11-26T01:19:58Z; merged: 2026-11-26T01:49:23Z (UTC).
+- [PR #16](https://github.com/Aishi-mana/SpriteForge/pull/16); merge commit `903d33a24d33`.
+- Recorded scope and verification at submission:
+
+Godot 4 and Unity desktop components bundled with modular sheet exports. Shared clock, clip switching, category equipment and layer visibility, loadout persistence, recipe and layer-set compatibility checks. Documentation and fingerprint/bundle regression tests included. JS parse passed; Python suite and actual engine compile/playback not verified. Baked frames, not live skeletal rig.
+
+### Phase 37: advanced layer occlusion and manual bone weight editing
+
+- Opened: 2026-11-26T01:23:31Z; merged: 2026-11-26T01:49:14Z (UTC).
+- [PR #17](https://github.com/Aishi-mana/SpriteForge/pull/17); merge commit `eba8893334d1`.
+- Recorded scope and verification at submission:
+
+Opt-in two-bone weighted meshes with bounded canvas brush stamps, undo/reset, per-layer explicit depth and animated body-bone alpha occlusion. Persistent recipes and synchronized independent sheets use matching order and baked masks. Existing rigid, soft and spring modes preserved. JS syntax checked; CPU regression tests added but not executed. No general multi-bone weight maps or dynamic inter-layer collisions.
+
+### Phase 38: character model and asset library manager
+
+- Opened: 2026-11-26T01:26:25Z; merged: 2026-11-26T01:49:06Z (UTC).
+- [PR #18](https://github.com/Aishi-mana/SpriteForge/pull/18); merge commit `397a65be554e`.
+- Recorded scope and verification at submission:
+
+Shared local searchable character recipe, individual layer and exact-body rig snapshots, tags/thumbnail previews, copy/apply/delete, validated bounded persistence. Installed model and LoRA manager shows file-presence readiness and filters compatibility without loading weights. Both Qwen checkpoints retained. JS parse checked; CPU regression tests added but not run. No installer or GPU benchmark.
+
+### Phase 39: integration testing, performance and stability
+
+- Opened: 2026-11-26T01:36:36Z; merged: 2026-11-26T01:48:59Z (UTC).
+- [PR #19](https://github.com/Aishi-mana/SpriteForge/pull/19); merge commit `d8ba565cd473`.
+- Recorded scope and verification at submission:
+
+Stabilization fixes: thread-isolated sampler/progress, cancellation, local worker cleanup and timeout, bounded model-header cache and render allocations, project input staging, SDXL folder ControlNet loading. CPU validation CI and Windows validate.bat, manual GPU/Godot/Unity acceptance checklist. 33 JavaScript assertions passed in an isolated harness; full Python and device tests not yet verified. Keep draft until validated.
+
+### Phase 40: custom skeleton and bone hierarchy editor
+
+- Opened: 2026-11-26T01:55:28Z; merged: 2026-11-26T03:56:59Z (UTC).
+- [PR #20](https://github.com/Aishi-mana/SpriteForge/pull/20); merge commit `4ea20cc8e616`.
+- Recorded scope and verification at submission:
+
+Independent custom rig tab with connected editable bone hierarchy, four starters, parent-child forward kinematics, CPU rigid pose preview/export, portable JSON presets and project persistence. Existing humanoid and modular rigs preserved. JS parse and literal ID checks passed; CPU CI pending. Multi-bone skinning, custom animation timeline and IK remain future phases.
+
+### Phase 41: multi-bone skinning and weight painting
+
+- Opened: 2026-11-26T02:06:23Z; merged: 2026-11-26T03:56:52Z (UTC).
+- [PR #21](https://github.com/Aishi-mana/SpriteForge/pull/21); merge commit `c5897c0d9812`.
+- Recorded scope and verification at submission:
+
+Optional custom-rig linear blend mesh with normalized nearest-four auto weights, manual radial stamps for any bone, selected-bone heatmap, undo/clear/reset, and preset/project persistence. Shared textured triangle rasterizer, rigid fallback, bounded mesh/stamps. Feature branch CPU CI enabled. JS syntax and IDs checked; regression tests added, CPU run pending. No timeline or IK.
+
+### Phase 42: advanced animation timeline
+
+- Opened: 2026-11-26T02:59:14Z; merged: 2026-11-26T03:56:44Z (UTC).
+- [PR #22](https://github.com/Aishi-mana/SpriteForge/pull/22); merge commit `65221fd4aa5d`.
+- Recorded scope and verification at submission:
+
+Custom rig bone-specific rotation tracks, linear/ease/step interpolation, key capture/duplicate/delete, scrub and playback with adjacent onion skins, reused weighted mesh binding and standard spritesheet export. One clip per profile; normalized rig and timeline persisted in project/JSON. Existing manual pose, standard animation and modular workflows preserved. JS syntax and literal IDs checked; CPU CI pending. No IK, multi-clip collection or position/scale tracks.
+
+### Phase 43: inverse kinematics and foot locking
+
+- Opened: 2026-11-26T03:05:36Z; merged: 2026-11-26T03:56:36Z (UTC).
+- [PR #23](https://github.com/Aishi-mana/SpriteForge/pull/23); merge commit `8e1805ec70d8`.
+- Recorded scope and verification at submission:
+
+Analytic two-bone IK, adjustable constraints, target drag geometry preview and residual, frame-indexed target keys and fixed contact ranges. Shared solver for rigid/weighted custom rig and baked timeline preview/export; project/preset persistence. Manual angles and existing modular/humanoid rigs retained. JS syntax and literal IDs checked; regression tests added and CI pending. Canvas-space contacts, not automatic root motion or ground detection.
+
+### Phase 44: AI-assisted animation cleanup
+
+- Opened: 2026-11-26T03:21:40Z; merged: 2026-11-26T03:56:29Z (UTC).
+- [PR #24](https://github.com/Aishi-mana/SpriteForge/pull/24); merge commit `2b4266834a23`.
+- Recorded scope and verification at submission:
+
+Selective SDXL inpainting of custom timeline frames, posed-joint/brush masks, exact outside-mask RGBA and default alpha lock, pixel palette lock, original/candidate/accepted comparison, persistent accepted frame overlays with source/profile/pad provenance checks, accepted playback and export. Existing Qwen/Neta reference runtimes are not true mask inpainting; excluded. CPU mock regressions and JS syntax/ID checks; CI and live GPU/browser tests pending.
+
+### Phase 45: animation retargeting between characters
+
+- Opened: 2026-11-26T03:29:49Z; merged: 2026-11-26T03:56:22Z (UTC).
+- [PR #25](https://github.com/Aishi-mana/SpriteForge/pull/25); merge commit `d69e33df3c0b`.
+- Recorded scope and verification at submission:
+
+Motion bundle export/import, stable ID/name suggestions and editable one-to-one mappings, rotation track and timing transfer, optional limb-length/orientation-scaled IK targets and fixed contacts, paired solved geometry preview and reachability report. Destination source pixels, rest skeleton, manual pose and weights preserved; apply replaces timeline and IK chains. CPU regression tests and JS syntax/ID checks; CI pending. No automatic root motion or guarantee of identical world-space poses.
+
+### Phase 46: multi-character animation scenes
+
+- Opened: 2026-11-26T03:43:26Z; merged: 2026-11-26T03:56:15Z (UTC).
+- [PR #26](https://github.com/Aishi-mana/SpriteForge/pull/26); merge commit `c3a150e51e55`.
+- Recorded scope and verification at submission:
+
+New Scenes tab: independent baked custom-rig actors from current or saved projects, PNG props, portable actor/scene bundles, position tween, facing, scale, opacity, depth, independent source FPS/speed/start/end/offset/loop-hold-hide. Shared frame scrub, cached playback, fixed untrimmed flattened scene export and project persistence. CPU budget guards and regression tests; JS syntax/IDs checked. CI pending. No live rig interaction, physics or collision logic.
+
+### Phase 47: visual effects, magic and particles
+
+- Opened: 2026-11-26T03:46:22Z; merged: 2026-11-26T03:56:07Z (UTC).
+- [PR #27](https://github.com/Aishi-mana/SpriteForge/pull/27); merge commit `3844cbf6a9f7`.
+- Recorded scope and verification at submission:
+
+Eight CPU procedural effect presets, deterministic seeded emitters, editable timing/color/radius/opacity/depth/rotation/speed, actor-pivot attachment or free position, shared scene timing, effect-only scenes, project/JSON persistence and standalone transparent VFX exports. Bounded effect work; regression tests added; JS syntax/IDs checked. CI pending. No additive shaders, automatic combat, live bone attachments or GPU inference.
+
+### Phase 48: batch character production
+
+- Opened: 2026-11-26T03:55:26Z; merged: 2026-11-26T03:57:52Z (UTC).
+- [PR #28](https://github.com/Aishi-mana/SpriteForge/pull/28); merge commit `a5085ee6d86d`.
+- Recorded scope and verification at submission:
+
+Production tab with shared generation settings, named character rows and reusable recipes, grouped persistent single-worker GPU queue, resolved seeds, per-row retry and new project creation, sequential saved custom rig animation exports with optional automatic retargeting and warning review. No automatic skeleton fitting; projects preserved; export status session-only. CPU regression tests and JS syntax/IDs checked. CI pending.
+
+### Phase 49 — initial performance and integration validation
+
+- Opened: 2026-11-26T04:01:57Z; merged: 2026-11-26T04:06:13Z (UTC).
+- [PR #29](https://github.com/Aishi-mana/SpriteForge/pull/29); merge commit `85d26a59913b`.
+- Recorded scope and verification at submission:
+
+Adds a maximum-layer CPU scene integration regression with repeat timing, deterministic JSON roundtrip and scrub checks, plus validation gates. Execution is pending; no benchmark results or hardware sign-off claimed.
+
+### Phase 50 — UI cleanup and workspace navigation
+
+- Opened: 2026-11-26T04:10:05Z; merged: 2026-11-26T04:14:32Z (UTC).
+- [PR #30](https://github.com/Aishi-mana/SpriteForge/pull/30); merge commit `d865ae8912da`.
+- Recorded scope and verification at submission:
+
+Fix hidden panel CSS, group navigation, add contextual workspace headings, collapsible setup, connection feedback and responsive styling. Preserve existing control IDs. Desktop visual verification remains pending.
+
