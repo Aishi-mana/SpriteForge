@@ -1,0 +1,3 @@
+# Phase 61F — Character pose and animation workflow
+
+Approve a sprite in Portrait, then open the standard rig or custom rig, select a reference pose, prepare an action clip, or prepare the starter export pack (idle, walk, run, attack). Standard rig replacement requires confirmation and clears stale rig results, keys and endpoints. Same-source handoff retains work. Custom rig reuses its skeleton; inspect weights and joints. Existing pose and animation engines perform the actual generation/rendering; these controls do not add new motion synthesis. Review joints and previews before exporting. GPU and interactive desktop verification remain outstanding.
