@@ -13,7 +13,7 @@ if not node:
 else:
     script = re.search(r"<script>(.*)</script>", html, re.S).group(1); tmp = tmpdir() / "ui.js"; tmp.write_text(script, encoding="utf-8")
     r = subprocess.run([node, "--check", str(tmp)], capture_output=True, text=True); ok(r.returncode == 0, "the page script parses" + ("" if r.returncode == 0 else "\n" + r.stderr[:400]))
-    for f in ("pxe_test.js", "options_test.js", "editor_test.js", "queue_test.js", "pose_presets_test.js", "phase61_test.js", "phase61f_test.js", "phase61g_test.js", "phase61kd_test.js", "phase61ke_test.js", "phase61kf_test.js"):
+    for f in ("pxe_test.js", "options_test.js", "editor_test.js", "queue_test.js", "pose_presets_test.js", "phase61_test.js", "phase61f_test.js", "phase61g_test.js", "phase61kd_test.js", "phase61ke_test.js", "phase61kf_test.js", "phase61lc_test.js"):
         r = subprocess.run([node, str(Path(__file__).parent / "js" / f)], capture_output=True, text=True)
         out = r.stdout.strip().splitlines(); ok(r.returncode == 0 and out and out[-1].strip() == "ALL PASSED", f"js/{f}: " + (out[-1] if out else r.stderr[:200]) + f" ({sum(1 for l in out if l.startswith('ok'))} checks)")
         if r.returncode != 0:
