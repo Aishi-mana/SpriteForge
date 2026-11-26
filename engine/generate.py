@@ -45,8 +45,19 @@ SAMPLER = "euler_a"
 
 
 def set_sampler(name):
-    global SAMPLER
-    SAMPLER = name if name in SAMPLERS else "euler_a"
+    _job_context.sampler = name if name in SAMPLERS else "euler_a"
+
+
+def _progress(done,total):
+    cb=getattr(_job_context,"progress",None)
+    if cb:
+        try:cb(done,total)
+        except Exception:pass
+
+
+def _check_cancelled():
+    cb=getattr(_job_context,"cancelled",None)
+    if cb and cb():raise RuntimeError("Generation cancelled")
 
 
 def _apply_sampler(pipe):
@@ -55,9 +66,10 @@ def _apply_sampler(pipe):
     if type(pipe.scheduler).__name__.startswith("FlowMatch"):
         return  # keep architecture-native flow schedule
     cfg = pipe.scheduler.config
-    if SAMPLER == "dpmpp_2m_karras":
+    sampler=getattr(_job_context,"sampler",SAMPLER)
+    if sampler == "dpmpp_2m_karras":
         pipe.scheduler = DPMSolverMultistepScheduler.from_config(cfg, use_karras_sigmas=True, algorithm_type="dpmsolver++")
-    elif SAMPLER == "euler":
+    elif sampler == "euler":
         pipe.scheduler = EulerDiscreteScheduler.from_config(cfg)
     else:
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(cfg)
@@ -145,7 +157,7 @@ def _load(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None):
         else: raise ValueError("This model needs a complete Diffusers pipeline folder")
     elif use_cn:
         cn, cn_name = _controlnet(cn_dir)
-        pipe = StableDiffusionXLControlNetPipeline.from_single_file(ckpt, controlnet=cn, torch_dtype=torch.float16, use_safetensors=True)
+        pipe = (StableDiffusionXLControlNetPipeline.from_pretrained(ckpt,controlnet=cn,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionXLControlNetPipeline.from_single_file(ckpt, controlnet=cn, torch_dtype=torch.float16, use_safetensors=True))
         _cache["cn_name"] = cn_name
     else:
         pipe = StableDiffusionXLPipeline.from_pretrained(ckpt,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionXLPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
@@ -175,15 +187,17 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
     import torch
     with _lock:
         from . import local_runtime as lr
+        _check_cancelled()
         if lr.route(ckpt):
             if control_image is not None:raise ValueError("Local model does not support SDXL ControlNet")
             _cache.update(key=None,pipe=None);gc.collect();torch.cuda.empty_cache()
             base=seed if seed is not None and seed>=0 else int(torch.randint(0,2**31-1,(1,)).item())
             out=[]
             for i in range(n):
+                _check_cancelled()
                 py,req=lr.request(ckpt,lora_dir,lora,lora_w,build_prompt(prompt,bg,kind,art_style),(negative+", " if negative else "")+negative_for(kind,art_style),steps,cfg,base+i,size,ip_image,bg,ip_scale)
                 out.append((lr.run(py,req,cancelled=getattr(_job_context,"cancelled",None)),req["seed"]))
-                if PROGRESS:PROGRESS(i+1,n)
+                _progress(i+1,n)
             return out
         pipe = _load(ckpt, lora, lora_w, lora_dir, ip_image is not None, control_image is not None, cn_dir)
         _apply_sampler(pipe)
@@ -201,6 +215,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
         outs = []
         try:
             for i in range(n):
+                _check_cancelled()
                 gen = torch.Generator("cpu").manual_seed(base + i)
                 import inspect
                 allowed=inspect.signature(pipe.__call__).parameters
@@ -209,11 +224,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
                 if family in mf.FLOW: opts={k:v for k,v in opts.items() if k in allowed}
                 img=pipe(**opts).images[0]
                 outs.append((img, base + i))
-                if PROGRESS:
-                    try:
-                        PROGRESS(i + 1, n)
-                    except Exception:
-                        pass
+                _progress(i+1,n)
                 torch.cuda.empty_cache()
         except Exception:
             # a failed run (e.g. OOM) can leave offload hooks half-applied: drop the pipeline so the next try starts clean
@@ -282,6 +293,7 @@ def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strengt
     """Repaint only the white area of `mask` (low strength = stay close to what is there). Returns a PIL RGB image."""
     import torch
     with _lock:
+        _check_cancelled()
         pipe = _load_inpaint(ckpt, lora, lora_w, lora_dir, ip_image is not None)
         _apply_sampler(pipe)
         kw = {}

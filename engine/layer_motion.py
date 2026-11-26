@@ -49,3 +49,27 @@ def spring_masks(pt,overlap):
         if overlap and m.any():
             m=ndi.binary_dilation(m,iterations=min(3,overlap))&pt["mask"]
         yield m
+
+
+def weighted_mesh(arr,settings,hd):
+    """Create a bounded regular mesh; B weight painted over a uniform A/B base.
+    Strokes are normalized to the transformed, clipped rest canvas.
+    """
+    yy,xx=np.nonzero(arr[...,3]>0)
+    if not len(xx):return None
+    H,W=arr.shape[:2]
+    x0,x1=max(0,int(xx.min())-1),min(W,int(xx.max())+2)
+    y0,y1=max(0,int(yy.min())-1),min(H,int(yy.max())+2)
+    tw,th=x1-x0,y1-y0
+    step=max(2 if hd else 1,int(np.ceil(max(tw,th)/48)))
+    xs=np.r_[np.arange(0,tw,step),tw].astype(float)
+    ys=np.r_[np.arange(0,th,step),th].astype(float)
+    gy,gx=np.meshgrid(ys,xs,indexing="ij")
+    uv=np.stack((gx,gy),axis=-1)
+    weight=np.full(gx.shape,settings["base"],dtype=float)
+    for x,y,r,v in settings["strokes"]:
+        distance=np.hypot(gx+x0-x*W,gy+y0-y*H)/max(r*max(W,H),.5)
+        strength=np.clip(1-distance,0,1)
+        strength=strength*strength*(3-2*strength)
+        weight=weight*(1-strength)+v*strength
+    return arr[y0:y1,x0:x1].copy(),uv,weight,(x0,y0)

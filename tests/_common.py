@@ -25,6 +25,13 @@ def tmpdir():
     return Path(tempfile.mkdtemp())
 
 
+def mock_sdxl_checkpoint(path):
+    """Small structurally valid safetensors fixture, never loaded by a model."""
+    header=json.dumps({"conditioner.embedder.1.x":{"dtype":"F16","shape":[4],"data_offsets":[0,8]}}).encode("utf-8")
+    header+=b" "*((-len(header))%8)
+    Path(path).write_bytes(len(header).to_bytes(8,"little")+header+b"\0"*8)
+
+
 def png_bytes(im):
     b = io.BytesIO()
     im.save(b, "PNG")

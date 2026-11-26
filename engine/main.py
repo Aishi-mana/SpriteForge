@@ -53,10 +53,10 @@ def b64(img):
 
 def scan(sub):
     d = Path(cfg()["models_dir"]) / sub
-    if not cfg()["models_dir"] or not d.exists(): return []
+    if not cfg()["models_dir"]: return []
     names=[p.name for p in d.glob("*.safetensors") if p.is_file()]
     if sub=="checkpoints":
-        names += [p.name for p in d.iterdir() if p.is_dir() and (p/"model_index.json").is_file()]
+        names += [p.name for p in d.iterdir() if p.is_dir() and (p/"model_index.json").is_file()] if d.is_dir() else []
         from .local_runtime import QWEN_CHECKPOINTS
         for name in QWEN_CHECKPOINTS:
             q=d.parent/"diffusion_models"/name
@@ -132,7 +132,7 @@ def pixelize_ep(file: UploadFile = File(...), mode: str = Form("auto"), size: in
     return {"results": [{"sprite": b64(sprite), "info": info}]}
 
 
-from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export
+from . import styles, inbetween, model_families as mf, character, modular, modular_assets, modular_rig, layer_export, asset_library
 
 
 def _art_style(value):
@@ -173,16 +173,22 @@ class GenParams(BaseModel):
 def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_image, ip_scale, post,
          control_image=None, cn_scale=0.8, cn_dir=None, gen_size=1024, kind="sprite", art_style="pixel"):
     try:
+        # Bound retained raw images before generation, regardless of UI settings.
+        if not 1<=n<=6 or not 128<=gen_size<=1024 or n*gen_size*gen_size>6_400_000:
+            raise ValueError("Generation batch exceeds image budget")
         outs = gen.generate(p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
                             control_image, cn_scale, cn_dir, kind, art_style=art_style) if art_style != "pixel" else gen.generate(
                                 p_ckpt, lora, lw, lora_dir, prompt, neg, steps, cfg_, seed, gen_size, bg, ip_image, ip_scale, n,
                                 control_image, cn_scale, cn_dir, kind)
+    except ValueError as e:
+        raise HTTPException(400,str(e))
     except Exception as e:
         hint = " - out of GPU memory: lower 'Generation size', set Variations to 1, close other GPU apps" if "out of memory" in str(e).lower() else ""
         raise HTTPException(500, f"{type(e).__name__}: {e}{hint}")
     results = []
     for raw, s in outs:
-        sprite, info = post(raw)
+        try:sprite, info = post(raw)
+        except ValueError as e:raise HTTPException(400,str(e))
         info["seed"] = s
         info["art_style"] = art_style
         if control_image is not None:
@@ -457,6 +463,8 @@ def rig_reference_frames(b: ReferenceFrames):
     redraw=None
     if b.method=="ai" and b.count>2:
         ckpt,lora_dir=_paths(b.checkpoint)
+        if mf.identify(ckpt) not in ("sdxl","unknown"):
+            raise HTTPException(400,"AI endpoint in-betweens currently require SDXL inpainting; crossfade is model independent")
         gen.set_sampler(b.sampler)
         def redraw(guide,t,i):
             def run(image,mask,ref):
@@ -1108,6 +1116,68 @@ def modular_export(body: dict = Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.get("/api/library")
+def library_list(kind: str="",q: str=""):
+    try:return {"entries":asset_library.list_entries(ROOT,kind,q)}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/library")
+def library_save(body: dict=Body(...)):
+    try:return asset_library.save(ROOT,body)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.get("/api/library/{entry_id}/preview")
+def library_preview(entry_id: str):
+    try:return FileResponse(asset_library.preview_path(ROOT,entry_id),media_type="image/png")
+    except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
+
+
+@app.get("/api/library/{entry_id}")
+def library_get(entry_id: str):
+    try:return asset_library.load(ROOT,entry_id)
+    except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
+
+
+@app.delete("/api/library/{entry_id}")
+def library_delete(entry_id: str):
+    try:return asset_library.delete(ROOT,entry_id)
+    except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
+
+
+@app.post("/api/library/{entry_id}/apply")
+def library_apply(entry_id: str,body: dict=Body(...)):
+    try:return asset_library.apply(ROOT,entry_id,body.get("recipe"),body.get("keep_placement") is True)
+    except FileNotFoundError as e:raise HTTPException(404,str(e))
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.get("/api/model_manager")
+def model_manager():
+    from . import local_runtime as lr
+    md=cfg()["models_dir"]
+    root,python=lr.runtime()
+    s=state()
+    models=[]
+    for name,info in s["model_info"].items():
+        p=_checkpoint_path(Path(md),name)
+        route,missing=lr.readiness(p)
+        components=[]
+        if route:
+            components=[root/"comfy/sd.py",python]
+            if route=="qwen":components+=list(lr.qwen_files(p.parent.parent,p).values())+[root/"comfy_extras/nodes_qwen.py"]
+        try:size=p.stat().st_size if p.is_file() else None
+        except OSError:size=None
+        models.append({"name":name,**info,"path":str(p),"bytes":size,"missing":missing if route else [],
+                       "components":[{"path":str(c),"present":c.is_file()} for c in components],
+                       "loras":[{"name":n,"family":family,"compatibility":mf.compatibility(info["family"],family)}
+                                for n,family in s["lora_families"].items()]})
+    return {"models":models,"lora_families":s["lora_families"],"models_dir":md,"gpu":s["gpu"],"runtime_root":str(root),"runtime_python":str(python),
+            "runtime_present":python.is_file() and (root/"comfy/sd.py").is_file(),
+            "note":"Header and file-presence inspection only; does not load model weights or benchmark GPU compatibility."}
+
+
 # ---------------- diagnostics ----------------
 @app.get("/api/diag")
 def diag_run():
@@ -1530,14 +1600,14 @@ def terrain_export(b: TerrainBody):
 # ---------------- generation queue + history ----------------
 def _exec_job(kind, params, inputs, progress):
     """Runs one queued job (called by the queue's worker thread). Returns the list of results."""
-    gen.PROGRESS = progress
+    gen._job_context.progress = progress
     gen._job_context.cancelled = getattr(progress,"cancelled",None)
     try:
         if kind == "generate":
             return _do_generate(GenParams(**params))["results"]
         return _do_reference(inputs["ref"], inputs.get("pose"), params)["results"]
     finally:
-        gen.PROGRESS = None
+        gen._job_context.progress = None
         gen._job_context.cancelled = None
 
 

@@ -29,7 +29,7 @@ def export(recipe,anim,count,fps,facing,near,weapon,amp,pad,softness,name,root,c
     if len(bodies)!=1:raise ValueError("Select exactly one visible body layer")
     body_idx=bodies[0]
     indices=[i for i,l in enumerate(clean["layers"]) if i!=body_idx and l["category"]!="body" and l["opacity"] and (l["visible"] or include_hidden)]
-    ordered=sorted(indices+[body_idx])
+    ordered=modular.layer_order(clean["layers"],indices,body_idx)
     margin=pad or round(rig.CLIP_PAD.get(anim,.25)*max(clean["width"],clean["height"]))
     w,h=clean["width"]+2*margin,clean["height"]+2*margin
     sw,sh=w*columns,h*math.ceil(count/columns)
@@ -55,6 +55,7 @@ def export(recipe,anim,count,fps,facing,near,weapon,amp,pad,softness,name,root,c
         if l["visible"]:assembled=Image.alpha_composite(assembled,sheets[i])
         layers.append({"id":f"layer_{i:02d}","source_index":i,"name":l["name"],"category":l["category"],
                        "z":z,"visible":l["visible"],"attachment":l["attachment"],"motion":l["motion"],
+                       "occlusion":l.get("occlusion",{"depth":"stack","bones":[]}),
                        "sheet":f"layers/layer_{i:02d}.png"})
     pivot=list(meta["pivot"])
     manifest={"version":1,"format":"spriteforge_modular_animation","animation":anim,"character_id":character_id(clean),"frame_count":count,"fps":fps,
