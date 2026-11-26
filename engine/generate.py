@@ -26,6 +26,8 @@ KINDS_PROP = ("prop", "icon", "ui")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind in PORTRAIT_FRAMINGS:
+        return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", " + PORTRAIT_FRAMINGS[kind][1]
     if kind == "character_art":
         return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", close-up, headshot, waist-up, feet out of frame, character sheet, multiple views"
     if kind == "modular_asset":
@@ -77,7 +79,17 @@ def _apply_sampler(pipe):
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(cfg)
 
 
+PORTRAIT_FRAMINGS = {
+    "portrait_face": ("face close-up, head fully visible", "full body, waist-up, distant subject"),
+    "portrait_bust": ("head, shoulders and upper chest, bust portrait", "full body, legs, extreme close-up"),
+    "portrait_half": ("waist-up portrait, head and torso visible", "full body, feet, extreme close-up"),
+    "portrait_full": ("full-length portrait, head to toe, feet visible, margin above and below", "headshot, waist-up, feet out of frame"),
+}
+
+
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind in PORTRAIT_FRAMINGS:
+        return f"{styles.PRESETS[art_style]}, character portrait, {user_prompt}, {PORTRAIT_FRAMINGS[kind][0]}, single character, centered, plain flat solid {bg} background"
     if kind == "character_art":
         return f"{styles.PRESETS[art_style]}, full-length character concept illustration, {user_prompt}, single character, entire body head to toe visible, feet visible, centered with space above and below, plain flat solid {bg} background"
     if kind == "modular_asset":
