@@ -562,3 +562,7 @@ Use the following template for each future change (replace placeholders with act
 - `ui/index.html` adds source-resolution canvas preview, RGBA connected wand, sampled and unrestricted circular erasers, original restore, interpolated strokes, eight snapshots and fully transparent apply guard. Commit `15b6ca05d810`.
 - JS buffer regression tests registered in `tests/test_ui.py` (`62518afb107d`, `ba3a3a939b9e`). CI and desktop verification pending. Canvas premultiplied alpha round trips may round partial-alpha RGB. Automatic previews replace manual edits; undo retains the preceding preview. No new model dependency.
 - [Phase notes](phases/PHASE61LC.md). Stacked on 61L-B; next 61L-D. 61M queued after 61L. Phase 62 packaging on hold.
+
+### 2026-11-26T19:40:07Z — 61L-B integration and 61L-C correction
+
+- PR #63 passed CPU validation run 45883522786 and merged at `681cef153466`. PR #64 failed Windows and Ubuntu run 45883789688 in the new JS regression; the wand test omitted the y coordinate. Corrected test call; rerun pending. No production feature removed.
