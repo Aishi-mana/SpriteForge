@@ -264,3 +264,25 @@ Capture start/end and intermediate joint poses, import approximate reference-ima
 
 ## Phase 26 — actual start/end reference animation
 Locked first and final image frames, independent SDXL in-betweens or quick crossfade, reference clip persistence and exact-frame PNG export. Phase 25 custom keyframes retained separately. Tests added; execution pending.
+
+## Phase 27 — soft joint deformation
+Optional CPU two-bone mesh skinning for elbows and knees; per-clip softness, preview/export and directional integration, rigid fallback, pixel/HD sampling, regression tests. Phase 25/26 retained.
+
+## Phase 28 — character model compatibility
+Architecture-aware text generation and checkpoint-specific LoRA compatibility labels. Local Diffusers folders and experimental Lumina single-file transformer route. Existing SDXL reference/inpaint retained. GPU validation pending.
+
+Phase 28 follow-up: shared Comfy Desktop standalone NetaYume/Qwen Rapid backends, model-specific defaults and references, SDXL cache release and owned local-worker cancellation. No server or duplicate model downloads.
+
+Phase 28 follow-up: allow both installed Qwen Rapid v23 checkpoint filenames through the shared standalone model picker and loader; no extra model copies.
+
+## Phase 29 — reference-led character consistency
+Separate master-image direction workflow, identity/view prompts, Qwen/Neta/SDXL reference routing, shared framing/palette, per-view regeneration and locks, project persistence and HD direction memory budget. Tests added; live validation pending.
+
+## Phase 30 — Character identity and appearance locking
+Feature-specific reference guidance, temporary target unlocks, separate full-body pose/outfit/expression/hair variants, master/candidate comparison and persistence. Tests added; live verification pending.
+
+## Phase 31 — Modular character customization
+Non-destructive CPU layer stack, transparent body/outfit/hair/accessory import and swaps, per-layer transforms, composite PNG, reusable ZIP recipe and source assets, project persistence and Reference/Animate handoff. Tests added; browser validation pending.
+
+## Phase 32 — AI-assisted modular asset generation
+Reference-led isolated outfit, footwear, hair and accessory candidates, transparent finishing, approximate fitting, raw/asset/composite review and explicit layer acceptance. Existing model/memory policy and modular recipes retained. Tests added; GPU validation pending.
