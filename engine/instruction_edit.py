@@ -1,8 +1,11 @@
 """Instruction-conditioned edits with explicit backend capabilities."""
 from PIL import Image
-import base64, io
+import base64, io, threading, time
 import numpy as np
 from . import generate as gen, alpha_cleanup
+
+EDIT_LOCK=threading.Lock()
+
 
 def capability(model):
     if not model.get("supported"):
@@ -25,7 +28,9 @@ def prepare(source,size,bg,pixel):
     canvas.paste(im,box[:2],im)
     return canvas,box
 
-def finish(raw,source,box,size,bg,tolerance,pixel,remove_bg,keep_canvas):
+def finish(raw,source,box,size,bg,tolerance,pixel,remove_bg,keep_canvas,allow_empty=False):
+    if not isinstance(raw,Image.Image) or min(raw.size)<1 or max(raw.size)>1024:
+        raise ValueError('Editing backend returned invalid or oversized image')
     im=raw.convert("RGBA")
     if remove_bg:
         im,_=alpha_cleanup.clean(im,tolerance,"smart",gen.BG_RGB[bg],soft=not pixel)
@@ -38,7 +43,7 @@ def finish(raw,source,box,size,bg,tolerance,pixel,remove_bg,keep_canvas):
     if pixel:
         a=im.getchannel("A").point(lambda v:255 if v>=128 else 0)
         im.putalpha(a)
-    if not im.getchannel("A").getbbox():
+    if not allow_empty and not im.getchannel("A").getbbox():
         raise ValueError("Edit returned an empty image; try a different background or tolerance")
     return im
 
@@ -115,11 +120,26 @@ def edit(source,model,ckpt,lora_dir,instruction,negative="",size=768,bg="green",
     else:
         raw,seed=gen.generate(ckpt,lora,lora_weight,lora_dir,prompt,negative,steps,cfg,seed,size,bg,
                               canvas,1-strength,1,kind="instruction_edit",art_style="pixel" if pixel else "custom")[0]
-    out=finish(raw,source,box,size,bg,tolerance,pixel,remove_bg,keep_canvas)
+    out=finish(raw,source,box,size,bg,tolerance,pixel,remove_bg,keep_canvas,allow_empty=region is not None)
     if region is not None:
         out=protected_composite(source,out,region)
+    if not out.getchannel("A").getbbox():
+        raise ValueError("Edit returned an empty image; try a different background or tolerance")
     return out,{"size":list(out.size),"backend":backend,"seed":seed,"pipeline":"pixel" if pixel else "hd",
                 "strength_supported":backend!="qwen_instruction","canvas_preserved":keep_canvas,"regional":region is not None,
                 "protected_pixels":int(np.count_nonzero(np.asarray(region)==0)) if region is not None else 0,
                 "native_mask":region is not None and backend=="sdxl_inpaint",
                 "identity_locks":selected,"identity_lock_type":"prompt_guidance"}
+
+
+def run_edit(*args,**kwargs):
+    """Reject overlapping edit requests instead of retaining a second GPU job in RAM."""
+    if not EDIT_LOCK.acquire(blocking=False):
+        raise RuntimeError("Another instruction edit is running; retry when it finishes")
+    started=time.monotonic()
+    try:
+        out,info=edit(*args,**kwargs)
+        info["elapsed_seconds"]=round(time.monotonic()-started,3)
+        return out,info
+    finally:
+        EDIT_LOCK.release()

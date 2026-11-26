@@ -29,3 +29,8 @@ Automated tests (`python tests/run_all.py`) cannot run SDXL. This list is ordere
 | 22 | **AI repair seams** on a tile with a visible join; also tick **solid** on a tile and export the tileset | the join is gone after repair (press again for another seed); the solid tile has a collision square in Godot / Tiled | before / after screenshot |
 
 Things worth judging by eye (quality, not bugs): the crisp converter vs the old one; three-quarter dummies/views; how consistent the generated directions are; cape physics feel (Flutter / Stiffness / Damping).
+
+
+## Phase 61K-G — reference editing acceptance (not yet performed on hardware)
+
+For each installed Qwen Rapid, NetaYume and compatible SDXL checkpoint, start with one candidate at 640 or 768 resolution using the backend defaults. Record model, resolution, elapsed time, peak device memory if measured, and visible quality. Test outfit replacement, wing addition, regional removal, protected RGBA comparison and contrasting background cleanup. Verify undo/redo, discard, staging and explicit approval in Studio and Modular. Save and reload the project; approved assets must persist, staged history must not. Verify a failed or OOM edit leaves the source untouched and a smaller retry works. Compare resource status before/after; no claim of peak VRAM savings without measurement. Confirm existing rig source is retained until explicitly replaced. Test brush drag at 1024 px and inspect responsiveness and seams.

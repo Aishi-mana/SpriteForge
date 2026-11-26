@@ -525,3 +525,12 @@ Use the following template for each future change (replace placeholders with act
 - Status and remaining limitations:
 - Next action:
 
+
+### 2026-11-26T19:10:27Z (2026-11-27 03:10:27 Manila) — Phase 61K-G: integration and resource safeguards
+
+- Purpose: stabilize reference editing before hardware acceptance; permit regional equipment removal even when an intermediate model result is empty.
+- Implementation: `engine/instruction_edit.py` bounds candidate dimensions, composites before checking final visibility, rejects overlapping instruction requests and reports elapsed duration. `engine/main.py` routes API through the guard and returns actionable OOM guidance. `ui/index.html` reuses the brush overlay, coalesces redraws, rejects oversized source images, freezes controls during requests and uses the resource recommendation when known.
+- Decisions: retain existing generation lock, local workers and model-specific settings; no new dependencies or claimed VRAM savings. The edit guard covers instruction requests, not the entire job queue.
+- Tests: added `tests/test_instruction_integration.py` for Qwen/Neta/SDXL mocked removal and protected pixels, timing, output bounds, overlap rejection and lock recovery. CPU CI pending; no hardware verification performed.
+- References: commits `be0cd568`, `b83bcccf`, `c05e30b2`, `471b6280`, `210e00f6`, `cf24488d`; [phase notes](phases/PHASE61KG.md), [manual acceptance](TESTING_CHECKLIST.md).
+- Status: implemented, validation pending. Documentation branch dependency PR #60 is still being validated. Next: submit 61K-G PR, validate, merge dependencies in order, then record actual outcomes. Real GPU quality, peak VRAM, desktop interaction and native engine imports remain outstanding. Phase 62 stays on hold.
