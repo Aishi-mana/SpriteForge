@@ -3,14 +3,16 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True):
-    if mode not in ("edge","smart","all","manual","magic"):
+def clean(image,tolerance=40,mode="smart",background=None,points=(),soft=True,shadow_strength=50):
+    if mode not in ("edge","smart","all","manual","magic","shadow"):
         raise ValueError("Unknown cleanup mode")
     im=image.convert("RGBA")
     a=np.array(im)
     rgb=a[:,:,:3].astype(np.float32)
     alpha=a[:,:,3]
     tol=max(1,min(100,int(tolerance)))
+    if mode=="shadow":
+        return _shadow_cleanup(im,tol,background,shadow_strength)
     if background is None:
         border=np.concatenate((a[0],a[-1],a[:,0],a[:,-1]))
         border=border[border[:,3]>=250,:3]
@@ -103,3 +105,91 @@ def _magic(im,a,rgb,bg,tol,auto):
         return im,info
     a[mask]=0
     return Image.fromarray(a),info
+
+
+def _shadow_cleanup(im,tol,background,strength):
+    """Remove only plausible shallow ground-shadow components, without model inference."""
+    if not 0<=strength<=100:
+        raise ValueError("Invalid shadow strength")
+    original=np.array(im)
+    # On already transparent assets, do not run a second color-key pass.
+    # A meaningful transparent exterior allows shadow-only refinement.
+    border=np.concatenate((original[0],original[-1],original[:,0],original[:,-1]))
+    if (border[:,3]==0).mean()>=.25:
+        base=im.copy()
+        info={"removed":0,"pockets":0}
+    else:
+        base,info=clean(im,tol,"magic",background,soft=False)
+        if info.get("note"):
+            return base,dict(info,shadow_removed=0)
+    a=np.array(base)
+    alpha=a[:,:,3]
+    visible=alpha>0
+    info=dict(info,shadow_removed=0)
+    if not strength or not visible.any():
+        return base,info
+    rgb=a[:,:,:3].astype(np.float32)
+    value=rgb.max(axis=2)
+    chroma=value-rgb.min(axis=2)
+    # Semi-transparent neutral/dark residuals, or opaque neutral midtones.
+    # Never classify very dark opaque outlines as a ground shadow.
+    candidate=visible & (chroma<=8+strength*.22) & (
+        ((alpha<255)&(alpha<=90+strength*1.5)&(value<=150+strength*.7)) |
+        ((alpha==255)&(value>=65-strength*.25)&(value<=120+strength*.9)))
+    # If a color key is available, allow its darker shades on opaque backgrounds.
+    if "background" in info:
+        bg=np.array(info["background"],dtype=np.float32)
+        denom=float(bg@bg)
+        if denom>0:
+            ratio=np.sum(rgb*bg,axis=2)/denom
+            residual=np.max(np.abs(rgb-ratio[:,:,None]*bg),axis=2)
+            candidate |= visible & (ratio>=.30-strength*.001) & (ratio<=.87) & (residual<=5+strength*.12)
+    core=visible & ~candidate
+    if not core.any():
+        return base,dict(info,note="No reliable foreground anchor; shadow cleanup skipped.")
+    ys,xs=np.nonzero(core)
+    top,bottom=int(ys.min()),int(ys.max())
+    height=bottom-top+1
+    width=int(xs.max()-xs.min()+1)
+    if height<8:
+        return base,dict(info,note="Foreground too small for conservative shadow detection.")
+    # Label before restricting vertical location: a tall connected gray garment
+    # must not become a shallow component merely because it crosses the foot band.
+    labels,n=ndi.label(candidate)
+    exterior=ndi.binary_propagation(
+        _boundary_seeds(~visible),mask=~visible)
+    touching=ndi.binary_dilation(exterior)
+    remove=np.zeros_like(visible)
+    for k,sl in enumerate(ndi.find_objects(labels),1):
+        if sl is None:
+            continue
+        yr,xr=sl
+        h,w=yr.stop-yr.start,xr.stop-xr.start
+        part=labels[sl]==k
+        if yr.start<bottom-max(2,round(height*(.07+strength*.001))):
+            continue
+        if yr.start>bottom+max(3,round(height*.15)):
+            continue
+        if h>max(2,round(height*(.10+strength*.001))) or w<max(4,round(width*.25)) or w<2*h:
+            continue
+        if xr.stop<=xs.min() or xr.start>xs.max():
+            continue
+        if not (part & touching[sl]).any():
+            continue
+        remove[sl]|=part
+    if remove.any():
+        a[remove]=0
+    info["shadow_removed"]=int(remove.sum())
+    info["removed"]+=info["shadow_removed"]
+    if not remove.any():
+        info["note"]="No confident ground shadow found. Adjust sensitivity or use manual cleanup."
+    return Image.fromarray(a),info
+
+
+def _boundary_seeds(mask):
+    seeds=np.zeros_like(mask)
+    seeds[0,:]=mask[0,:]
+    seeds[-1,:]=mask[-1,:]
+    seeds[:,0]=mask[:,0]
+    seeds[:,-1]=mask[:,-1]
+    return seeds

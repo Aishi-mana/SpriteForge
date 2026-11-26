@@ -546,3 +546,9 @@ Use the following template for each future change (replace placeholders with act
 
 - Adds optional CPU-only exterior segmentation in engine/alpha_cleanup.py and the existing Alpha Cleanup preview dialog in ui/index.html. Existing modes and callers retain behavior. Auto uses supported nearby border shades; hard alpha removal preserves retained RGBA and guards against erasing the entire image. No semantic or cast-shadow guarantee.
 - Regression cases added to tests/test_alpha_cleanup.py; CI and desktop verification pending. Implementation commit `291852b2571c`. Next: 61L-B shadow removal after validation. Roadmap adds 61M exact-fit modular layers after 61L; packaging remains on hold.
+
+### 2026-11-27 (Manila) — Phase 61L-B: ground shadow removal
+
+- Engine `engine/alpha_cleanup.py`: CPU-only shallow component detection near foreground feet, exterior contact, optional background pass, transparent-source bypass and hard RGBA preservation. Commit `fadeb61586cf`.
+- API `engine/main.py` validates independent 0–100 sensitivity; UI `ui/index.html` offers Ground shadow removal and reports pixel counts. Tests `tests/test_alpha_cleanup.py` cover opaque/translucent shadows, clothing/boots, zero strength and API integration. Commits `d8274286c38d`, `98f705c3770c`, `31a0d23ceb3e`.
+- [Phase notes](phases/PHASE61LB.md) describe heuristic limits. No semantic guarantee or measured hardware result. CI pending; stacked on 61L-A. Next: 61L-C manual erase/restore. 61M remains queued, Phase 62 packaging on hold.
