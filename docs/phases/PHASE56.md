@@ -1,0 +1,3 @@
+# Phase 56 — Character behavior preview (initial)
+
+Scenes > Game character behavior preview. Add scene actors containing baked clips, assign an actor clip to Idle, Walk and Attack, then start the sandbox. Use movement buttons or focus the canvas and use left/right arrows and Space. Idle and walk loop; attack plays once and returns to idle or walk. Adjust movement speed and attack reach; optional illustrative rectangular hurtbox and attack hitbox overlays. The preview uses a centered, bottom-aligned sprite and mirrors it with movement direction. It does not modify scenes or projects. No actual hit detection, per-frame authored hitboxes, effect triggers, persistent state graph, or engine export. Real desktop interaction needs verification.
