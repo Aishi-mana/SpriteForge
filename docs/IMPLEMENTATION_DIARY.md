@@ -541,3 +541,8 @@ Use the following template for each future change (replace placeholders with act
 - Phase 61K-G PR [#61](https://github.com/Aishi-mana/SpriteForge/pull/61) passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45881683504); retargeted to main after #60, confirmed mergeable, merged at 2026-11-26T19:15:41Z (`6ab3ade814fc`).
 - All seven reference-editing implementation phases are merged. Updated README, HANDOFF, roadmap and phase notes to reflect the verified milestone. Documentation-only closure; no production changes or new hardware test results.
 - Continue pushing implementations and maintaining documentation and dated diary entries. Next: manual GPU/desktop and native engine acceptance; measure actual latency and VRAM. Phase 62 Windows packaging stays on hold until explicitly resumed.
+
+### 2026-11-27 (Manila) — Phase 61L-A: magic background eraser
+
+- Adds optional CPU-only exterior segmentation in engine/alpha_cleanup.py and the existing Alpha Cleanup preview dialog in ui/index.html. Existing modes and callers retain behavior. Auto uses supported nearby border shades; hard alpha removal preserves retained RGBA and guards against erasing the entire image. No semantic or cast-shadow guarantee.
+- Regression cases added to tests/test_alpha_cleanup.py; CI and desktop verification pending. Implementation commit `291852b2571c`. Next: 61L-B shadow removal after validation. Roadmap adds 61M exact-fit modular layers after 61L; packaging remains on hold.
