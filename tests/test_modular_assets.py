@@ -48,4 +48,24 @@ ok(review["visible_pixels"]==2 and review["outside_guide"]==1 and review["outsid
 ok(probe.getpixel((40,90))[3]==255,"guide review non-destructive")
 try:A.body_landmarks(Image.new("RGBA",(16,16)));ok(False,"empty silhouette rejected")
 except ValueError:ok(True,"empty silhouette rejected")
+# Registered extraction preserves changed pixels at their exact coordinates.
+from engine import instruction_edit
+edited=shaped.copy()
+edited.paste((20,50,200,255),(32,45,48,60))
+edited.putpixel((29,4),(50,20,10,255))
+isolated,meta=A.extract_edit(shaped,edited,hair_mask,30)
+ok(isolated.size==shaped.size and isolated.getpixel((35,50))==edited.getpixel((35,50)) and isolated.getpixel((40,15))[3]==0,"difference extraction excludes unchanged pixels")
+ok(isolated.getpixel((29,4))[3]==255 and meta["placement"]["outside_guide"]>0,"outside-guide changes reported not clipped")
+try:A.extract_edit(shaped,shaped,hair_mask);ok(False,"no-change extraction rejected")
+except ValueError:ok(True,"no-change extraction rejected")
+original_run=instruction_edit.run_edit
+try:
+    def fake(source,model,ckpt,lora_dir,**kw):
+        assert source.tobytes()==shaped.tobytes() and kw["keep_canvas"]
+        return edited.copy(),{"seed":1,"backend":"qwen_instruction"}
+    instruction_edit.run_edit=fake
+    out,raw,meta=A.qwen_asset(shaped,hair_mask,{"supported":True,"backend":"qwen"},"qwen","", "outfit","blue coat","front",tolerance=30)
+    ok(out.tobytes()==isolated.tobytes() and raw.tobytes()==edited.tobytes(),"mocked Qwen extraction route")
+finally:
+    instruction_edit.run_edit=original_run
 done("test_modular_assets")
