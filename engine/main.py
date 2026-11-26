@@ -1604,6 +1604,24 @@ def projects_save(body: dict = Body(...)):
     return _proj(projects.save, body.get("name"), body)
 
 
+@app.post("/api/projects/duplicate")
+def projects_duplicate(body: dict = Body(...)):
+    return _proj(projects.duplicate, body.get("source"), body.get("destination"))
+
+
+@app.get("/api/projects/{name}/bundle")
+def projects_bundle(name: str):
+    from fastapi.responses import Response
+    raw = _proj(projects.bundle, name)
+    return Response(raw, media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="spriteforge-project.zip"'})
+
+
+@app.post("/api/projects/import")
+def projects_import(name: str = Form(...), file: UploadFile = File(...)):
+    raw = file.file.read(projects._BUNDLE_LIMIT + 1)
+    return _proj(projects.restore_bundle, name, raw)
+
+
 @app.get("/api/projects/{name}")
 def projects_load(name: str):
     return _proj(projects.load, name)
