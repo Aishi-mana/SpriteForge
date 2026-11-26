@@ -4,7 +4,7 @@ const code=html.split('/*ALPHA61-START*/')[1].split('function alpha61Open')[0];
 const c={};vm.createContext(c);vm.runInContext(code,c);
 const original=new Uint8ClampedArray([100,100,100,255,100,100,100,255,20,30,40,255,100,100,100,255]);
 let d=original.slice();
-c.alpha61Wand(d,4,1,0,10);
+c.alpha61Wand(d,4,1,0,0,10);
 assert.deepStrictEqual(Array.from(d),[0,0,0,0,0,0,0,0,20,30,40,255,100,100,100,255]);console.log('ok connected wand');
 c.alpha61Stroke(d,original,4,1,'restore',0,0,1,10,[]);
 assert.deepStrictEqual(Array.from(d),Array.from(original));console.log('ok exact restore');
