@@ -1526,16 +1526,19 @@ class AlphaCleanupParams(BaseModel):
     points: List[List[int]] = []
     soft: bool = True
     shadow_strength: int = 50
+    edge_strength: int = 50
+    alpha_cutoff: int = 12
+    hard_edges: bool = True
 
 
 @app.post("/api/alpha/cleanup")
 def alpha_cleanup_ep(p: AlphaCleanupParams):
     from . import alpha_cleanup
-    if p.background not in ("auto", *gen.BG_RGB) or not 1<=p.tolerance<=100 or not 0<=p.shadow_strength<=100 or len(p.points)>64 or any(len(q)!=2 for q in p.points):
+    if p.background not in ("auto", *gen.BG_RGB) or not 1<=p.tolerance<=100 or not 0<=p.shadow_strength<=100 or not 0<=p.edge_strength<=100 or not 0<=p.alpha_cutoff<=254 or len(p.points)>64 or any(len(q)!=2 for q in p.points):
         raise HTTPException(400,"Invalid alpha cleanup settings")
     try:
         im=_character_reference(p.image)
-        out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft,p.shadow_strength)
+        out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft,p.shadow_strength,p.edge_strength,p.alpha_cutoff,p.hard_edges)
     except ValueError as e:
         raise HTTPException(400,str(e))
     return {"sprite":b64(out),"info":info}
