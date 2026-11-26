@@ -624,3 +624,8 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — 61M-B test correction
 
 - CPU run 45889558860 failed on both platforms in the asymmetric silhouette fixture: shoulder pixels started at row 29, inside the estimated head band ending at row 30 exclusive. Moved synthetic shoulder boundary to row 30; production heuristic unchanged. Revalidation pending.
+
+### 2026-11-27 (Manila) — Phase 61M-C: experimental Qwen extraction
+
+- `engine/modular_assets.py` adds fixed-coordinate difference extraction and guarded Qwen instruction route (`16c50e127e90`); API opt-in (`c4c4786c9781`), Modular controls (`38d411b3a112`), mocked extraction regressions (`3c311c59d647`).
+- Design: preserve input body, no post-extraction scaling, advisory guide, explicit candidate approval. Pixel differencing is not semantic extraction; model drift and same-color regions remain risks. CI, real inference and desktop testing pending. Stacked on corrected PR #70. [Phase notes](phases/PHASE61MC.md). Next 61M-D; packaging on hold.

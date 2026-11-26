@@ -991,6 +991,7 @@ class ModularAsset(BaseModel):
     view: str = "front"
     source: str = "body"
     fixed_canvas: bool = False
+    extraction: bool = False
     replace_category: bool = True
     checkpoint: str
     lora: str = ""
@@ -1014,7 +1015,10 @@ def modular_generate_asset(b: ModularAsset):
     from . import local_runtime as lr
     ckpt,lora_dir=_paths(b.checkpoint)
     try:
-        if not mf.describe(ckpt)["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
+        model=mf.describe(ckpt)
+        if b.extraction and (not b.fixed_canvas or model.get("backend")!="qwen"):
+            raise ValueError("Extraction requires fixed canvas and Qwen Rapid")
+        if not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
         prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,b.description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
@@ -1026,19 +1030,30 @@ def modular_generate_asset(b: ModularAsset):
             rect,guide,landmarks=modular_assets.placement_guide(ref,b.category)
         else:
             rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
-        # A square RGB reference preserves the full character silhouette for all three runtimes.
-        ref=gen.prep_reference(ref,b.bg,canvas=512)
-        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
-        gen.set_sampler(b.sampler)
-        res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
-                 ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
-                 gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
-        info=res["info"]
-        if b.fixed_canvas:
-            registered,info=modular_assets.register_asset(modular.decode(res["sprite"]),info,(recipe["width"],recipe["height"]))
-            res["sprite"]=modular.png_uri(registered)
-            info.update(fit_method="silhouette_band_region",landmarks=landmarks,
-                        placement=modular_assets.placement_review(registered,guide))
+        if b.extraction:
+            mf.check_lora(ckpt,lora_dir,b.lora)
+            seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+            gen.set_sampler(b.sampler)
+            asset,edited,info=modular_assets.qwen_asset(ref,guide,model,ckpt,lora_dir,b.category,b.description,b.view,
+                size=min((640,768,896,1024),key=lambda v:abs(v-b.gen_size)),bg=b.bg,
+                tolerance=max(1,min(100,b.bg_tol)),pixel=recipe["pixel"],steps=max(1,min(50,b.steps)),
+                cfg=max(1,min(15,b.cfg)),seed=seed,negative=b.negative,lora=b.lora,lora_weight=b.lora_weight)
+            info["landmarks"]=landmarks
+            res={"sprite":modular.png_uri(asset),"raw":modular.png_uri(edited)}
+        else:
+            # A square RGB reference preserves the full character silhouette for all three runtimes.
+            ref=gen.prep_reference(ref,b.bg,canvas=512)
+            seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+            gen.set_sampler(b.sampler)
+            res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                     ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
+                     gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
+            info=res["info"]
+            if b.fixed_canvas:
+                registered,info=modular_assets.register_asset(modular.decode(res["sprite"]),info,(recipe["width"],recipe["height"]))
+                res["sprite"]=modular.png_uri(registered)
+                info.update(fit_method="silhouette_band_region",landmarks=landmarks,
+                            placement=modular_assets.placement_review(registered,guide))
         layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
                "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
         # Validate the resulting recipe budget before presenting an addable candidate.
@@ -1047,6 +1062,7 @@ def modular_generate_asset(b: ModularAsset):
         info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
         return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info,"placement_mask":modular.png_uri(guide) if guide is not None else None}
     except ValueError as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(409,str(e))
 
 
 class ModularAnimation(BaseModel):

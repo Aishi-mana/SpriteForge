@@ -183,3 +183,40 @@ def placement_review(asset,guide):
     return {"visible_pixels":count,"outside_guide":outside,
             "outside_fraction":round(outside/max(1,count),4),
             "review_required":True}
+
+
+def extract_edit(body,edited,guide,tolerance=30):
+    """Extract changed visible pixels in original coordinates; no semantic guarantee."""
+    if body.size!=edited.size or body.size!=guide.size:
+        raise ValueError("Edited body and guide must share the reference canvas")
+    src=np.asarray(body.convert("RGBA"))
+    dst=np.asarray(edited.convert("RGBA"))
+    delta=np.max(np.abs(src.astype(np.int16)-dst.astype(np.int16)),axis=2)
+    changed=(dst[:,:,3]>=32)&((src[:,:,3]<32)|(delta>tolerance))
+    if not changed.any():
+        raise ValueError("No changed asset pixels found; retry the edit")
+    out=np.zeros_like(dst)
+    out[changed]=dst[changed]
+    layer=Image.fromarray(out)
+    return layer,{"size":list(body.size),"x":0,"y":0,"registration":"fixed_canvas",
+                  "fit_method":"registered_edit_difference","asset_bounds":list(layer.getchannel("A").getbbox()),
+                  "placement":placement_review(layer,guide),"review_required":True}
+
+
+def qwen_asset_instruction(category,description,view):
+    prompt(category,description,view)  # validate category, length and view
+    return ("Equip the reference mannequin with "+description.strip()+". Category: "+LABELS[category]+
+            ". Keep the exact "+view+" view, pose, framing, body proportions and all uncovered body pixels unchanged. "
+            "Add only the requested wearable, without shifting or resizing the mannequin. "
+            "Do not change the background or add shadows. Keep the mannequin visible for comparison.")
+
+
+def qwen_asset(body,guide,model,ckpt,lora_dir,category,description,view,**settings):
+    from . import instruction_edit
+    if instruction_edit.capability(model)!="qwen_instruction":
+        raise ValueError("Registered Qwen extraction requires Qwen Rapid")
+    edited,meta=instruction_edit.run_edit(body,model,ckpt,lora_dir,
+        instruction=qwen_asset_instruction(category,description,view),locks=["body","pose","style"],
+        keep_canvas=True,remove_bg=True,**settings)
+    layer,info=extract_edit(body,edited,guide,settings.get("tolerance",30))
+    return layer,edited,{**meta,**info}
