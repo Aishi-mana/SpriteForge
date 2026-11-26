@@ -1,0 +1,3 @@
+# Phase 60 — Resource controls
+
+Open GPU resources & optimization to inspect CUDA device memory, allocator usage, the cached pipeline and installed dependency versions. Release cache keeps the pipeline; unload drops the cached pipeline. Both refuse while the generation lock is held. Conservative preset sets reference and HD generation resolution to 640 (up to 8 GiB) or 768, 20 steps and one variation. Existing offloading and VAE tiling remain unchanged. Recommendations are starting points, not VRAM guarantees. External worker and local LLM memory are not managed by this panel. Real GPU testing is outstanding.

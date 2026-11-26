@@ -1413,6 +1413,19 @@ def model_manager():
 
 
 # ---------------- diagnostics ----------------
+@app.get("/api/resources")
+def resources_status():
+    return gen.resource_status()
+
+
+@app.post("/api/resources/release")
+def resources_release(body: dict = Body(...)):
+    try:
+        return gen.release_resources(unload=body.get("unload") is True)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e))
+
+
 @app.get("/api/diag")
 def diag_run():
     return diag.run_checks(ROOT, cfg()["models_dir"], llmm.state())

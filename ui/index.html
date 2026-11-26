@@ -116,8 +116,8 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 #ws58Divider{flex:0 0 7px;cursor:col-resize;background:var(--line);touch-action:none;outline-offset:-2px}#ws58Divider:hover,#ws58Divider:focus{background:var(--acc)}body.ws58Focus aside,body.ws58Focus #ws58Divider{display:none}#ws58Tools{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}#ws58Tools button{width:auto;margin:0}#ws58Dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:16px;width:min(460px,92vw);max-height:80vh;overflow:auto}#ws58Dialog::backdrop{background:#0009}#ws58Results button{margin:4px 0;text-align:left}#ws58Results button:focus-visible{outline:2px solid var(--acc)}
 </style></head><body>
 <aside>
-<h1>SpriteForge <small>phase 58</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
-<div class="mut" id="gpu">loading…</div>
+<h1>SpriteForge <small>phase 60</small> <button class="sec" style="width:auto;margin:0 0 0 6px;padding:2px 8px;font-size:12px;vertical-align:middle" onclick="toggleDiag()">🩺 Diagnostics</button></h1>
+<div class="mut" id="gpu">loading…</div><details class="sf-fold" ontoggle="if(this.open)res60Refresh()"><summary>GPU resources &amp; optimization</summary><div id="res60Info" class="mut" style="white-space:pre-wrap">Refresh to inspect GPU memory.</div><div class="row"><button class="sec" onclick="res60Refresh()">Refresh</button><button class="sec" onclick="res60Release(false)">Release cache</button></div><button class="sec" onclick="res60Release(true)">Unload cached model</button><button class="sec" onclick="res60Preset()">Apply conservative preset</button><div class="mut">Changes generation resolution, steps and variation count only. Does not change checkpoint, prompt or output size.</div><div id="res60Status" class="mut" role="status"></div></details>
 <details class="sf-fold"><summary>Model setup</summary><label>Models folder (contains checkpoints/ and loras/)</label>
 <div class="row"><input id="mdir" placeholder="C:/.../ComfyUI-Shared/models"><button class="sec" style="width:70px;margin:0" onclick="saveDir()">Set</button></div>
 <button class="sec" onclick="init()">Refresh models / connection</button></details><details class="sf-fold" open><summary>Project</summary><label>Project name</label>
@@ -2169,6 +2169,14 @@ async function anExport(){try{if(!TL.src)throw new Error('Put a tile on the work
  $('status').className='';$('status').textContent=`Exported ${d.frames} frames (${d.sheet[0]}×${d.sheet[1]} strip, ${d.ms} ms) to: ${d.dir}\n${d.files.join(', ')}`}
  catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 /*END TILEFX*/
+/*RES60-START*/
+let res60Data=null,res60Busy=false;
+function res60Show(d){res60Data=d;const gib=n=>(n/1073741824).toFixed(2)+' GiB';let lines=[d.cuda?(d.device||'CUDA GPU'):'CUDA unavailable',d.busy?'AI engine busy':'AI engine idle','Cached model: '+(d.checkpoint||'none')];if(d.memory){const m=d.memory;lines.push('Device free / total: '+gib(m.free)+' / '+gib(m.total),'PyTorch allocated / reserved: '+gib(m.allocated)+' / '+gib(m.reserved))}lines.push('Recommended starting resolution: '+d.recommended_size+' px');for(const [k,v] of Object.entries(d.dependencies||{}))lines.push(k+': '+(v||'not installed'));if(d.warning)lines.push(d.warning);$('res60Info').textContent=lines.join('\n')}
+async function res60Run(fn){if(res60Busy)return;res60Busy=true;$('res60Status').textContent='Working…';try{res60Show(await fn());$('res60Status').textContent='Resource status updated.'}catch(e){$('res60Status').textContent='Error: '+e.message}finally{res60Busy=false}}
+function res60Refresh(){return res60Run(()=>api('/api/resources'))}
+function res60Release(unload){if(unload&&!confirm('Unload the cached AI pipeline? The next generation will reload it.'))return;return res60Run(()=>api('/api/resources/release',{...J,body:JSON.stringify({unload})}))}
+function res60Preset(){if(!confirm('Set generation resolution to a conservative starting value, 20 steps and one variation?'))return;const size=res60Data?.recommended_size===768?'768':'640';for(const id of ['gsize','hdgen'])$(id).value=size;for(const id of ['n','n1','tn']){const e=$(id);if(e)e.value='1'}$('steps').value='20';markDirty();$('res60Status').textContent='Preset applied. Actual VRAM usage depends on model and conditioning.'}
+/*RES60-END*/
 /*WS58-START*/
 const WS58={width:350,drag:false,focus:false,previous:null};
 function ws58Width(n){const max=Math.max(240,Math.min(520,window.innerWidth-300));WS58.width=Math.max(240,Math.min(max,Math.round(Number(n)||350)));document.querySelector('aside').style.width=WS58.width+'px';$('ws58Divider').setAttribute('aria-valuenow',String(WS58.width));try{localStorage.setItem('sf_workspace_width',String(WS58.width))}catch(e){}}
