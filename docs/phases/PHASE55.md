@@ -1,0 +1,3 @@
+# Phase 55 — Map painter (initial)
+
+Tiles & props > Map painter. Create a 1–64 by 1–64 cell grid. Choose a tile from the tileset, paint or erase cells, or mark/clear collision independently. Painted cells retain their image source even if the tileset order changes. Undo retains 30 strokes. Export a transparent PNG or self-contained SpriteForge JSON with embedded tile images, tile indices and collision flags. Exports require equal-sized tiles and a maximum 16 million output pixels. Map editing is session-only; export before leaving the application. JSON import, project persistence, polygon collisions, navigation regions and automatic terrain painting are not included. Windows interactive verification is outstanding.
