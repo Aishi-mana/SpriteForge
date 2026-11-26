@@ -304,3 +304,6 @@ Per-layer two-bone weighted meshes and bounded paint strokes, brush canvas with 
 
 ## Phase 38 — Character model and asset library manager
 Searchable local character/collection, individual asset and body-rig snapshots with tags, thumbnails and independent copies; matching rig validation; installed checkpoint, runtime component and LoRA compatibility manager. No model copies or GPU loading. Tests added; live validation pending.
+
+## Phase 39 — Integration testing, performance and stability
+Thread-local generation state, worker cancellation and scratch cleanup, bounded header classification cache and rig/batch limits, staged image saves, CPU validation workflow and Windows validation checklist. 33 existing JavaScript assertions passed in isolated harness; full suite and hardware/runtime checks remain to be verified.

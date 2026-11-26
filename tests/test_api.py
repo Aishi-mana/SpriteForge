@@ -76,7 +76,15 @@ def fake_generate(*a, **k):
     img = Image.new("RGB", (1024, 1024), (200, 200, 205)); ImageDraw.Draw(img).ellipse([300, 150, 700, 600], fill=(240, 200, 165)); n = a[13]; return [(img, a[8] + i) for i in range(n)]
 M.gen.generate = fake_generate
 r = A(M.portrait_base, prompt="knight", n=2, size=64, colors=12, seed=3, bg="light gray", ip_scale=.6); ok(len(r["results"]) == 2 and from_url(r["results"][0]["sprite"]).size == (64, 64), "portrait base: pixelised to the chosen size")
-base = from_url(r["results"][0]["sprite"]); stream = "".join(A(M.portrait_expressions, base=Up(base), mask=json.dumps({"cx": .5, "cy": .45, "rx": .27, "ry": .3}), items=json.dumps([{"name": "happy", "text": ""}, {"name": "sad", "text": ""}]), character="x", strength=.82, extra=4))
+base = from_url(r["results"][0]["sprite"]); response = A(M.portrait_expressions, base=Up(base), mask=json.dumps({"cx": .5, "cy": .45, "rx": .27, "ry": .3}), items=json.dumps([{"name": "happy", "text": ""}, {"name": "sad", "text": ""}]), character="x", strength=.82, extra=4)
+# Real FastAPI returns StreamingResponse; stubs return its iterable.
+if hasattr(response,"body_iterator"):
+    async def read_stream():
+        chunks=[]
+        async for chunk in response.body_iterator:chunks.append(chunk.decode() if isinstance(chunk,bytes) else chunk)
+        return "".join(chunks)
+    stream=asyncio.run(read_stream())
+else:stream="".join(response)
 ev = [json.loads(l[5:]) for l in stream.split("\n\n") if l.startswith("data:")]; ok([e["result"]["name"] for e in ev if "result" in e] == ["happy", "sad"] and ev[-1].get("done"), "portrait expressions stream one result per expression, then done")
 pe = M.portrait_export(M.PortraitExport(name="Hero", images=[M.PortraitItem(name="neutral", image=data_url(base)), M.PortraitItem(name="happy", image=data_url(base)), M.PortraitItem(name="happy", image=data_url(base))], columns=2))
 ok(pe["frames"] == 3 and "happy_2" in (Path(pe["dir"]) / "Hero_portraits.tres").read_text(), "portrait export: duplicate names are made unique; Godot gets one animation per expression")
