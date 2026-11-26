@@ -155,6 +155,23 @@ def list_projects(root):
     return sorted(out, key=lambda p: -p["saved_at"])
 
 
+def validate_clips(value, profile):
+    from . import custom_skeleton
+    if value is None:return []
+    if not isinstance(value,list) or len(value)>24:raise ValueError("At most 24 saved clips")
+    if value and not profile:raise ValueError("Saved clips require a skeleton")
+    out=[];names=set()
+    for clip in value:
+        if not isinstance(clip,dict):raise ValueError("Invalid saved clip")
+        name=clip.get("name")
+        if not isinstance(name,str) or not name.strip() or len(name)>60 or name in names:raise ValueError("Invalid or duplicate saved clip name")
+        names.add(name)
+        candidate=custom_skeleton.validate({**profile,"timeline":clip.get("timeline"),"ik":clip.get("ik",[])})
+        if "timeline" not in candidate:raise ValueError("Saved clip requires a timeline")
+        out.append({"name":name,"timeline":candidate["timeline"],"ik":candidate.get("ik",[])})
+    return out
+
+
 def save(root, name, data):
     from . import modular, custom_skeleton, custom_cleanup, scenes
     scene=data.get('scene')
@@ -162,6 +179,7 @@ def save(root, name, data):
     clean_cleanup=custom_cleanup.validate_saved(data.get('custom_cleanup'))
     profile=data.get("custom_skeleton")
     clean_profile=custom_skeleton.validate(profile) if profile is not None else None
+    clean_clips=validate_clips(data.get("custom_clips"),clean_profile)
     recipe=data.get("modular")
     clean_recipe=modular.validate(recipe)[0] if recipe is not None else None
     d = _dir(root, name)
@@ -180,7 +198,7 @@ def save(root, name, data):
     _save_portrait(d, data.get("portrait"))
     _save_tileset(d, data.get("tileset"))
     doc = {"version": 1, "name": d.name, "saved_at": time.time(),
-           "settings": data.get("settings", {}), "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_cleanup": clean_cleanup, "scene": clean_scene, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
+           "settings": data.get("settings", {}), "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_clips": clean_clips, "custom_cleanup": clean_cleanup, "scene": clean_scene, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
            "anim_params": data.get("anim_params", {}), "tab": data.get("tab", 1), "palette": data.get("palette"), "template": data.get("template"), "directions": data.get("directions"),
            "has_ref": (d / "ref.png").exists(), "has_anim": (d / "anim.png").exists()}
     tmp = d / "project.json.tmp"
