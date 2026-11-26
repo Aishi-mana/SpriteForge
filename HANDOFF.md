@@ -1,6 +1,6 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub implementation baseline `4035422dc642`, Phase 61L-F, merged 2026-11-26T19:52:27Z.  
+**Snapshot:** GitHub implementation baseline `26c3a6d3454f`, Phase 61L-G, merged 2026-11-26T20:04:57Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (private).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
@@ -26,7 +26,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 - Engine: `python -m engine.main`, bound to `127.0.0.1` (default port 8765).
 - UI edits take effect on reload; Python edits require restart. Rust/Tauri changes require `spriteforge.bat rebuild`.
 - With no models or GPU, many algorithm/API tests can run, but a full GPU acceptance test cannot.
-- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest merged implementation PR #67 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45886106091). This does not establish GPU or desktop acceptance.
+- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest merged implementation PR #68 passed [CPU validation](https://github.com/Aishi-mana/SpriteForge/actions/runs/45887047432). This does not establish GPU or desktop acceptance.
 - Run [Manual testing checklist](docs/TESTING_CHECKLIST.md) for hardware and Godot/Tiled validation.
 
 ## Features and confidence as recorded in previous phase notes
@@ -62,7 +62,7 @@ See [Repository workflow](docs/REPOSITORY_WORKFLOW.md) for a follow-up cleanup p
 
 ## What's next
 
-1. Phase 61L-A through F merged; validate G and perform manual acceptance. 61M exact-fit modular assets follow. Continue manual reference-editing acceptance and measure GPU resource usage.
+1. Phase 61L-A through G merged; perform manual acceptance. Phase 61M-A fixed-canvas registration is the next implementation. 61M exact-fit modular assets follow. Continue manual reference-editing acceptance and measure GPU resource usage.
 2. Target Windows GPU and desktop acceptance; native engine import checks remain outstanding.
 3. Phase 62 packaging is on hold.
 4. Review tracked runtime data separately, after backups.
