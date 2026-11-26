@@ -1,0 +1,3 @@
+# Phase 57 — Project backups and copies
+
+Open Project > Project backups & copies. Save edits before copying or downloading a ZIP. Duplicate saved creates a new named project without overwriting existing data. Download ZIP exports the saved project folder's supported files. Import backup restores into a new name. A downloaded backup also serves as a manual version snapshot. Archives are limited to 128 MiB and 2048 files, and unsafe or duplicate paths are rejected. Models, external assets, device-local identity profiles and session-only map data are not included. Automatic scheduled backups, version history UI and drag-and-drop are deferred. Desktop download/import behavior still needs interactive verification.
