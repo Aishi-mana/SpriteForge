@@ -1,10 +1,10 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub `main`, Phase 22 codebase, reviewed for documentation on 2026-11-26.  
+**Snapshot:** GitHub implementation baseline `351d4a132543`, Phase 61K-F, merged 2026-11-26T19:03:23Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (private).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
-Start with [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
+Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 
 ## What this project does
 
@@ -26,7 +26,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 - Engine: `python -m engine.main`, bound to `127.0.0.1` (default port 8765).
 - UI edits take effect on reload; Python edits require restart. Rust/Tauri changes require `spriteforge.bat rebuild`.
 - With no models or GPU, many algorithm/API tests can run, but a full GPU acceptance test cannot.
-- The existing code has a standalone test runner, not a declared GitHub Actions workflow. **This documentation refresh has not run the suite against a full checkout or verified hardware.**
+- GitHub Actions CPU validation runs the Python/Node suite on Windows and Ubuntu. Latest implementation PR #59 passed run 130. This does not establish GPU or desktop acceptance.
 - Run [Manual testing checklist](docs/TESTING_CHECKLIST.md) for hardware and Godot/Tiled validation.
 
 ## Features and confidence as recorded in previous phase notes
@@ -41,7 +41,7 @@ python tests/run_all.py   rem model calls faked; Node.js needed for JS tests
 | 21 | Blob/edge terrain sets | Delivered; Godot/Tiled painting not confirmed |
 | 22 | Corner/multi-terrain, animated tiles, solid collision, AI seam repair | Delivered; real SDXL and Godot/Tiled behaviour not confirmed |
 
-These are **historical reports**, not new test results. Details: [Changelog](CHANGELOG.md) and [phase notes](docs/phases/). Phase 22 is the last documented feature phase.
+These are **historical reports**, not new test results. Details: [Changelog](CHANGELOG.md) and [phase notes](docs/phases/). Later phases through 61K-F are documented in the living diary.
 
 ## Implementation map and pitfalls
 
@@ -62,9 +62,9 @@ See [Repository workflow](docs/REPOSITORY_WORKFLOW.md) for a follow-up cleanup p
 
 ## What's next
 
-1. Confirm target-laptop results for Phases **19-22**, particularly multi-terrain painting in Godot and animated/collision tile imports in Godot/Tiled; attach errors/screenshots without exposing local configuration.
-2. Fix observed issues with a regression test, update docs and include a clear manual-verification note in the PR.
-3. Choose a next feature from [Roadmap](docs/ROADMAP.md), prioritizing the previously requested **Animate start/end reference sprites**.
-4. Clean up tracked runtime files and duplicate top-level `PHASE*.md` files after a deliberate review and backup.
+1. Phase 61K-G: integration and performance validation of reference editing, source masks, staged assets and resource controls.
+2. Target Windows GPU and desktop acceptance; native engine import checks remain outstanding.
+3. Phase 62 packaging is on hold.
+4. Review tracked runtime data separately, after backups.
 
-**Working agreement:** prefer a short-lived GitHub branch and PR, update tests/docs with changes, state what was actually verified, and avoid ZIP-as-source-of-truth instructions.
+**Working agreement:** use focused branches and PRs, update tests and phase notes, append timestamped entries to the [living diary](docs/IMPLEMENTATION_DIARY.md) for implementations, fixes, validation and merges. Update current status in the README and roadmap; never claim unverified hardware results.
