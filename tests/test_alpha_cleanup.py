@@ -80,4 +80,19 @@ out,info=alpha_cleanup.refine(weak,None,50,12)
 ok(out.tobytes()==weak.tobytes(),"refinement cannot erase all visible pixels")
 res=main.alpha_cleanup_ep(main.AlphaCleanupParams(image=main.b64(rim),mode="refine",background="white",hard_edges=False))
 ok(res["info"]["decontaminated"]==1,"edge refinement API")
+# Protection works on the actual operation input and preserves full RGBA.
+mask=Image.new("L",rim.size,0)
+mask.putpixel((3,2),255)
+mask.putpixel((4,3),255)
+out,info=alpha_cleanup.refine(rim,(255,255,255),100,12,False)
+out,info=alpha_cleanup.preserve_regions(rim,out,mask,info)
+ok(out.tobytes()==rim.tobytes() and info["protected_restored"]==2 and info["removed"]==0,"protected edge colors and alpha restored")
+res=main.alpha_cleanup_ep(main.AlphaCleanupParams(image=main.b64(rim),mode="refine",background="white",hard_edges=False,protection=main.b64(mask)))
+ok(res["info"]["protected_restored"]==2,"API applies protection")
+try:
+    alpha_cleanup.preserve_regions(rim,rim,Image.new("L",(2,2)),{})
+except ValueError:
+    ok(True,"wrong-size protection rejected")
+else:
+    ok(False,"wrong-size protection rejected")
 done("test_alpha_cleanup")
