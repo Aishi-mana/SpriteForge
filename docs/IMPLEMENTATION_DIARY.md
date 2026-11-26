@@ -620,3 +620,7 @@ Use the following template for each future change (replace placeholders with act
 
 - `engine/modular_assets.py` adds body-alpha band estimates, category region and row-envelope guide, non-destructive spill review (`c604889e61da`). API fixed-canvas path uses derived region and returns mask and metadata (`cfe7487e3fee`). UI shows mask and spill warning (`36839353c71f`); regressions (`3a86818afe65`).
 - Design: CPU geometry only, no pose model or diffusion mask conditioning yet; no clipping. Fixed vertical fractions can misidentify unusual poses and proportions. Legacy path unchanged. [Phase notes](phases/PHASE61MB.md). CI, real model and desktop verification pending. Next 61M-C. Phase 62 stays on hold.
+
+### 2026-11-27 (Manila) — 61M-B test correction
+
+- CPU run 45889558860 failed on both platforms in the asymmetric silhouette fixture: shoulder pixels started at row 29, inside the estimated head band ending at row 30 exclusive. Moved synthetic shoulder boundary to row 30; production heuristic unchanged. Revalidation pending.
