@@ -9,3 +9,6 @@ src-tauri/target/
 
 # Local worker inputs, outputs and logs (never commit)
 local-image-jobs/
+
+# Shared local character snapshots (never commit user assets)
+character-library/

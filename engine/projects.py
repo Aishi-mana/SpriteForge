@@ -160,12 +160,15 @@ def save(root, name, data):
     recipe=data.get("modular")
     clean_recipe=modular.validate(recipe)[0] if recipe is not None else None
     d = _dir(root, name)
-    d.mkdir(parents=True, exist_ok=True)
     images = data.get("images") or {}
-    for key in ("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant"):
+    keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant")
+    # Reject malformed input before replacing any image from an existing project.
+    staged={key:_decode_png(images[key]) for key in keys if images.get(key)}
+    d.mkdir(parents=True, exist_ok=True)
+    for key in keys:
         f = d / f"{key}.png"
-        if images.get(key):
-            f.write_bytes(_decode_png(images[key]))
+        if key in staged:
+            tmp=f.with_suffix(".png.tmp");tmp.write_bytes(staged[key]);tmp.replace(f)
         elif f.exists():
             f.unlink()
     _save_results(d, data.get("results"))

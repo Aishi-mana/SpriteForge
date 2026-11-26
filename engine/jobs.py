@@ -292,7 +292,7 @@ class Manager:
         self.progress[jid] = [0, int(job["params"].get("n") or 1)]
         try:
             def progress(done,total):self.progress[jid]=[done,total]
-            progress.cancelled=lambda:jid in self._cancel_running
+            progress.cancelled=lambda:self._stop or jid in self._cancel_running
             results = self.executor(job["kind"], job["params"], inputs, progress)
             if jid in self._cancel_running:
                 job["status"], job["error"] = "cancelled", "cancelled while running (results discarded)"
