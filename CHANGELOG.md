@@ -252,3 +252,6 @@ and AI seam repair (inpaint only the half-shifted seam cross). Details: docs/pha
 
 ## Phase 23 - multi-style character generation
 Style presets, HD full-colour output, reference pose support and queue/project settings. See docs/phases/PHASE23.md. Hardware validation pending.
+
+## Phase 24 — HD rig animation (initial implementation)
+Automatic smooth rigid-bone rendering for sources above 160 px, alpha preservation, preview fitting, HD export filtering and memory budgets. Regression tests added; execution and visual validation pending.

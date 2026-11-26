@@ -7,3 +7,5 @@ Choose an SDXL-compatible anime checkpoint and optional matching LoRA yourself; 
 Queue requests carry style and output size, and sidebar fields are saved with projects. Old projects default to pixel art. HD results can be downloaded, saved and used as references. Pixel editor, tileset, upscaled PNG and rig buttons are disabled on HD result cards; portraits, templates, directions and tile generation retain the existing pixel workflow. No explicit sexual-generation controls are added.
 
 Validation: regression tests added for prompt defaults, HD gradients, alpha, output size and JS queue parameters. Run python tests/run_all.py with Node.js installed. Real GPU, Windows UI and output quality must be checked on the target machine before merging.
+
+Phase 24 follow-up enables HD rig animation; see [Phase 24](PHASE24.md).

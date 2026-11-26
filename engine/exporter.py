@@ -87,6 +87,8 @@ def _plan(entries, o):
 
 
 def _gif(frames, fps, path, scale=4):
+    if max(frames[0].size) > 256:
+        scale = 1
     g = []
     for im in frames:
         im = im.resize((im.width * scale, im.height * scale), Image.NEAREST)
@@ -103,7 +105,7 @@ def _godot_path(p):
     return p if p.endswith("/") else p + "/"
 
 
-def _godot(name, sheet_name, entries, regions, gpath, cell_pivot):
+def _godot(name, sheet_name, entries, regions, gpath, cell_pivot, smooth=False):
     subs, anims = [], []
     for ai, e in enumerate(entries):
         frames = []
@@ -121,7 +123,7 @@ def _godot(name, sheet_name, entries, regions, gpath, cell_pivot):
     first = entries[0]["name"]
     px, py = cell_pivot
     tscn = (f'[gd_scene load_steps=2 format=3]\n\n[ext_resource type="SpriteFrames" path="{gpath}{name}.tres" id="1_frames"]\n\n'
-            f'[node name="{name}" type="AnimatedSprite2D"]\ntexture_filter = 1\ncentered = false\n'
+            f'[node name="{name}" type="AnimatedSprite2D"]\ntexture_filter = {2 if smooth else 1}\ncentered = false\n'
             f'offset = Vector2({-px}, {-py})\nsprite_frames = ExtResource("1_frames")\nanimation = &"{first}"\nautoplay = "{first}"\n')
     return tres, tscn
 
@@ -211,7 +213,7 @@ def export_pack(entries, opts, name, root):
     """entries: [{name, fps, loop, frames:[RGBA PIL], pivot:(x,y)}]. opts keys: layout, columns, padding, pot, crop, uniform,
     godot, godot_path, unity, ppu, gif, frames."""
     o = {"layout": "rows", "columns": 8, "padding": 0, "pot": False, "crop": True, "uniform": True, "godot": True,
-         "godot_path": "res://sprites/", "unity": True, "ppu": 32, "gif": True, "frames": False}
+         "godot_path": "res://sprites/", "unity": True, "ppu": 32, "gif": True, "frames": False, "smooth": False}
     o.update({k: v for k, v in (opts or {}).items() if k in o})
     o["layout"] = o["layout"] if o["layout"] in ("rows", "grid", "column") else "rows"
     o["padding"] = max(0, min(int(o["padding"]), 16))
@@ -224,6 +226,8 @@ def export_pack(entries, opts, name, root):
         for e in entries:
             _align_and_crop([e], o["crop"])
     pos, W, H = _plan(entries, o)
+    if W > 32768 or H > 32768 or W * H > 64_000_000:
+        raise ValueError('Atlas exceeds size budget; use fewer frames or a smaller grid')
     d = Path(root) / "exports" / (f"{name}_pack" if len(entries) > 1 else f"{name}_{entries[0]['name']}")
     d.mkdir(parents=True, exist_ok=True)
     sheet = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -257,7 +261,7 @@ def export_pack(entries, opts, name, root):
     # ---- Godot 4 ----
     if o["godot"]:
         gp = _godot_path(o["godot_path"])
-        tres, tscn = _godot(name, sheet_name, entries, regions, gp, entries[0]["pivot"])
+        tres, tscn = _godot(name, sheet_name, entries, regions, gp, entries[0]["pivot"], o["smooth"])
         (d / f"{name}.tres").write_text(tres)
         (d / f"{name}.tscn").write_text(tscn)
         files += [f"{name}.tres", f"{name}.tscn"]
@@ -275,7 +279,7 @@ def export_pack(entries, opts, name, root):
         u = {"image": sheet_name, "width": W, "height": H, "pivotX": round(px / cw, 5), "pivotY": round((ch - py) / ch, 5),
              "ppu": int(o["ppu"]), "animations": anims}
         (d / f"{name}_unity.json").write_text(json.dumps(u, indent=2))
-        (d / "SpriteForgeImporter.cs").write_text(UNITY_CS)
+        (d / "SpriteForgeImporter.cs").write_text(UNITY_CS.replace('FilterMode.Point', 'FilterMode.Bilinear') if o['smooth'] else UNITY_CS)
         files += [f"{name}_unity.json", "SpriteForgeImporter.cs"]
     # ---- previews / frames ----
     for e in entries:
@@ -294,7 +298,7 @@ def export_pack(entries, opts, name, root):
     if o["godot"]:
         readme += ["GODOT 4", f"  Copy {sheet_name}, {name}.tres and {name}.tscn into your project at {_godot_path(o['godot_path'])}",
                    f"  (or edit the paths inside the .tres/.tscn). Open {name}.tscn: an AnimatedSprite2D with all animations;",
-                   f"  its origin is the character's feet (centered = off, offset = ({-px}, {-py})). Pixel filter is set to Nearest.", ""]
+                   f"  its origin is the character's feet (centered = off, offset = ({-px}, {-py})). Texture filter is set to {'Linear' if o['smooth'] else 'Nearest'}.", ""]
     if o["unity"]:
         readme += ["UNITY", f"  Copy {sheet_name}, {name}_unity.json and SpriteForgeImporter.cs into Assets/ (script into an Editor folder or anywhere).",
                    f"  Select {name}_unity.json, then Assets > SpriteForge > Import Sprite Sheet. It slices the sprites (pivot = feet,",

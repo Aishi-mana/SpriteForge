@@ -57,10 +57,14 @@ def autoplace(sprite):
             "r_hip": P(.07, .58), "r_knee": P(.08, .78), "r_ankle": P(.08, .95)}
 
 
+def is_hd(sprite):
+    return max(sprite.size) > 160
+
+
 def assign_parts(sprite, joints, overrides=None):
     """Label every opaque pixel with a bone index (-1 = transparent): nearest weighted bone segment, then manual paint."""
     arr = np.asarray(sprite.convert("RGBA"))
-    opaque = arr[..., 3] >= 128
+    opaque = arr[..., 3] >= (1 if is_hd(sprite) else 128)
     H, W = opaque.shape
     ys, xs = np.mgrid[0:H, 0:W]
     P = np.stack([xs + .5, ys + .5], -1).astype(np.float32)
@@ -308,11 +312,20 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
            pad=0, overlap=1, ss=4, secondary=None, view="side"):
     sprite = sprite.convert("RGBA")
     W0, H0 = sprite.size
+    hd = is_hd(sprite)
+    if hd:
+        if max(W0, H0) > 1024:
+            raise ValueError('HD rig source must be at most 1024 px')
+        ss = 1  # avoid allocating 16x full-resolution layers
+        overlap = min(12, overlap * max(1, round(max(W0, H0) / 128)))
     pad = pad if pad > 0 else int(round(CLIP_PAD.get(anim, .25) * max(W0, H0)))
+    if hd and (W0 + 2 * pad) * (H0 + 2 * pad) * max(1, frames) > 48_000_000:
+        raise ValueError('HD clip exceeds pixel budget; reduce frames, source size or padding')
     lab = assign_parts(sprite, joints, overrides)
     arr = np.asarray(sprite).copy()
-    arr[arr[..., 3] < 128] = 0
-    arr[..., 3] = np.where(arr[..., 3] >= 128, 255, 0)
+    if not hd:
+        arr[arr[..., 3] < 128] = 0
+        arr[..., 3] = np.where(arr[..., 3] >= 128, 255, 0)
     opaque = arr[..., 3] > 0
     use_sec = bool(secondary) and secondary.get("enabled", True)
     parts = _prep_secondary(lab, joints, secondary) if use_sec else []
@@ -329,7 +342,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
     def layer(m):
         l = np.zeros((CH, CW, 4), np.uint8)
         l[pad:pad + H0, pad:pad + W0][m] = arr[m]
-        return Image.fromarray(l, "RGBA").resize((CW * ss, CH * ss), Image.NEAREST)
+        return Image.fromarray(l, "RGBA") if hd else Image.fromarray(l, "RGBA").resize((CW * ss, CH * ss), Image.NEAREST)
 
     layers = {}
     for i in range(len(BONES)):
@@ -347,7 +360,7 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
                 m = m | (ndi.binary_dilation(m, iterations=overlap) & pt["mask"] & ((gx + .5 - px_) ** 2 + (gy + .5 - py_) ** 2 <= rad ** 2))
             layers[("s", pt["name"], i)] = layer(m)
     piv = {n: (joints[n][0] + pad) * ss for n in JOINTS}, {n: (joints[n][1] + pad) * ss for n in JOINTS}
-    cols = np.unique(arr[opaque][:, :3], axis=0) if opaque.any() else np.zeros((0, 3), np.uint8)  # palette for crisp 'mode' downsampling
+    cols = np.unique(arr[opaque][:, :3], axis=0) if not hd and opaque.any() else np.zeros((0, 3), np.uint8)  # palette for crisp 'mode' downsampling
     use_pal = 0 < len(cols) <= 64
     keys = ((cols[:, 0].astype(np.int64) << 16) | (cols[:, 1].astype(np.int64) << 8) | cols[:, 2].astype(np.int64)) if use_pal else None
     F = -1 if facing == "right" else 1
@@ -396,12 +409,12 @@ def render(sprite, joints, overrides, anim="walk", frames=8, facing="right", nea
             if key not in layers:
                 continue
             inv = np.linalg.inv(mats[key])
-            tl = layers[key].transform(layers[key].size, Image.AFFINE, tuple(inv[:2].flatten()), resample=Image.NEAREST)
+            tl = layers[key].transform(layers[key].size, Image.AFFINE, tuple(inv[:2].flatten()), resample=Image.Resampling.BICUBIC if hd else Image.NEAREST)
             canvas = Image.alpha_composite(canvas, tl)
-        out.append(_downsample(canvas, ss, keys, cols, use_pal))
+        out.append(canvas if hd else _downsample(canvas, ss, keys, cols, use_pal))
     ank = ((joints["l_ankle"][0] + joints["r_ankle"][0]) / 2 + pad, max(joints["l_ankle"][1], joints["r_ankle"][1]) + pad)
     return out, {"size": (CW, CH), "pad": pad, "pivot": [round(ank[0], 1), round(ank[1], 1)], "joints": jframes,
-                 "secondary": [pt["name"] for pt in parts]}
+                 "secondary": [pt["name"] for pt in parts], "render_mode": "hd" if hd else "pixel"}
 
 
 def _downsample(img, ss, keys, cols, use_pal):
@@ -434,6 +447,8 @@ def export(frames, meta, fps, anim, name, root):
     d = Path(root) / "exports" / f"{safe}_{anim}"
     d.mkdir(parents=True, exist_ok=True)
     w, h = frames[0].size
+    if w * len(frames) > 32768 or w * h * len(frames) > 64_000_000:
+        raise ValueError('Animation sheet exceeds size budget; use a smaller clip or grid export')
     sheet = Image.new("RGBA", (w * len(frames), h), (0, 0, 0, 0))
     atlas = {"frames": {}, "meta": {"app": "SpriteForge", "image": f"{safe}_{anim}_sheet.png", "format": "RGBA8888",
              "size": {"w": w * len(frames), "h": h}, "scale": "1", "pivot": {"x": meta["pivot"][0], "y": meta["pivot"][1]},
@@ -449,7 +464,8 @@ def export(frames, meta, fps, anim, name, root):
     (d / f"{safe}_{anim}_atlas.json").write_text(json.dumps(atlas, indent=2))
     g = []
     for im in frames:
-        im = im.resize((w * 4, h * 4), Image.NEAREST)
+        scale = 1 if max(w, h) > 256 else 4
+        im = im.resize((w * scale, h * scale), Image.NEAREST)
         p = im.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=255)
         p.paste(255, Image.eval(im.getchannel("A"), lambda v: 255 if v < 128 else 0))
         g.append(p)

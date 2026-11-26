@@ -317,6 +317,8 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         raise HTTPException(400, f"unknown animation: {anim}")
     frames, fps = max(1, min(frames, 32)), max(1, min(fps, 60))
     sp, jn, ov = _sprite(sprite), _joints(joints), json.loads(overrides)
+    if rig.is_hd(sp) and refine:
+        raise HTTPException(400, "AI joint cleanup is pixel-only; disable it for HD animation")
     sec = _secondary(secondary)
     args = (anim, frames, facing, near, weapon, amp, max(0, min(pad, 200)), max(0, min(overlap, 3)), max(1, min(ss, 6)))
     params = [args, checkpoint, lora, lora_weight, character, negative, strength, steps, cfg, seed, radius, jn, ov, sampler, sec]
@@ -326,7 +328,10 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         e = _RCACHE[key]
         raw, imgs, meta, info = e["raw"], e["imgs"], e["meta"], e["info"]
     else:
-        raw, meta = rig.render(sp, jn, ov, *args, secondary=sec)
+        try:
+            raw, meta = rig.render(sp, jn, ov, *args, secondary=sec)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
         imgs = raw
         if refine:
             ckpt, lora_dir = _paths(checkpoint)
@@ -354,7 +359,10 @@ def rig_animate(sprite: UploadFile = File(...), joints: str = Form(...), overrid
         out["key"] = key
         out["accept"] = [i not in set(info.get("reverted_idx", [])) for i in range(len(imgs))]
     if export:
-        out["saved_to"] = rig.export(imgs, meta, fps, anim, name, ROOT)
+        try:
+            out["saved_to"] = rig.export(imgs, meta, fps, anim, name, ROOT)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
     return out
 
 
@@ -445,6 +453,7 @@ def rig_export_pack(b: PackBody):
     except Exception:
         raise HTTPException(400, "bad sprite data")
     entries, seen = [], set()
+    pixel_budget = 0
     for a in b.anims:
         if a.anim not in rig.CLIPS or a.anim in seen:
             raise HTTPException(400, f"unknown or duplicate animation: {a.anim}")
@@ -460,14 +469,27 @@ def rig_export_pack(b: PackBody):
                 raise HTTPException(400, f"frames of {a.anim} must share one size (max 1024 px)")
             pivot = (a.pivot[0], a.pivot[1])
         else:
-            frames, meta = rig.render(sp, jn, b.overrides, a.anim, max(1, min(a.count, 32)), a.facing, a.near, a.weapon,
-                                      a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary))
+            count = max(1, min(a.count, 32))
+            pad = max(0, min(a.pad, 200)) or round(rig.CLIP_PAD.get(a.anim, .25) * max(sp.size))
+            if rig.is_hd(sp) and pixel_budget + (sp.width + 2 * pad) * (sp.height + 2 * pad) * count > 48_000_000:
+                raise HTTPException(400, 'HD pack exceeds pixel budget; export fewer clips or frames')
+            try:
+                frames, meta = rig.render(sp, jn, b.overrides, a.anim, count, a.facing, a.near, a.weapon,
+                                          a.amp, max(0, min(a.pad, 200)), max(0, min(a.overlap, 3)), 4, secondary=_secondary(b.secondary))
+            except ValueError as e:
+                raise HTTPException(400, str(e))
             pivot = tuple(meta["pivot"])
+        pixel_budget += sum(im.width * im.height for im in frames)
+        if rig.is_hd(sp) and pixel_budget > 48_000_000:
+            raise HTTPException(400, "HD pack exceeds pixel budget; export fewer clips or frames")
         entries.append({"name": a.anim, "fps": fps, "loop": a.anim not in rig.ONE_SHOT, "frames": frames, "pivot": pivot})
     if sum(len(e["frames"]) for e in entries) > 400:
         raise HTTPException(400, "too many frames (max 400)")
     try:
-        return exporter.export_pack(entries, b.options, b.name, ROOT)
+        options = dict(b.options, smooth=rig.is_hd(sp))
+        return exporter.export_pack(entries, options, b.name, ROOT)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"{type(e).__name__}: {e}")
 
