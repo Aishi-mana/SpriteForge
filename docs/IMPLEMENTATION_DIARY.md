@@ -868,3 +868,9 @@ Use the following template for each future change (replace placeholders with act
 - Add per-instance source margins and nine-slice rendering for reusable image panels and frames, including transparent centers, integer destination cuts and proportional border compression for small layouts.
 - Add editor toggle, editable margins and quarter-margin suggestion; preview/export use the same renderer. Legacy image instances retain stretch rendering.
 - Add CPU validation, archive roundtrip and JS geometry coverage. Stacked on 61R-B while its validation is running; no manual CI dispatch. Desktop visual acceptance pending.
+
+
+## 2026-11-27 20:58 PHT — Phase 61R-D: Controls and interaction states
+
+- PR #96 and #97 passed CPU validation and merged. Add button, toggle, tab and slider visual-state configuration, alternate image or rectangle-color variants, normal fallback, pointer preview and forced-state inspection. Preview changes are transient; PNG export uses normal artwork.
+- Validate state asset references and nine-slice compatibility; prevent referenced artwork deletion. CPU and JS tests added. Slider value mechanics, keyboard navigation, game actions and desktop acceptance remain pending. No manual CI dispatch.
