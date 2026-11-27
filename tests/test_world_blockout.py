@@ -3,7 +3,7 @@ from _common import *
 from engine import world as W, world_blockout as B, generate as G
 from PIL import Image, ImageDraw
 import json
-d={**W.default(),"width":320,"height":240,"prompt":"modern anime forest trail with mossy rocks"}
+d={**W.default(),"width":320,"height":240,"spawn":[160,180],"prompt":"modern anime forest trail with mossy rocks"}
 c=B.settings({"seed":12,"rocks":2,"trees":4,"foreground":1})
 plan=B.layout(d,c)
 ok(plan==B.layout(d,c),"deterministic shared layout")
