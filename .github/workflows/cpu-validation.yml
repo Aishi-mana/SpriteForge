@@ -1,11 +1,15 @@
 name: CPU validation
 on:
-  # Automatic runs paused to conserve Actions minutes; run manually when approved.
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   cpu:
+    # Do not use paid private-repository minutes automatically.
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.private == false
     strategy:
       fail-fast: false
       matrix:
