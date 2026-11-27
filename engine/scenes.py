@@ -103,7 +103,7 @@ def compose(scene,decoded,index,cache):
     for _,kind,a in sorted(layers,key=lambda layer:(layer[0],layer[1])):
         if kind==1:
             if not vfx.active(a,index):continue
-            x,y=a["x"],a["y"];mirror=False
+            x,y=a["x"],a["y"];mirror=a.get("world_flip",False)
             if a["actor"] is not None:
                 actor=by[a["actor"]]
                 if frame_index(actor,index,scene["fps"]) is None or not actor["opacity"]:continue

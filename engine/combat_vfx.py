@@ -34,7 +34,7 @@ def cue(value,request):
             raise ValueError("Combat anchor actor is not visible at event frame")
         ax,ay=scenes.position(actor,frame)
         return ax+round(dx*actor["scale"]/100)*(-1 if actor["flip"] else 1),ay+round(dy*actor["scale"]/100)
-    e={**selected,"start":start,"end":end,"actor":None,"face_actor":False}
+    e={**selected,"start":start,"end":end,"actor":None,"face_actor":False,"world_flip":False}
     if mode=="follow":
         # Actor-facing offsets are stored in world pixels; compositor mirrors the full local effect.
         e.update(actor=source["id"],face_actor=True,x=round(x*source["scale"]/100),y=round(y*source["scale"]/100))
@@ -53,12 +53,8 @@ def cue(value,request):
             ax,ay=anchor(target,arrive,tx,ty)
             k=vfx.keyframe(e,arrive)
             e.update(travel_x=ax-e["x"]-k["dx"],travel_y=ay-e["y"]-k["dy"])
-        elif source["flip"]:
-            # Launch freezes the world origin and heading; mirror the X trajectory/key offsets.
-            e["travel_x"]=-e["travel_x"]
-            e["rotation"]=(-e["rotation"] if e["kind"] in vfx.PROJECTILE_KINDS else 180-e["rotation"])
-            e["rotation"]=((e["rotation"]+180)%360)-180
-            e["keyframes"]=[{**k,"dx":-k["dx"],"rotation":-k["rotation"]} for k in e["keyframes"]]
+        else:
+            e["world_flip"]=source["flip"]
     scene["effects"]=[e if x["id"]==e["id"] else x for x in scene["effects"]]
     return {"scene":scenes.validate(scene)[0],"trigger":trigger,"start":start,"end":end,
             "arrival":vfx.flight_end(e) if e["kind"] in vfx.PROJECTILE_KINDS else None}
@@ -70,6 +66,7 @@ def behavior_clip(value,effect_id):
     if e is None:raise ValueError("Choose a scene effect")
     count=e["end"]-e["start"]+1
     if count<2:raise ValueError("Behavior preview needs at least two effect frames")
+    e={**e,"world_flip":False}
     w,h,x,y=vfx.effect_canvas(e)
     recipe={"version":1,"name":e["name"],"width":w,"height":h,"count":count,"fps":scene["fps"],"loop":False,"actors":[],
             "effects":[{**e,"actor":None,"face_actor":False,"start":0,"end":count-1,"x":x,"y":y,"visible":True}]}

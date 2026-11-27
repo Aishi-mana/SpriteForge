@@ -15,7 +15,9 @@ e=follow["scene"]["effects"][0]
 ok(follow["trigger"]==4 and follow["start"]==5 and follow["end"]==12,"source frame timing")
 ok(e["actor"]=="a" and e["face_actor"] and (e["x"],e["y"])==(15,-12),"scaled mirrored attachment")
 launch=C.cue(scene,{**req,"mode":"launch"})["scene"]["effects"][0]
-ok(launch["actor"] is None and launch["travel_x"]==-96 and launch["x"]==28,"launch captures facing and origin")
+ok(launch["actor"] is None and launch["world_flip"] and launch["travel_x"]==96 and launch["x"]==28,"launch captures facing and origin")
+repeat=C.cue(C.cue(scene,{**req,"mode":"launch"})["scene"],{**req,"mode":"launch"})["scene"]["effects"][0]
+ok(repeat==launch,"reapplying launch does not reverse direction")
 aim=C.cue(scene,{**req,"mode":"projectile_target"})
 e=aim["scene"]["effects"][0]
 arr=aim["arrival"];target=aim["scene"]["actors"][1]
