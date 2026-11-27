@@ -77,8 +77,11 @@ def validate(value):
         from . import world_masks
         if role not in MASKS:
             out[-1]["depth"]=world_masks.depth(l.get("depth"),out[-1],im)
-        elif l.get("generated_mask") is not None:
-            out[-1]["generated_mask"]=boolean(l["generated_mask"],"generated mask flag")
+        else:
+            if l.get("generated_mask") is not None:out[-1]["generated_mask"]=boolean(l["generated_mask"],"generated mask flag")
+            if l.get("mask_override") is not None:out[-1]["mask_override"]=boolean(l["mask_override"],"mask correction flag")
+            if out[-1].get("generated_mask") and out[-1].get("mask_override"):raise ValueError("Generated mask cannot be a correction")
+            if out[-1].get("mask_override") and any(a.get("mask_override") and a["role"]==role for a in out[:-1]):raise ValueError("Only one correction layer per mask role")
         decoded[key]=im
     result=dict(version=1,name=label(value.get("name","New world"),"world name"),width=w,height=h,
                 view=view,style=style,prompt=label(value.get("prompt",""),"map prompt",2000,True),

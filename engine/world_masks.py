@@ -91,7 +91,13 @@ def effective(value):
     for l in d["layers"]:
         if l["role"] not in world.MASKS:continue
         if l["role"]=="walkable":has_walk=True
-        result[l["role"]]=ImageChops.lighter(result[l["role"]],_binary(images[l["id"]],THRESHOLD))
+        if not l.get("mask_override"):
+            result[l["role"]]=ImageChops.lighter(result[l["role"]],_binary(images[l["id"]],THRESHOLD))
+    for l in d["layers"]:
+        if not l.get("mask_override"):continue
+        im=images[l["id"]];coverage=_binary(im,THRESHOLD)
+        added=im.getchannel("R").point([255 if a>=128 else 0 for a in range(256)])
+        result[l["role"]]=Image.composite(added,result[l["role"]],coverage)
     result["walkable"]=ImageChops.subtract(result["walkable"],result["collision"])
     return result,has_walk
 
@@ -132,7 +138,7 @@ def generate(value,options=None):
                 ImageDraw.Draw(alpha).rectangle((0,max(0,hint["anchor"][1]-ry),im.width,im.height),fill=0)
             _place_max(occlusion,alpha,l["x"],l["y"])
     if not found or not walk.getbbox():raise ValueError("No visible walkable source; choose trail/ground with visible alpha")
-    walk=ImageChops.subtract(walk,collision)
+    # Keep raw walk coverage so erasing a suggested collision can restore walkability.
     ids={l["id"] for l in keep}
     for role,mask in (("collision",collision),("walkable",walk),("occlusion",occlusion)):
         key="auto_"+role;i=2
