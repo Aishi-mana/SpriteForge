@@ -709,3 +709,7 @@ Use the following template for each future change (replace placeholders with act
 
 - Prompt snapshot invalidation, history restores actual generation parameters and saved HD control refresh (`c6f2173ae6c2`); mocked native and local runtime parity tests (`052b01e6455d`); queue UI history/preview regressions (`7d7552d88f0b`); batch recipe propagation test (`6957b1fdbdee`).
 - Tests added, CI pending. No actual model inference, desktop acceptance or head-height enforcement claimed. Existing model policies unchanged. [Phase notes](phases/PHASE61ND.md); manual checklist updated. Packaging on hold.
+
+### 2026-11-27T00:21:58Z — 61N-D integration
+
+- PR #79 passed CPU validation run 45913273985 and merged at `29b4437f72da`. All 61N phases merged and CPU validated. Real model inference, desktop acceptance and head-height quality remain unverified. Phase 62 remains on hold.
