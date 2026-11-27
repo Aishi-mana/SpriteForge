@@ -1454,6 +1454,20 @@ def world_masks_inspect(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/world/playtest/prepare")
+def world_playtest_prepare(body: dict=Body(...)):
+    from . import world_playtest as wp
+    try:return wp.prepare(body.get("world"),body.get("clips"),body.get("options"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/playtest/project")
+def world_playtest_project(body: dict=Body(...)):
+    from . import world_playtest as wp
+    try:return wp.saved_clips(projects.load(ROOT,body.get("project")))
+    except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/world/validate")
 def world_validate(body: dict=Body(...)):
     from . import world
