@@ -722,3 +722,13 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T03:19:26Z — 61O integration
 
 - PR #80 passed CPU validation run 45922429701 and merged at `b8885badac71`. Standalone lossless WebP exports CPU-validated; desktop download acceptance and representative file-size savings remain unverified. Existing PNG/game-engine packs unchanged. Phase 62 on hold.
+
+### 2026-11-27 (Manila) — Actions usage pause and Phase 61P-A
+
+- User requested manual-only CI to conserve remaining Actions minutes; push/PR triggers removed on main (`3db2b22e6105`), manual dispatch retained. No CI started for this phase.
+- Dedicated standalone procedural VFX recipes (`d8aa648b1eac`), API endpoints (`0358f5421681`), VFX workspace, browser-local library, transparent playback, recipe import/export and scene insertion (`3ffe0819a76d`), CPU regression file (`6830b07437c0`).
+- Reuses existing Phase 47 renderer and PNG/GIF atlas exporter; current-frame PNG/WebP, no projectile motion, explosion chaining or AI yet. Saved library is browser-local, portable via JSON. Tests added but not executed here; desktop and export acceptance pending. [Phase notes](phases/PHASE61PA.md). Packaging on hold.
+
+### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
+
+- PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.

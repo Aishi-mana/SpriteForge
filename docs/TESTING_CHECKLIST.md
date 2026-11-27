@@ -50,3 +50,7 @@ Start with a new project and verify neutral empty Generate, Character Studio and
 ## Phase 61O — WebP export
 
 Choose WebP in Image download format and download a generated sprite, editor selection (1x/8x), character master, modular layer/registered asset/composite, and a map image. Confirm actual .webp files open, dimensions, alpha and crisp nearest-neighbor scaling match PNG. Compare file sizes on representative pixel and HD art; WebP may be larger for tiny palettes. Switch to PNG and verify the existing filenames and image content. Save/reopen project to verify selection; old projects use PNG. Export game-engine packs and confirm PNG/GIF paths are unchanged. Test unavailable encoder error if applicable. Desktop acceptance pending.
+
+## Phase 61P-A — Standalone VFX Studio
+
+Open VFX Studio without a model or actor. Select each built-in effect, change color/radius/FPS/duration/seed, render, scrub, play and stop; compare pixel and smooth sampling. Confirm changing fields invalidates stale previews; leaving the workspace stops playback. Save/load/delete a custom preset, reload the app, export/import a recipe JSON and reject malformed inputs. Download one frame in PNG and WebP. Export a fixed-canvas sprite sheet, individual PNGs, GIF and metadata; check transparent alpha and playback. Insert into a scene with sufficient duration; verify insufficient duration is reported and scene data remains unchanged. CPU and desktop acceptance pending; automated Actions paused.
