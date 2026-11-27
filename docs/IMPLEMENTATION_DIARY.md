@@ -898,3 +898,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61R-H: Animated UI effects
 
 - PR #100 and #101 passed CPU validation and merged. Add per-component fade, slide, scale, pulse, highlight glow and resource sweep recipes with delay, easing, duration, intensity, looping and reverse; non-destructive requestAnimationFrame preview, static PNG export and persisted validated motion metadata. CPU and JS tests added. Timed gameplay cooldowns, floating damage text, event-driven transitions and animated export deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-I: Interactive testing and World integration
+
+- Reuse the System Studio renderer in the World playtest as a viewport-fixed aspect-fit overlay; preserve nine-slice, text, controls, HUD fills and motion recipes. Add pointer testing, role-wide resource simulation, reset and independent runtime image cache. Map/theme authoring and static export remain unchanged. JS regression tests added. Stacked on 61R-H pending validation. Runtime inventory/dialogue scripts, game-event bindings and keyboard UI navigation deferred. No manual CI dispatch.
