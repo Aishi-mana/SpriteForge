@@ -82,6 +82,24 @@ def validate(value):
         else:
             part.update(color=color(c.get("color","#263449"),"rectangle"),border=color(c.get("border","#9aa9bf"),"border"),
                         border_width=n(c.get("border_width",1),0,32,"border width"))
+        if c.get("control") is not None:
+            control=c["control"]
+            if kind=="text" or not isinstance(control,dict):raise ValueError("Invalid control")
+            mode=control.get("mode","button")
+            if mode not in ("button","toggle","tab","slider"):raise ValueError("Invalid control mode")
+            states=control.get("states",{})
+            if not isinstance(states,dict) or any(k not in ("hovered","pressed","selected","disabled") for k in states):raise ValueError("Invalid control states")
+            variants={}
+            for state,v in states.items():
+                if kind=="image":
+                    if not isinstance(v,str) or v not in ids:raise ValueError("Missing state artwork")
+                    if "slice" in part:
+                        a=next(a for a in clean if a["id"]==v)
+                        m=part["slice"]
+                        if m["left"]+m["right"]>=a["width"] or m["top"]+m["bottom"]>=a["height"]:raise ValueError("State artwork too small for nine-slice")
+                else:v=color(v,"state fill")
+                variants[state]=v
+            part["control"]=dict(mode=mode,enabled=world.boolean(control.get("enabled",True),"control enabled"),selected=world.boolean(control.get("selected",False),"control selected"),states=variants)
         parts.append(part)
     result = dict(version=1,name=world.label(value.get("name","New UI theme"),"theme name"),width=w,height=h,
                 style=style,pixel=world.boolean(value.get("pixel",style=="pixel"),"theme sampling"),

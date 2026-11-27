@@ -58,4 +58,15 @@ for margins in ({"left":24},{"top":8,"bottom":8},{"left":-1},{"right":1.5},[]):
 projects.save(root,"Sliced",{"system_theme":sliced})
 projects.restore_bundle(root,"SlicedCopy",projects.bundle(root,"Sliced"))
 ok(projects.load(root,"SlicedCopy")["system_theme"]==sliced,"nine-slice archive persistence")
+controlled=copy.deepcopy(sliced)
+controlled["components"][0]["control"]=dict(mode="toggle",states={"hovered":"kit_1"})
+controlled=S.validate(controlled)
+ok(controlled["components"][0]["control"]["enabled"],"control defaults")
+ok(S.validate(json.loads(json.dumps(controlled)))==controlled,"control roundtrip")
+for control in ({"mode":"bad"},{"states":{"bad":"kit_1"}},{"states":{"pressed":"missing"}},{"enabled":"yes"}):
+    bad=copy.deepcopy(controlled);bad["components"][0]["control"]=control
+    try:S.validate(bad);ok(False,"invalid control")
+    except ValueError:ok(True,"invalid control rejected")
+projects.save(root,"Controls",{"system_theme":controlled})
+ok(projects.load(root,"Controls")["system_theme"]==controlled,"control persistence")
 done("test_system_assets")
