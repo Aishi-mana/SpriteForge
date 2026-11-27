@@ -6,7 +6,7 @@
 
 **VFX implementation:** 61P-A through H merged and CPU-validated on their PRs; final main validation passed (45976217804); desktop/GPU/native engine import acceptance pending. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
 
-**World Studio:** 61Q-A–F merged and CPU/JS-validated on their PRs. Initial World Studio scope integrated; final main CI and desktop/GPU acceptance pending. Phase 61R System Asset Studio planned, not started. Raster-first quarter-view maps, shared-layout AI plates and props, style profiles, effective masks, polish and session-only character movement/actions/VFX preview.
+**World Studio:** 61Q-A–F merged and CPU/JS-validated on their PRs. Initial World Studio scope integrated; final main CI passed, desktop/GPU acceptance pending. Phase 61R-A System Asset Studio foundation implemented on feature branch; CPU/JS validation pending. Next B shared game style profiles and AI kits. Raster-first quarter-view maps, shared-layout AI plates and props, style profiles, effective masks, polish and session-only character movement/actions/VFX preview.
 
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 
