@@ -1300,6 +1300,22 @@ def scene_project_actor(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/world/validate")
+def world_validate(body: dict=Body(...)):
+    from . import world
+    try:return world.validate(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/render")
+def world_render(body: dict=Body(...)):
+    from . import world
+    try:
+        im,doc=world.render(body.get("world"),body.get("show_masks",False))
+        return {"image":b64(im),"width":doc["width"],"height":doc["height"]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/validate")
 def scene_validate(body: dict=Body(...)):
     try:return scenes.validate(body)[0]

@@ -790,3 +790,11 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T09:43:54Z — Phase 61P-H integration and 61P milestone
 
 - PR #88 passed [CPU validation 45969155296](https://github.com/Aishi-mana/SpriteForge/actions/runs/45969155296) on Windows and Ubuntu at `eb4be331427e` (completed 2026-11-27T08:55:46Z); merged to main at `69a2b4684452`. Phase 61P-A–H is fully implemented, merged and CPU-validated on PRs. 61P-G post-merge CPU run [45968674565](https://github.com/Aishi-mana/SpriteForge/actions/runs/45968674565) also passed. Final main post-merge validation pending at integration; real desktop, GPU inference and native engine import acceptance remain outstanding. No Phase 62 packaging started; repository rules unchanged.
+
+### 2026-11-27T09:47:27Z — 61P main validation
+
+- Final main CPU run [45976217804](https://github.com/Aishi-mana/SpriteForge/actions/runs/45976217804) passed at `a215cb9358cb`. Desktop, real GPU and native engine acceptance remain outstanding.
+
+### 2026-11-27 (Manila) — Phase 61Q-A: World Studio foundation
+
+- User approved modern anime/HD-2D quarter-view AI environment blockouts with separated ground, rocks, trees, foreground and gameplay masks, manual polish and character playtest. Implemented independent World Studio tab with raster layer import, ordered compositing, offsets/drag, visibility, lock, opacity, zoom/scroll viewport, spawn coordinates, undo, PNG composite and portable JSON, character project save/load and ZIP restoration. Files: `engine/world.py`, `engine/main.py`, `engine/projects.py`, `ui/index.html`, `tests/test_world.py`; implementation commit `dc2e096c3c5c`. Default quarter view 1280x720, modern anime, smooth sampling. Limits: 3072 px per side, six million canvas pixels, 24 layers/24 million source pixels/48 MB encoded. Masks are imported map-sized alpha coverage; display is separate from art, no collision enforcement yet. Existing tile painter unchanged. AI generation, style extraction, mask painting and playable actors deferred to B–F. CPU tests added, CI pending; desktop and GPU acceptance not performed. [Phase notes](phases/PHASE61QA.md). Phase 62 held; 61R system assets planned.
