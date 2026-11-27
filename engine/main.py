@@ -1374,8 +1374,30 @@ def world_blockout_asset(p: WorldAssetParams):
 
 @app.post("/api/world/blockout/assemble")
 def world_blockout_assemble(body: dict=Body(...)):
-    from . import world_blockout as wb
-    try:return wb.assemble(body.get("world"),body.get("blockout"),body.get("assets"))
+    from . import world_blockout as wb, world_masks
+    try:
+        result=wb.assemble(body.get("world"),body.get("blockout"),body.get("assets"))
+        auto=body.get("generate_masks",False)
+        if not isinstance(auto,bool):raise ValueError("Invalid mask generation flag")
+        if auto:result,_=world_masks.generate(result,body.get("gameplay"))
+        else:result.pop("gameplay",None)
+        return result
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/masks/generate")
+def world_masks_generate(body: dict=Body(...)):
+    from . import world_masks
+    try:
+        doc,status=world_masks.generate(body.get("world"),body.get("options"))
+        return {"world":doc,"status":status}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/masks/inspect")
+def world_masks_inspect(body: dict=Body(...)):
+    from . import world_masks
+    try:return world_masks.inspect(body.get("world"))
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 

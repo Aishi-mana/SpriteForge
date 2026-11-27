@@ -74,6 +74,11 @@ def validate(value):
         out.append(dict(id=key,name=label(l.get("name",role),"layer name"),role=role,image=l["image"],x=x,y=y,
                         opacity=integer(l.get("opacity",100),0,100,"layer opacity"),
                         visible=boolean(l.get("visible",True),"layer visibility"),locked=boolean(l.get("locked",False),"layer lock")))
+        from . import world_masks
+        if role not in MASKS:
+            out[-1]["depth"]=world_masks.depth(l.get("depth"),out[-1],im)
+        elif l.get("generated_mask") is not None:
+            out[-1]["generated_mask"]=boolean(l["generated_mask"],"generated mask flag")
         decoded[key]=im
     result=dict(version=1,name=label(value.get("name","New world"),"world name"),width=w,height=h,
                 view=view,style=style,prompt=label(value.get("prompt",""),"map prompt",2000,True),
@@ -84,6 +89,9 @@ def validate(value):
     if value.get("style_profile") is not None:
         from . import world_style
         result["style_profile"]=world_style.validate(value["style_profile"])
+    if value.get("gameplay") is not None:
+        from . import world_masks
+        result["gameplay"]=world_masks.metadata(value["gameplay"])
     return result,decoded
 
 def render(value,show_masks=False):
