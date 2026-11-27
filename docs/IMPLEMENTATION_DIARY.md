@@ -751,3 +751,7 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T04:51:09Z — 61P-D validation status
 
 - PR #84 opened at `066e1d1cb3e5`. Automatic main push run [45942246404](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942246404) and 61P-D pull request run [45942323715](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942323715) both completed as skipped, not passed. Connected repository metadata still private. Public-only condition prevented hosted CPU jobs. PRs #81–84 remain open; no merge or desktop acceptance claimed.
+
+### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
+
+- PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.
