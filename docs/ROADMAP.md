@@ -10,6 +10,8 @@ This is a **candidate backlog**, not a release promise. The repository now inclu
 - Phase 61M — Exact-Fit Modular Asset Generation (after 61L): generate isolated hair, outfits, armor and accessories against a fixed unclothed character sprite base; identical source canvas, origin, pose and proportions; preserve base pixels, support front/back layer order, transparent export, alignment validation and manual correction. Generative exact fit is a target, not a verified guarantee. See [61M-A and planned B–G](phases/PHASE61MA.md); A–G merged and CPU validated; real-model acceptance pending.
 - Phase 61N — Generate prompt audit and body-base mode: [A](phases/PHASE61NA.md), [B](phases/PHASE61NB.md), and [C](phases/PHASE61NC.md) merged and CPU validated; [D integration](phases/PHASE61ND.md) merged and CPU validated. Real-model and desktop acceptance outstanding.
 - [Phase 61O — Lightweight WebP image export](phases/PHASE61O.md): standalone lossless WebP download selector merged and CPU validated; existing PNG/game-engine packs unchanged.
+- Phase 61P — VFX Animation Studio: [A standalone workspace and library](phases/PHASE61PA.md) implemented on feature branch, validation deferred; B advanced slashes/trails; C projectile paths; D explosion/impact chaining; E AI artwork; F timeline and keyframes; G character/combat integration; H export and stabilization.
+- Automatic CPU Actions paused at user request; manual dispatch and local tests remain available.
 - Phase 62 Windows packaging is on hold.
 - See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-G.
 
