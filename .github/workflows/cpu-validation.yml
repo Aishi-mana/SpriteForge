@@ -1,8 +1,6 @@
 name: CPU validation
 on:
-  pull_request:
-  push:
-    branches: [main, 'feature/**']
+  # Automatic runs paused to conserve Actions minutes; run manually when approved.
   workflow_dispatch:
 permissions:
   contents: read
