@@ -39,7 +39,7 @@ def validate(value):
     e=vfx.validate([raw],count,set())[0]
     w,h,_,_=vfx.effect_canvas(e)
     if max(w,h)>1024 or w*h*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
-    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow","path","travel_x","travel_y","arc_height","impact_kind","impact_frames","impact_scale","impact_color")},"version":1,"count":count,"fps":fps,"loop":loop}
+    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow","path","travel_x","travel_y","arc_height","impact_kind","impact_frames","impact_scale","impact_color","artwork","artwork_opacity")},"version":1,"count":count,"fps":fps,"loop":loop}
 
 def scene(value):
     r=validate(value);w,h,x,y=vfx.effect_canvas(r)

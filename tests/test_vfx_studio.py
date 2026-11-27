@@ -90,4 +90,24 @@ from pathlib import Path
 html=(Path(__file__).resolve().parents[1]/"ui"/"index.html").read_text(encoding="utf-8")
 ok(html.index('id="fxEdit"')<html.index('id="fxProjectileControls"')<html.index('id="fxName"'),"scene trajectory controls in scene panel")
 ok(html.index('id="fxEdit"')<html.index('id="fxImpactControls"')<html.index('id="fxName"'),"scene impact controls in scene panel")
+# Portable artwork is an optional layer; it never changes trajectory or impact timing.
+from engine import vfx_art, modular
+from PIL import Image, ImageDraw
+im=Image.new("RGBA",(180,100))
+ImageDraw.Draw(im).ellipse((5,5,175,95),fill=(220,50,170,255))
+uri=vfx_art.normalize(im,False)
+ok(max(vfx_art.decoded(uri).size)<=128,"artwork bounded")
+base=next(p for p in presets if p["kind"]=="fireball")
+custom=V.validate({**base,"artwork":uri,"artwork_opacity":100})
+ok(V.validate(json.loads(json.dumps(custom)))==custom,"portable artwork recipe")
+original,_=V.render(base,5)
+painted,_=V.render(custom,5)
+ok(original[0].size==painted[0].size and original[0].tobytes()!=painted[0].tobytes(),"artwork overlays same canvas")
+hidden,_=V.render({**custom,"artwork_opacity":0},5)
+ok(original[0].tobytes()==hidden[0].tobytes(),"zero opacity retains original")
+chain=V.validate({**custom,"impact_kind":"explosion","impact_frames":5})
+ok(vfx.stage(chain,chain["end"])["artwork"] is None,"impact does not inherit flight artwork")
+for bad in ({"artwork":"bad"},{"artwork":[]},{"artwork_opacity":101},{"artwork":modular.png_uri(Image.new("RGBA",(129,1),(1,2,3,255)))}):
+    try:V.validate({**base,**bad});ok(False,"reject invalid artwork")
+    except ValueError:ok(True,"reject invalid artwork")
 done("test_vfx_studio")

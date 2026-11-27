@@ -64,3 +64,6 @@ Select fireball, energy bolt, ice shard and magic orb. Test straight, arc, accel
 
 ## Phase 61P-D — Explosion and impact chaining
 Render each standalone burst. In VFX Studio select a projectile, choose an impact and reserve final frames; test straight/arc and signed endpoints, independent impact color/size, single-frame impact, inactive frames, malformed timing, old recipes, pixel/smooth sampling, saved/imported recipes, transparent atlas and scene export. Confirm impact starts immediately after arrival and stays at the endpoint relative to the current scene anchor. Inspect trajectory and impact controls in both workspaces. CPU and desktop acceptance pending.
+
+## Phase 61P-E — AI effect artwork
+Use global checkpoint/LoRA and generation controls, choose pixel or painted artwork, generate a single effect, inspect alpha, import a local PNG/WebP/JPEG, toggle background keying, clear artwork and change layer opacity. Render slash/projectile/burst, scrub, compare original and artwork overlay, save/load/export/import recipe, insert into scene, export PNG/GIF. Confirm impact remains procedural, no stale generation after recipe switch, and no GPU is required to replay saved art. CPU and real model/desktop acceptance pending.

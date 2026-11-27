@@ -752,6 +752,14 @@ Use the following template for each future change (replace placeholders with act
 
 - PR #84 opened at `066e1d1cb3e5`. Automatic main push run [45942246404](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942246404) and 61P-D pull request run [45942323715](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942323715) both completed as skipped, not passed. Connected repository metadata still private. Public-only condition prevented hosted CPU jobs. PRs #81–84 remain open; no merge or desktop acceptance claimed.
 
+### 2026-11-27 (Manila) — Phase 61P-E: AI effect artwork
+
+- Added VFX-specific prompt assembly, existing model/runtime generation endpoint and CPU image import/flat-background keying, portable bounded PNG artwork in recipes, optional opacity-controlled overlay with procedural rotation/scale/fade, Studio generation/import/clear/preview controls, regression tests. Files: `engine/generate.py`, `engine/main.py`, `engine/vfx_art.py`, `engine/vfx.py`, `engine/vfx_studio.py`, `ui/index.html`, `tests/test_vfx_studio.py`, `tests/test_vfx_art_prompt.py`. Saved artwork replays without a model; effects preserve their procedural motion and impact. No model inference or desktop validation performed; single-image artwork, not AI video or frame-by-frame generation. Impact stage remains procedural. Stacked on #84; earlier PRs remain open; repo metadata still private. [Phase notes](phases/PHASE61PE.md). Next timeline/keyframes, packaging on hold.
+
+### 2026-11-27 (Manila) — 61P-E PR status
+
+- PR #85 opened at `aeb49b7b5574`. [CPU run 45942676416](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942676416) reported completed/skipped; no test pass claimed unless completed successfully. Repository metadata still private, automatic CPU jobs remain public-only. PRs #81–85 remain open; #81 mergeability needs rechecking after the main CI update. No real model inference or desktop acceptance claimed.
+
 ### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
 
 - PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.

@@ -3,7 +3,7 @@ import math
 import random
 import re
 from PIL import Image, ImageDraw
-from . import modular
+from . import modular, vfx_art
 
 SLASH_KINDS=("slash_horizontal","slash_vertical","slash_diagonal","slash_crescent","slash_spin","slash_double","weapon_trail")
 PROJECTILE_KINDS=("fireball","energy_bolt","ice_shard","magic_orb")
@@ -52,7 +52,8 @@ def validate(effects,count,actor_ids):
             trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60),path=path,
             travel_x=n(e,"travel_x",-512,512,96),travel_y=n(e,"travel_y",-512,512,0),
             arc_height=n(e,"arc_height",-256,256,48),impact_kind=impact_kind,
-            impact_frames=impact_frames,impact_scale=impact_scale,impact_color=impact_color.lower()))
+            impact_frames=impact_frames,impact_scale=impact_scale,impact_color=impact_color.lower(),
+            artwork=vfx_art.validate(e.get("artwork")),artwork_opacity=n(e,"artwork_opacity",0,100,100)))
     return out
 
 def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"]
@@ -72,7 +73,7 @@ def stage(e,frame):
     end=flight_end(e)
     if frame<=end:return {**e,"end":end,"impact_kind":"none"}
     return {**e,"kind":e["impact_kind"],"start":end+1,"radius":impact_radius(e),
-            "color":e.get("impact_color",e["color"]),"impact_kind":"none"}
+            "color":e.get("impact_color",e["color"]),"impact_kind":"none","artwork":None}
 
 def max_surface_side(e):
     r=max(e["radius"],impact_radius(e)) if e.get("impact_kind","none")!="none" else e["radius"]
@@ -276,4 +277,20 @@ def surface(e,frame):
                 if kind=="fire":disk(x,y,max(1,size*(1.3-age*.6)),a,.7*(1-age))
                 else:disk(x,y,max(1,size*(1+age*2)),a*.45,.15)
     if ss>1:im=im.resize((side,side),Image.Resampling.LANCZOS)
+    if e.get("artwork"):
+        angle=e["rotation"]
+        strength=1
+        scale=1
+        if kind in PROJECTILE_KINDS:
+            a=projectile_offset(e,max(e["start"],frame-1));b=projectile_offset(e,min(e["end"],frame+1))
+            dx,dy=b[0]-a[0],b[1]-a[1]
+            if dx or dy:angle+=math.degrees(math.atan2(dy,dx))
+        elif kind in SLASH_KINDS or kind=="slash":
+            angle+=(t-.5)*e.get("sweep",180)
+            strength=max(.15,math.sin(math.pi*t))
+        elif kind in BURST_KINDS or kind=="impact":
+            scale=.35+.65*t;strength=1-t
+        else:
+            scale=.85+.15*math.sin(t*math.tau*speed)
+        vfx_art.overlay(im,e["artwork"],r,angle,strength*opacity*e.get("artwork_opacity",100)/100,scale,e["pixel"])
     return im,(side//2,side//2)
