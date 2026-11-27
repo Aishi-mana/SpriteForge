@@ -110,6 +110,14 @@ def validate(value):
                 else:v=color(v,"state fill")
                 variants[state]=v
             part["control"]=dict(mode=mode,enabled=world.boolean(control.get("enabled",True),"control enabled"),selected=world.boolean(control.get("selected",False),"control selected"),states=variants)
+        if c.get("resource") is not None:
+            q=c["resource"]
+            if not isinstance(q,dict):raise ValueError("Invalid HUD resource")
+            role=q.get("role","hp");direction=q.get("direction","right")
+            if role not in ("hp","mp","stamina","xp","cooldown","custom"):raise ValueError("Invalid resource type")
+            if direction not in ("right","left","up","down"):raise ValueError("Invalid fill direction")
+            maximum=n(q.get("maximum",100),1,1000000,"resource maximum")
+            part["resource"]=dict(role=role,direction=direction,maximum=maximum,value=n(q.get("value",maximum),0,maximum,"resource value"))
         parts.append(part)
     result = dict(version=1,name=world.label(value.get("name","New UI theme"),"theme name"),width=w,height=h,
                 style=style,pixel=world.boolean(value.get("pixel",style=="pixel"),"theme sampling"),
