@@ -73,3 +73,6 @@ In Studio and Scenes add, update, select and delete keys; test relative frame pl
 
 ## Phase 61P-G — Combat integration
 Assign scene actor attack clips. Add an effect, set playhead and source clip frame, delay and offsets; apply follow, launch, target and projectile-to-target cues. Test facing/scale, moving target arrival, nonzero source offset/FPS/speed, unreachable frames, duration overflow, repeat apply, scrub/export and behavior preview Attack (Space), facing left/right and VFX finishing after attack. Reapply baked cues after actor edits. No real collision or bone tracking. CPU and desktop acceptance pending.
+
+## Phase 61P-H — VFX export and stabilization
+Export a moving/keyframed projectile and mirrored actor effect: verify atlas frame pixels, actual launch origin in JSON/Godot/Unity, transparent inactive frames, optional APNG/animated WebP alpha and playback, GIF binary alpha/looping, manifest hashes, recipe/cue sidecar, and ZIP contents. Test scene effect-only export vs scene composition, custom columns and engine options. Change frame range with impact enabled; verify valid clamped duration and keyframe warnings. Import recipe while switching presets; stale result should not overwrite. Verify native engine imports and desktop/GPU separately; CPU tests do not prove those.
