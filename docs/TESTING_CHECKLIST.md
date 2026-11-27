@@ -79,3 +79,6 @@ Export a moving/keyframed projectile and mirrored actor effect: verify atlas fra
 
 ## Phase 61Q-A — World Studio foundation
 Open World Studio; create a quarter-view anime map, import overlapping transparent PNGs as ground, objects, foliage, foreground and map-sized alpha masks. Verify stacking, drag, offsets, opacity, visibility, lock, undo, zoom and spawn; reject invalid dimensions/oversized images/incorrect mask size. Export PNG without debug overlays, JSON roundtrip, save/load and duplicate/restore project, load legacy project without world. Existing tile painter and character/VFX workspaces remain independent. No AI generation or playtest yet. CPU and desktop acceptance pending.
+
+## Phase 61Q-B — AI structured environment blockout
+Quarter-view anime/HD-2D: enter forest trail prompt, preview winding/straight/clearing plan, adjust counts/seed, select model and generate. Verify pass roles, no unwanted character prompt framing, alpha cutout props, aligned trail and spawn, individually movable repeated props, foreground on top, original map retained on failed/cancelled pass, portable blockout settings. Try zero object counts, invalid canvas/view, failed key cleanup, model-specific output. CPU synthetic coverage does not establish real model visual quality, perspective, matching or desktop acceptance. Gameplay masks still separate.

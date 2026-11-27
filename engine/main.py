@@ -1300,6 +1300,48 @@ def scene_project_actor(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+class WorldAssetParams(GenParams):
+    world: dict
+    blockout: dict
+    role: str
+
+
+@app.post("/api/world/blockout/plan")
+def world_blockout_plan(body: dict=Body(...)):
+    from . import world_blockout as wb
+    try:
+        d,c=wb.inputs(body.get("world"),body.get("blockout"))
+        return {"layout":wb.layout(d,c),"roles":wb.needed(c),"blockout":c}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/blockout/asset")
+def world_blockout_asset(p: WorldAssetParams):
+    from . import world_blockout as wb
+    try:
+        d,c=wb.inputs(p.world,p.blockout)
+        prompt,kind=wb.prompt(d,c,p.role)
+        if p.bg not in gen.BG_RGB:raise ValueError("Choose a valid object background color")
+        side=max(512,min(1024,p.gen_size))//64*64
+        ckpt,lora_dir=_paths(p.checkpoint)
+        gen.set_sampler(p.sampler)
+        # Generation is single-image and uses the existing selected backend.
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,
+                              p.seed,side,p.bg,None,0,1,kind=kind,
+                              art_style="pixel" if d["pixel"] else "custom")[0]
+        return {"image":wb.normalize(raw,p.role,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"]),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/world/blockout/assemble")
+def world_blockout_assemble(body: dict=Body(...)):
+    from . import world_blockout as wb
+    try:return wb.assemble(body.get("world"),body.get("blockout"),body.get("assets"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/world/validate")
 def world_validate(body: dict=Body(...)):
     from . import world
