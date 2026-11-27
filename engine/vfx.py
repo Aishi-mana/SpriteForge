@@ -124,6 +124,8 @@ def effect_canvas(e):
     offsets=[motion_offset(e,i) for i in range(e["start"],e["end"]+1)]
     xs,ys=zip(*offsets)
     if e.get("world_flip",False):xs=tuple(-x for x in xs)
+    # Preserve the unshifted origin even if all keys lie on one side of it.
+    xs=(*xs,0);ys=(*ys,0)
     return (side+max(xs)-min(xs),side+max(ys)-min(ys),side//2-min(xs),side//2-min(ys))
 
 def surface(e,frame):

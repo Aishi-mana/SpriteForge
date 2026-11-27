@@ -1,10 +1,10 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub implementation baseline `8c8be370f45c`, Phase 61P-F, merged 2026-11-27T08:12:42Z.  
+**Snapshot:** GitHub implementation baseline `e9719b541a02`, Phase 61P-G, merged 2026-11-27T08:49:29Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (public, verified 2026-11-27).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
-**VFX implementation:** 61P-A through F merged and CPU-validated on their PRs; main post-merge validation passed; desktop acceptance pending. 61P-G combat integration implemented on feature branch, validation pending. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
+**VFX implementation:** 61P-A through G merged and CPU-validated on their PRs; desktop acceptance pending. 61P-H export/stabilization implemented on feature branch, CPU validation pending. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
 
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 

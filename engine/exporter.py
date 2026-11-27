@@ -3,7 +3,7 @@ Every frame shares a feet-anchored pivot, so clips line up in the engine without
 import json, math, re, hashlib, zipfile, tempfile
 from pathlib import Path
 import numpy as np
-from PIL import Image
+from PIL import Image, features
 
 
 def _safe(s, default="sprite"):
@@ -86,8 +86,12 @@ def _plan(entries, o):
     return pos, W, H
 
 
-def _gif(frames, fps, path, scale=4):
-    if max(frames[0].size) > 256:
+def _durations(count,fps,unit=1):
+    return [max(unit,unit*(round((i+1)*1000/(fps*unit))-round(i*1000/(fps*unit)))) for i in range(count)]
+
+
+def _gif(frames, fps, path, scale=4, loop=True):
+    if max(frames[0].size) > 256 or frames[0].width*frames[0].height*len(frames)*scale*scale>32_000_000:
         scale = 1
     g = []
     for im in frames:
@@ -95,7 +99,18 @@ def _gif(frames, fps, path, scale=4):
         p = im.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=255)
         p.paste(255, Image.eval(im.getchannel("A"), lambda v: 255 if v < 128 else 0))
         g.append(p)
-    g[0].save(path, save_all=True, append_images=g[1:], duration=int(1000 / fps), loop=0, transparency=255, disposal=2)
+    g[0].save(path, save_all=True, append_images=g[1:], duration=_durations(len(g),fps,10), transparency=255, disposal=2, **({"loop":0} if loop else {}))
+
+
+def _animated(frames,fps,loop,path,kind):
+    duration=_durations(len(frames),fps)
+    if kind=="apng":
+        frames[0].save(path,format="PNG",save_all=True,append_images=frames[1:],
+                       duration=duration,loop=0 if loop else 1,disposal=0,blend=0)
+    elif kind=="webp":
+        if not features.check("webp"):raise ValueError("WebP encoder unavailable")
+        frames[0].save(path,format="WEBP",save_all=True,append_images=frames[1:],
+                       duration=duration,loop=0 if loop else 1,lossless=True,quality=90,method=4,exact=True)
 
 
 def _godot_path(p):
@@ -291,11 +306,14 @@ def export_pack(entries, opts, name, root):
     """entries: [{name, fps, loop, frames:[RGBA PIL], pivot:(x,y)}]. opts keys: layout, columns, padding, pot, crop, uniform,
     godot, godot_path, unity, ppu, gif, frames."""
     o = {"layout": "rows", "columns": 8, "padding": 0, "pot": False, "crop": True, "uniform": True, "godot": True,
-         "godot_path": "res://sprites/", "unity": True, "ppu": 32, "gif": True, "frames": False, "smooth": False}
+         "godot_path": "res://sprites/", "unity": True, "ppu": 32, "gif": True, "frames": False, "smooth": False, "apng": False, "webp": False, "vfx_metadata": None}
     o.update({k: v for k, v in (opts or {}).items() if k in o})
     o["layout"] = o["layout"] if o["layout"] in ("rows", "grid", "column") else "rows"
     o["padding"] = max(0, min(int(o["padding"]), 16))
     o["columns"] = max(1, min(int(o["columns"]), 64))
+    for flag in ("apng","webp"):
+        if not isinstance(o[flag],bool):raise ValueError("Invalid animation export option")
+    if o["webp"] and not features.check("webp"):raise ValueError("WebP encoder unavailable")
     name = _safe(name)
     entries = [dict(e, name=_safe(e["name"], "anim"), frames=list(e["frames"])) for e in entries]
     if not entries or any(not e["frames"] or not 1 <= e["fps"] <= 1000 for e in entries):
@@ -370,8 +388,13 @@ def export_pack(entries, opts, name, root):
     # ---- previews / frames ----
     for e in entries:
         if o["gif"]:
-            _gif(e["frames"], e["fps"], d / f"{name}_{e['name']}.gif")
+            _gif(e["frames"], e["fps"], d / f"{name}_{e['name']}.gif",loop=e["loop"])
             files.append(f"{name}_{e['name']}.gif")
+        for kind in ("apng","webp"):
+            if o[kind]:
+                filename=f"{name}_{e['name']}.{kind}"
+                _animated(e["frames"],e["fps"],e["loop"],d/filename,kind)
+                files.append(filename)
         if o["frames"]:
             fd = d / "frames" / e["name"]
             fd.mkdir(parents=True, exist_ok=True)
@@ -379,17 +402,26 @@ def export_pack(entries, opts, name, root):
                 f.save(fd / f"{name}_{e['name']}_{i:02d}.png")
     px, py = entries[0]["pivot"]
     cw, ch = entries[0]["frames"][0].size
+    is_vfx=isinstance(o["vfx_metadata"],dict)
+    anchor=("scene origin" if o["vfx_metadata"].get("type")=="scene" else "effect origin") if is_vfx else "feet"
     readme = [f"SpriteForge export: {name}", "",
-              f"Sheet {W}x{H}px, {len(pos)} frames, cell {cw}x{ch}px, feet pivot at ({px}, {py}) px from the cell's top-left.", ""]
+              f"Sheet {W}x{H}px, {len(pos)} frames, cell {cw}x{ch}px, {anchor} pivot at ({px}, {py}) px from the cell's top-left.", ""]
     if o["godot"]:
         readme += ["GODOT 4", f"  Copy {sheet_name}, {name}.tres and {name}.tscn into your project at {_godot_path(o['godot_path'])}",
                    f"  (or edit the paths inside the .tres/.tscn). Open {name}.tscn: an AnimatedSprite2D with all animations;",
-                   f"  its origin is the character's feet (centered = off, offset = ({-px}, {-py})). Texture filter is set to {'Linear' if o['smooth'] else 'Nearest'}.", ""]
+                   f"  its origin is the {anchor} (centered = off, offset = ({-px}, {-py})). Texture filter is set to {'Linear' if o['smooth'] else 'Nearest'}.", ""]
     if o["unity"]:
         readme += ["UNITY", f"  Copy {sheet_name}, {name}_unity.json and SpriteForgeImporter.cs into Assets/ (script into an Editor folder or anywhere).",
-                   f"  Select {name}_unity.json, then Assets > SpriteForge > Import Sprite Sheet. It slices the sprites (pivot = feet,",
+                   f"  Select {name}_unity.json, then Assets > SpriteForge > Import Sprite Sheet. It slices the sprites (pivot = {anchor},",
                    f"  {o['ppu']} pixels per unit) and creates one .anim clip per animation, an Animator Controller and a prefab next to the sheet.", ""]
     readme += ["ASEPRITE / PHASER / OTHERS", f"  {name}_atlas.json is an Aseprite-style JSON hash (frames, frameTags with loop and fps, pivot)."]
+    if is_vfx:
+        filename=f"{name}_vfx.json"
+        (d/filename).write_text(json.dumps(o["vfx_metadata"],indent=2),encoding="utf-8")
+        files.append(filename)
+        readme += ["VFX: "+filename+" stores the origin, timing and recipe or baked scene cue metadata.",
+                   "PNG atlas is authoritative for exact frame count and RGBA. GIF has binary alpha; APNG/WebP keep partial alpha.",
+                   "Animated encoders can coalesce identical consecutive frames; use the atlas for frame-indexed gameplay."]
     (d / "README.txt").write_text("\n".join(readme))
     files.append("README.txt")
     files += _package(d, name, files, entries if o["frames"] else [], atlas)

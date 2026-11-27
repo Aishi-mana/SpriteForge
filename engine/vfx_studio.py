@@ -47,4 +47,7 @@ def scene(value):
     return {"version":1,"name":r["name"],"width":w,"height":h,"count":r["count"],"fps":r["fps"],"loop":r["loop"],"actors":[],"effects":[effect]}
 
 def render(value,frame=None,preview=True):
-    return scenes.render(scene(value),frame,preview)
+    s=scene(value)
+    frames,meta=scenes.render(s,frame,preview)
+    e=s['effects'][0]
+    return frames,{**meta,'pivot':[e['x'],e['y']]}
