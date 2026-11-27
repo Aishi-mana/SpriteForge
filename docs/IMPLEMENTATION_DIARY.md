@@ -743,6 +743,15 @@ Use the following template for each future change (replace placeholders with act
 
 - PR #83 opened at `6da666e8cafa`. [CPU validation run 45941010590](https://github.com/Aishi-mana/SpriteForge/actions/runs/45941010590) completed with skipped conclusion, not a pass. Repository metadata still reported private; public-only condition prevented automatic CPU jobs. PRs #81–83 remain open. Manual dispatch or confirmed public visibility and another PR event are needed for actual validation.
 
+### 2026-11-27 (Manila) — Phase 61P-D: explosion and impact chaining
+
+- Three standalone burst presets (explosion, shockwave, frost burst), optional impact flash or burst on projectile arrival, independent impact duration/color/scale, deterministic flight/impact stage timing, fixed canvas and shared scene/standalone export. Updated `engine/vfx.py`, `engine/vfx_studio.py`, `engine/scenes.py`, `ui/index.html`, `tests/test_vfx_studio.py`. Corrected 61P-C misplaced Scene trajectory controls and added a regression assertion. Old recipes default to no impact; no arbitrary recursive chains or collision detection. Actor-attached effects retain current anchor semantics. CPU tests added, not run locally; desktop pending.
+- User approved public auto CI. Restored push/main and PR triggers directly on main (`1146a683f037`), retaining public-only automatic execution because connected metadata still reports private. Stacked on #83. [Phase notes](phases/PHASE61PD.md). Next 61P-E AI effect artwork; packaging on hold.
+
+### 2026-11-27T04:51:09Z — 61P-D validation status
+
+- PR #84 opened at `066e1d1cb3e5`. Automatic main push run [45942246404](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942246404) and 61P-D pull request run [45942323715](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942323715) both completed as skipped, not passed. Connected repository metadata still private. Public-only condition prevented hosted CPU jobs. PRs #81–84 remain open; no merge or desktop acceptance claimed.
+
 ### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
 
 - PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.

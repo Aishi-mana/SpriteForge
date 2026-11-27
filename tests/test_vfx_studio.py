@@ -61,4 +61,33 @@ for kind in vfx.PROJECTILE_KINDS:
 for key,val in (("path","unknown"),("travel_x",513),("travel_y",-513),("arc_height",257)):
     try:V.validate({**r,key:val});ok(False,"reject invalid "+key)
     except ValueError:ok(True,"reject invalid "+key)
+# Single-recipe flight/impact sequences, including short impact and inactive frames.
+base=next(p for p in presets if p["kind"]=="fireball")
+for kind in vfx.IMPACT_KINDS[1:]:
+    chain=V.validate({**base,"count":16,"start":2,"end":13,"impact_kind":kind,"impact_frames":5,
+                      "impact_scale":180,"impact_color":"#aabbcc","travel_x":-100,"travel_y":40,"path":"arc"})
+    ok(vfx.flight_end(chain)==8,"impact flight timing")
+    ok(vfx.projectile_offset(chain,8)==(-100,40) and vfx.projectile_offset(chain,13)==(-100,40),"impact anchored at arrival")
+    ok(vfx.stage(chain,8)["kind"]=="fireball" and vfx.stage(chain,9)["kind"]==kind,"exact stage transition")
+    ok(vfx.stage(chain,9)["color"]=="#aabbcc" and vfx.stage(chain,9)["radius"]==58,"impact settings")
+    frames,meta=V.render(chain)
+    ok(frames[0].getbbox() is None and frames[15].getbbox() is None,"chain inactive range")
+    ok(all(frames[i].getbbox() for i in (2,8,9)),"visible flight and impact")
+    same,_=V.render(chain,9)
+    ok(same[0].tobytes()==frames[9].tobytes(),"chain deterministic scrub")
+    ok(V.validate(json.loads(json.dumps(chain)))==chain,"chain portable recipe")
+    short,_=V.render({**chain,"count":3,"start":0,"end":2,"impact_frames":1})
+    ok(all(im.getbbox() for im in short),"single frame impact")
+    w,h,x,y=vfx.effect_canvas(chain)
+    ok(w>=vfx.max_surface_side(chain)+100 and h>=vfx.max_surface_side(chain),"chain canvas bounds")
+for bad in ({**base,"impact_kind":"unknown"},{**base,"impact_kind":"explosion","impact_frames":16},
+            {**base,"impact_scale":201},{**base,"impact_color":"bad"},
+            {**presets[0],"impact_kind":"explosion"}):
+    try:V.validate(bad);ok(False,"reject invalid chain")
+    except ValueError:ok(True,"reject invalid chain")
+# The Scene trajectory and impact controls must live in the Scene edit panel.
+from pathlib import Path
+html=(Path(__file__).resolve().parents[1]/"ui"/"index.html").read_text(encoding="utf-8")
+ok(html.index('id="fxEdit"')<html.index('id="fxProjectileControls"')<html.index('id="fxName"'),"scene trajectory controls in scene panel")
+ok(html.index('id="fxEdit"')<html.index('id="fxImpactControls"')<html.index('id="fxName"'),"scene impact controls in scene panel")
 done("test_vfx_studio")

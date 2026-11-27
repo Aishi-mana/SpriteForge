@@ -14,6 +14,9 @@ PRESETS = (
     ("energy_bolt","Energy bolt","#65d7ff",12,False,"burst"),
     ("ice_shard","Ice shard","#a4eaff",16,False,"burst"),
     ("magic_orb","Magic orb","#b994ff",20,False,"burst"),
+    ("explosion","Explosion","#ff9345",12,False,"burst"),
+    ("shockwave","Shockwave","#f6e3bb",12,False,"burst"),
+    ("frost_burst","Frost burst","#a4eaff",12,False,"burst"),
     ("impact","Impact flash","#ffe29b",8,False,"burst"),
     ("sparks","Sparks","#ffc861",16,False,"burst"),
     ("fire","Fire","#ff793c",24,True,"continuous"),
@@ -36,7 +39,7 @@ def validate(value):
     e=vfx.validate([raw],count,set())[0]
     w,h,_,_=vfx.effect_canvas(e)
     if max(w,h)>1024 or w*h*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
-    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow","path","travel_x","travel_y","arc_height")},"version":1,"count":count,"fps":fps,"loop":loop}
+    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow","path","travel_x","travel_y","arc_height","impact_kind","impact_frames","impact_scale","impact_color")},"version":1,"count":count,"fps":fps,"loop":loop}
 
 def scene(value):
     r=validate(value);w,h,x,y=vfx.effect_canvas(r)

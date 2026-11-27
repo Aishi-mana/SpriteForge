@@ -4,6 +4,8 @@
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (private).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
+**Pending VFX implementation:** 61P-A through D on stacked feature PRs; CPU validation pending. Main automatic CPU triggers restored with public-only job condition; repository visibility must be confirmed before paid-minute-free execution. See the living diary for current status.
+
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 
 ## What this project does
