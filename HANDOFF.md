@@ -4,7 +4,7 @@
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (public, verified 2026-11-27).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
-**VFX implementation:** 61P-A through F merged and CPU-validated on their PRs; main post-merge validation and desktop acceptance pending. Next 61P-G combat integration. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
+**VFX implementation:** 61P-A through F merged and CPU-validated on their PRs; main post-merge validation passed; desktop acceptance pending. 61P-G combat integration implemented on feature branch, validation pending. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
 
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 

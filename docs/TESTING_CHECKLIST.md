@@ -70,3 +70,6 @@ Use global checkpoint/LoRA and generation controls, choose pixel or painted artw
 
 ## Phase 61P-F — VFX keyframes
 In Studio and Scenes add, update, select and delete keys; test relative frame placement, linear/smooth/hold, position, scale, rotation, opacity and tint. Scrub and play, test nonzero start, chained impacts and artwork, save/load/import JSON, insert into a later scene frame, export standalone and scene. Confirm no-key recipes unchanged, bounds include moving/scaled effects, invalid durations are rejected, scene shortening prunes out-of-range keys only after confirmation. CPU and desktop acceptance pending.
+
+## Phase 61P-G — Combat integration
+Assign scene actor attack clips. Add an effect, set playhead and source clip frame, delay and offsets; apply follow, launch, target and projectile-to-target cues. Test facing/scale, moving target arrival, nonzero source offset/FPS/speed, unreachable frames, duration overflow, repeat apply, scrub/export and behavior preview Attack (Space), facing left/right and VFX finishing after attack. Reapply baked cues after actor edits. No real collision or bone tracking. CPU and desktop acceptance pending.

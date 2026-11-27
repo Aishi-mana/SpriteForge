@@ -48,6 +48,7 @@ def validate(effects,count,actor_ids):
             particles=n(e,"particles",1,96,24),speed=n(e,"speed",10,200,100),
             gravity=n(e,"gravity",-100,100,0),seed=n(e,"seed",0,2147483647,0),
             visible=visible,pixel=pixel,emission=emission,
+            face_actor=_face_actor(e,actor),world_flip=_world_flip(e,actor),
             sweep=n(e,"sweep",30,360,180),thickness=n(e,"thickness",5,70,24),
             trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60),path=path,
             travel_x=n(e,"travel_x",-512,512,96),travel_y=n(e,"travel_y",-512,512,0),
@@ -56,6 +57,16 @@ def validate(effects,count,actor_ids):
             artwork=vfx_art.validate(e.get("artwork")),artwork_opacity=n(e,"artwork_opacity",0,100,100),
             keyframes=vfx_keyframes.validate(e.get("keyframes",[]),end-start+1)))
     return out
+
+def _world_flip(e,actor):
+    value=e.get("world_flip",False)
+    if not isinstance(value,bool) or (value and actor is not None):raise ValueError("World mirror needs a free effect")
+    return value
+
+def _face_actor(e,actor):
+    value=e.get("face_actor",False)
+    if not isinstance(value,bool) or (value and actor is None):raise ValueError("Facing mirror needs an attached actor")
+    return value
 
 def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"] and keyframe(e,frame)["opacity"]>0
 
@@ -112,6 +123,7 @@ def effect_canvas(e):
     side=max_surface_side(e)
     offsets=[motion_offset(e,i) for i in range(e["start"],e["end"]+1)]
     xs,ys=zip(*offsets)
+    if e.get("world_flip",False):xs=tuple(-x for x in xs)
     return (side+max(xs)-min(xs),side+max(ys)-min(ys),side//2-min(xs),side//2-min(ys))
 
 def surface(e,frame):
