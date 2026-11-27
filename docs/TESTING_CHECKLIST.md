@@ -76,3 +76,6 @@ Assign scene actor attack clips. Add an effect, set playhead and source clip fra
 
 ## Phase 61P-H — VFX export and stabilization
 Export a moving/keyframed projectile and mirrored actor effect: verify atlas frame pixels, actual launch origin in JSON/Godot/Unity, transparent inactive frames, optional APNG/animated WebP alpha and playback, GIF binary alpha/looping, manifest hashes, recipe/cue sidecar, and ZIP contents. Test scene effect-only export vs scene composition, custom columns and engine options. Change frame range with impact enabled; verify valid clamped duration and keyframe warnings. Import recipe while switching presets; stale result should not overwrite. Verify native engine imports and desktop/GPU separately; CPU tests do not prove those.
+
+## Phase 61Q-A — World Studio foundation
+Open World Studio; create a quarter-view anime map, import overlapping transparent PNGs as ground, objects, foliage, foreground and map-sized alpha masks. Verify stacking, drag, offsets, opacity, visibility, lock, undo, zoom and spawn; reject invalid dimensions/oversized images/incorrect mask size. Export PNG without debug overlays, JSON roundtrip, save/load and duplicate/restore project, load legacy project without world. Existing tile painter and character/VFX workspaces remain independent. No AI generation or playtest yet. CPU and desktop acceptance pending.
