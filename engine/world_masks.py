@@ -27,7 +27,9 @@ def default_depth(layer,im):
 def depth(value,layer,im):
     if value is None:return default_depth(layer,im)
     if not isinstance(value,dict):raise ValueError("Invalid depth hint")
-    base=default_depth(layer,im);w,h=im.size
+    # Avoid rescanning large plates when a complete saved hint already exists.
+    base=value if all(k in value for k in ('mode','anchor','footprint','solid','occludes')) else default_depth(layer,im)
+    w,h=im.size
     mode=value.get("mode",base["mode"])
     if mode not in MODES:raise ValueError("Invalid depth mode")
     anchor=value.get("anchor",base["anchor"]);fp=value.get("footprint",base["footprint"])
