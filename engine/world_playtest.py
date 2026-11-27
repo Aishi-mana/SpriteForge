@@ -45,7 +45,7 @@ def clear(masks,has_walk,point,radius=0):
 
 def saved_clips(doc):
     """Extract saved standard animation results without loading a GPU model."""
-    result={}
+    result={};budget=[0,0]
     pixel=doc.get("settings",{}).get("artstyle","pixel")=="pixel"
     for state in STATES:
         r=doc.get("results",{}).get(state)
@@ -55,11 +55,11 @@ def saved_clips(doc):
         pivot=r.get("pivot")
         if not isinstance(pivot,(list,tuple)) or len(pivot)!=2:continue
         c=dict(name=state,frames=chosen,fps=r.get("fps",10),pivot=[round(v) for v in pivot],pixel=pixel,loop=state in ("idle","walk","run"))
-        result[state]=scenes.clip(c)[0]
+        result[state]=scenes.clip(c,budget)[0]
     if "idle" not in result:
         uri=doc.get("images",{}).get("charactersprite") or doc.get("images",{}).get("anim")
         if uri:
             im=world.image(uri);box=im.getchannel("A").getbbox()
-            if box:result["idle"]=scenes.clip(dict(name="Sprite",frames=[uri],fps=1,loop=True,pixel=pixel,pivot=[(box[0]+box[2])//2,box[3]]))[0]
+            if box:result["idle"]=scenes.clip(dict(name="Sprite",frames=[uri],fps=1,loop=True,pixel=pixel,pivot=[(box[0]+box[2])//2,box[3]]),budget)[0]
     if not result:raise ValueError("Saved project has no usable sprite or standard animation clips")
     return result
