@@ -33,4 +33,6 @@ ok(out["status"]=="done" and out["frames"]==2 and Path(out["dir"]).is_dir(),"ret
 ok(projects.load(root,"Destination")["custom_skeleton"]==C.validate(d),"destination project not modified")
 again=P.animation(root,{"source":"Source","target":"Destination","options":opts})
 ok(again["dir"]!=out["dir"],"unique export directories")
+_,planned=P.plan({**body,"params":{**body["params"],"art_style":"head_5","body_base":True}})
+ok(all(row["params"]["art_style"]=="head_5" and row["params"]["body_base"] is True for row in planned),"batch generation preserves captured style and mode")
 done("test_production")

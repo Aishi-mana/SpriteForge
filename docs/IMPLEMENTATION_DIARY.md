@@ -696,3 +696,16 @@ Use the following template for each future change (replace placeholders with act
 
 - Six neutral style mappings (`afc4d5ed2374`) and existing Art Style selector group (`5c6595d04b16`); CPU prompt, API preview and queue UI tests (`548c25f7054b`, `e559fce50d61`, `ffd172f0b2d2`).
 - All legacy style IDs preserved. New styles use existing HD finishing and shared style settings; no independent proportion dropdown or automatic anatomy enforcement. No model inference or desktop verification; CI pending. Stacked on corrected PR #77. [Phase notes](phases/PHASE61NC.md). Next 61N-D; packaging on hold.
+
+### 2026-11-26T23:48:00Z — 61N-B integration
+
+- PR #77 passed CPU validation run 45911491222 and merged at `b63d6ce7f184`.
+
+### 2026-11-26T23:48:08Z — 61N-C integration
+
+- PR #78 passed CPU validation run 45911598462 and merged at `9a6605f5e106`.
+
+### 2026-11-27 (Manila) — Phase 61N-D: Generate integration
+
+- Prompt snapshot invalidation, history restores actual generation parameters and saved HD control refresh (`c6f2173ae6c2`); mocked native and local runtime parity tests (`052b01e6455d`); queue UI history/preview regressions (`7d7552d88f0b`); batch recipe propagation test (`6957b1fdbdee`).
+- Tests added, CI pending. No actual model inference, desktop acceptance or head-height enforcement claimed. Existing model policies unchanged. [Phase notes](phases/PHASE61ND.md); manual checklist updated. Packaging on hold.

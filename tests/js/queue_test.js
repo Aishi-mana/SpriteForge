@@ -27,7 +27,7 @@ const collect = () => ({ prompt: $('prompt').value, steps: $('steps').value });
 const applied = []; const applySettings = s => applied.push(s); const setRef = u => { refURL = u }; const markDirty = () => { dirty = true };
 const poseBlob = async () => 'BLOB'; const openEditor = (u, o) => { editorCalls.push([u, o]) }; const render = (r, t) => rendered.push([r, t]); const tab = n => { mode = n }; const show = () => {}; const checkModel = () => true;
 
-` + block + `;globalThis.T = { qStatusText, qDiff, qEsc, qTitle, genParams, refParams, qEnqueue, qFollow, qRefresh, hUse, armed, QS, qRenderList,
+` + block + `;globalThis.T = { qStatusText, qDiff, qEsc, qTitle, genParams, refParams, genPromptPreview, genPromptInvalidate, genPromptStale, qEnqueue, qFollow, qRefresh, hUse, armed, QS, qRenderList,
   setMode: v => { mode = v }, crIndex, trCornerGrid, trNames, tsSolid, tlRepair, anMake, anExport, anBody, AN, anStop, TR, trBits, trMakeGrid, trBody, trSet, trClear, trGenerate, trMap, trExport, trSlots, TL, tileParams, tlKindChanged, tlAdd, tlSeamless, tlOffset, tlEdit, tsExport, tsRender, hTab, tlUse, setRef: u => { refURL = u }, get pts() { return pts }, get mode() { return mode }, get refURL() { return refURL }, applied, get dirty() { return dirty } };`;
 const editorCalls = [];
 new Function('$', 'api', 'J', 'rendered', 'editorCalls', env)($, api, J, rendered, editorCalls);
@@ -151,5 +151,19 @@ const r = T.refParams(); ok(r.ip_scale === 0.7 && r.n === 3 && r.canvas === 128 
   ok(T.AN.frames.length == 3 && T.AN.ms == 90 && T.AN.timer && $('status').textContent.startsWith('3 frames, 90 ms'), 'frames are loaded and the preview loops'); T.anStop(); ok(T.AN.timer === null, 'the preview stops (it is stopped when you leave the tab)');
   apiQueue = [{ dir: '/x/water_anim', frames: 6, ms: 90, sheet: [96, 16], files: ['water.png', 'water.tres'] }]; await T.anExport(); ok(calls[calls.length - 1].url == '/api/tiles/export_anim' && $('status').textContent.startsWith('Exported 6 frames (96×16 strip, 90 ms)'), 'animation export request and report');
   T.TL.src = null; $('status').textContent = ''; await T.anMake(); ok($('status').textContent.includes('workbench'), 'animation without a tile: clear message');
+  // 61N-D: history restores captured generation parameters even with stale UI snapshots.
+  T.hUse({kind:'generate',ui:{artstyle:'pixel',genBodyBase:false,prompt:'old'},params:{kind:'sprite',art_style:'head_6',body_base:true,prompt:'neutral mannequin',negative:'extra fingers'}});
+  const restored=T.applied[T.applied.length-1];
+  ok(restored.artstyle==='head_6'&&restored.genBodyBase===true&&restored.prompt==='neutral mannequin'&&restored.neg==='extra fingers','history restores actual mode, style and prompt');
+  set({artstyle:'head_6',genBodyBase:true,prompt:'neutral mannequin'});
+  const preview={style_text:'six head heights',positive:'assembled',negative:'negative',kind:'body_base',art_style:'head_6',checkpoint:'SDXL',background:'white'};
+  apiQueue=[preview];await T.genPromptPreview();
+  ok($('genPromptPositive').textContent==='assembled'&&$('genPromptStyle').textContent==='six head heights','preview renders returned engine text');
+  set({prompt:'different'});T.genPromptStale();
+  ok($('genPromptPositive').textContent===''&&$('genPromptStatus').textContent.includes('Settings changed'),'changing prompt invalidates visible preview');
+  let resolve;apiQueue=[()=>new Promise(r=>resolve=r)];const pending=T.genPromptPreview();T.genPromptInvalidate();resolve(preview);await pending;
+  ok($('genPromptPositive').textContent==='','late preview cannot overwrite invalidated project snapshot');
+  apiQueue=[new Error('preview unavailable')];await T.genPromptPreview();
+  ok($('genPromptStatus').textContent.includes('preview unavailable'),'preview error reported');
   console.log(fail ? fail + ' FAILED' : 'ALL PASSED'); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e.stack || e); process.exit(1); });
