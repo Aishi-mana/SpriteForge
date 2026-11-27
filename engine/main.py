@@ -1385,6 +1385,59 @@ def world_blockout_assemble(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/world/polish/stroke")
+def world_polish_stroke(body: dict=Body(...)):
+    from . import world_polish
+    try:return world_polish.stroke(body.get("world"),body.get("stroke"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/polish/transform")
+def world_polish_transform(body: dict=Body(...)):
+    from . import world_polish
+    try:
+        doc,key=world_polish.transform(body.get("world"),body.get("layer"),body.get("transform"))
+        return {"world":doc,"selected":key}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/polish/replace")
+def world_polish_replace(body: dict=Body(...)):
+    from . import world_polish
+    try:return world_polish.replace(body.get("world"),body.get("layer"),body.get("image"),body.get("rect"),body.get("feather",8))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+class WorldPolishParams(GenParams):
+    world: dict
+    layer: str
+    rect: list | None = None
+    instruction: str
+    feather: int = 8
+
+
+@app.post("/api/world/polish/regenerate")
+def world_polish_regenerate(p: WorldPolishParams):
+    from . import world_polish as wp, world_blockout as wb, world, local_runtime as lr
+    try:
+        d,l,im,box=wp.region(p.world,p.layer,p.rect)
+        prompt,kind=wp.prompt(d,p.layer,p.rect,p.instruction)
+        if p.bg not in gen.BG_RGB:raise ValueError("Invalid object background")
+        ckpt,lora_dir=_paths(p.checkpoint);gen.set_sampler(p.sampler)
+        ref=None;strength=0;profile=d.get("style_profile")
+        if profile and profile["enabled"] and profile["image_condition"]:
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support")
+            image=world.image(profile["reference"]);ref=image if lr.route(ckpt) else gen.prep_reference(image,p.bg)
+            strength=profile["strength"]
+        side=max(512,min(1024,p.gen_size))//64*64
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,p.seed,side,p.bg,ref,strength,1,kind=kind,art_style="pixel" if d["pixel"] else "custom")[0]
+        uri=wb.normalize(raw,wp.ROLE_MAP[l["role"]],gen.BG_RGB[p.bg],p.bg_tol,d["pixel"])
+        return {"world":wp.replace(d,p.layer,uri,p.rect,p.feather,True),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
 @app.post("/api/world/masks/generate")
 def world_masks_generate(body: dict=Body(...)):
     from . import world_masks
