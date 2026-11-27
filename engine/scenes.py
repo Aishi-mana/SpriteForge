@@ -103,14 +103,16 @@ def compose(scene,decoded,index,cache):
     for _,kind,a in sorted(layers,key=lambda layer:(layer[0],layer[1])):
         if kind==1:
             if not vfx.active(a,index):continue
-            x,y=a["x"],a["y"]
+            x,y=a["x"],a["y"];mirror=False
             if a["actor"] is not None:
                 actor=by[a["actor"]]
                 if frame_index(actor,index,scene["fps"]) is None or not actor["opacity"]:continue
                 ax,ay=position(actor,index);x=ax+(-x if actor["flip"] else x);y=ay+y
+                mirror=actor["flip"] and a.get("face_actor",False)
             dx,dy=vfx.motion_offset(a,index)
-            x+=dx;y+=dy
+            x+=-dx if mirror else dx;y+=dy
             im,(px,py)=vfx.surface(a,index)
+            if mirror:im=im.transpose(Image.Transpose.FLIP_LEFT_RIGHT);px=im.width-px
             composite(out,im,x-px,y-py)
             continue
         i=frame_index(a,index,scene["fps"])

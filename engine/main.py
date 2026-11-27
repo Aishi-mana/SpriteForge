@@ -1312,6 +1312,22 @@ def scene_validate_actor(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/scenes/combat_cue")
+def scene_combat_cue(body: dict=Body(...)):
+    from . import combat_vfx
+    try:return combat_vfx.cue(body.get("scene"),body.get("cue"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/combat_preview")
+def scene_combat_preview(body: dict=Body(...)):
+    from . import combat_vfx
+    try:
+        frames,meta=combat_vfx.behavior_clip(body.get("scene"),body.get("effect"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/render")
 def scene_render(body: dict=Body(...)):
     try:
@@ -1401,7 +1417,7 @@ def scene_export_effect(body: dict=Body(...)):
         if count<2:raise ValueError("Standalone export needs at least two active frames")
         from . import vfx
         w,h,x,y=vfx.effect_canvas(effect)
-        single={**effect,"actor":None,"start":0,"end":count-1,"x":x,"y":y,"visible":True}
+        single={**effect,"actor":None,"face_actor":False,"start":0,"end":count-1,"x":x,"y":y,"visible":True}
         recipe={"version":1,"name":effect["name"],"width":w,"height":h,"count":count,
                 "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
         frames,meta=scenes.render(recipe,preview=False)
