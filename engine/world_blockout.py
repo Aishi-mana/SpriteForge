@@ -1,7 +1,7 @@
 """Raster-first shared-layout blockout. AI supplies art; deterministic geometry supplies alignment."""
 import random
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
-from . import world, modular, alpha_cleanup
+from . import world, modular, alpha_cleanup, world_style
 
 ROLES=("background","ground","trail","rock","tree","foreground")
 LAYOUTS=("winding","straight","clearing")
@@ -46,7 +46,7 @@ def prompt(value,config,role):
     if role not in needed(c):raise ValueError("Unused or invalid blockout role")
     theme=d["prompt"];style=STYLE_TEXT[d["style"]]
     material=c["materials"][role]
-    common=", ".join(v for v in (style,"consistent environment art direction",theme,material,"elevated three-quarter JRPG camera, consistent light from upper left") if v)
+    common=", ".join(v for v in (style,"consistent environment art direction",theme,material,world_style.guidance(d.get("style_profile")),"elevated three-quarter JRPG camera, consistent light from upper left") if v)
     if role=="background":
         detail="distant scenic background plate only, scenery fills frame, no path, no close foreground props, no characters, atmospheric distance"
     elif role in ("ground","trail"):

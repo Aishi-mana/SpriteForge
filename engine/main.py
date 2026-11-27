@@ -1300,6 +1300,37 @@ def scene_project_actor(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/world/style/analyze")
+def world_style_analyze(body: dict=Body(...)):
+    from . import world_style
+    try:
+        return world_style.analyze(body.get("image"),body.get("name","Environment style"),
+                                   body.get("source","Character reference"),body.get("remove_bg",False),body.get("pixel",False))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/style/project")
+def world_style_project(body: dict=Body(...)):
+    from . import world_style
+    try:
+        source=body.get("source","charactersprite")
+        if source not in ("charactersprite","characterart","anim","customrig","ref"):raise ValueError("Invalid project art source")
+        doc=projects.load(ROOT,body.get("project"))
+        image=doc.get("images",{}).get(source)
+        if not image:raise ValueError("Saved project has no selected artwork")
+        name=doc["name"]
+        return world_style.analyze(image,(name+" style")[:60],(name+" / "+source)[:100],
+                                   body.get("remove_bg",False),body.get("pixel",False))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/style/validate")
+def world_style_validate(body: dict=Body(...)):
+    from . import world_style
+    try:return world_style.validate(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 class WorldAssetParams(GenParams):
     world: dict
     blockout: dict
@@ -1325,9 +1356,15 @@ def world_blockout_asset(p: WorldAssetParams):
         side=max(512,min(1024,p.gen_size))//64*64
         ckpt,lora_dir=_paths(p.checkpoint)
         gen.set_sampler(p.sampler)
+        profile=d.get("style_profile");ref=None;strength=0
+        if profile and profile["enabled"] and profile["image_condition"]:
+            from . import world, local_runtime as lr
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support; switch to text guidance")
+            im=world.image(profile["reference"]);ref=im if lr.route(ckpt) else gen.prep_reference(im,p.bg)
+            strength=profile["strength"]
         # Generation is single-image and uses the existing selected backend.
         raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,
-                              p.seed,side,p.bg,None,0,1,kind=kind,
+                              p.seed,side,p.bg,ref,strength,1,kind=kind,
                               art_style="pixel" if d["pixel"] else "custom")[0]
         return {"image":wb.normalize(raw,p.role,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"]),"seed":seed}
     except HTTPException:raise
