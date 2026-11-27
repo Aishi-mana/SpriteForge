@@ -24,4 +24,11 @@ assert.equal(c.sysControlVariant(ctrl,'hovered'),'#ffffff');assert.equal(c.sysCo
 assert.equal(c.sysControlHit([ctrl],5,5).id,'c');ctrl.control.enabled=false;assert.equal(c.sysControlState(ctrl,preview),'disabled');
 c.sysControlActivate([ctrl],ctrl,preview.selected);assert.equal(preview.selected.c,true);
 console.log('ok control interaction and fallback');
+const bar={x:10,y:20,width:100,height:40,resource:{role:'hp',maximum:100,value:25,direction:'right'}};
+assert.deepEqual(Array.from(c.sysResourceClip(bar)),[10,20,25,40]);
+bar.resource.direction='left';assert.deepEqual(Array.from(c.sysResourceClip(bar)),[85,20,25,40]);
+bar.resource.direction='up';assert.deepEqual(Array.from(c.sysResourceClip(bar)),[10,50,100,10]);
+bar.resource.direction='down';assert.deepEqual(Array.from(c.sysResourceClip(bar)),[10,20,100,10]);
+assert.equal(c.sysResourceFraction(bar.resource,200),1);assert.equal(c.sysResourceFraction(bar.resource,-1),0);assert.equal(c.sysResourceText(bar.resource),'25 / 100');
+console.log('ok HUD clipping and labels');
 console.log('ALL PASSED');

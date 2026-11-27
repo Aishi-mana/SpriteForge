@@ -86,4 +86,15 @@ for bad in ({**opts,"size":33},{**opts,"category":"unknown"}):
     except ValueError:ok(True,"invalid icon rejected")
 projects.save(root,"Icons",{"system_theme":with_icon})
 ok(projects.load(root,"Icons")["system_theme"]==with_icon,"icon persistence")
+hud=copy.deepcopy(with_icon)
+hud["components"][0]["resource"]=dict(role="hp",maximum=150,value=75,direction="left")
+hud=S.validate(hud)
+ok(hud["components"][0]["resource"]["value"]==75,"HUD resource validation")
+ok(S.validate(json.loads(json.dumps(hud)))==hud,"HUD roundtrip")
+for bad in ({"maximum":0},{"maximum":10,"value":11},{"direction":"diagonal"},{"role":"unknown"},{"value":-1}):
+    broken=copy.deepcopy(hud);broken["components"][0]["resource"]=bad
+    try:S.validate(broken);ok(False,"invalid HUD resource")
+    except ValueError:ok(True,"invalid HUD rejected")
+projects.save(root,"HUD",{"system_theme":hud})
+ok(projects.load(root,"HUD")["system_theme"]==hud,"HUD persistence")
 done("test_system_assets")
