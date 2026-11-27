@@ -1,0 +1,5 @@
+# Phase 61L-G — Alpha integration and resource safeguards
+
+Reduce redundant CPU buffers for shadow/refine, index component selection directly, validate protection dimensions before processing, and prevent the public cleanup API from returning a fully erased sprite. Recompute protected halo correction counts. Browser preview enforces 1024 px per side, reuses mask canvas and overlay buffers, coalesces brush redraws to animation frames and flushes before encoding. History retains at most eight snapshots with an estimated 32 MB budget (always retains the newest snapshot); elapsed preview time includes network and decoding. No new model/dependency. Regression coverage includes protected shadow-to-refinement pipeline, maximum canvas, all-erasure guard and history budget. No measured speedup, peak memory or desktop acceptance yet. Browser partial-alpha RGB rounding remains unresolved; automatic server protection preserves operation-input RGBA exactly. Phase 61M exact-fit layers next after validation and merge. Windows packaging remains on hold.
+
+PR #68 passed CPU validation run 45887047432 and merged 2026-11-26T20:04:57Z (`26c3a6d3454f`). Desktop acceptance pending.

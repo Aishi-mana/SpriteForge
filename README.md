@@ -2,7 +2,7 @@
 
 A **local-first AI pixel-art sprite studio** for Windows (usable offline after required models have been downloaded): generate character sprites, give them poses, animate them
 with a bone rig, and export sprite sheets with ready-made Godot 4 / Unity data. Everything runs on your own machine
-(SDXL via `diffusers`, plus an optional local chat assistant through `llama.cpp`).
+(SDXL via `diffusers`, supported local Qwen Rapid and NetaYume workers, plus optional local chat via `llama.cpp`).
 
 Built for an 8 GB laptop GPU (RTX 5070 Laptop, 32 GB RAM): SDXL runs with CPU offload; the assistant runs on the CPU.
 
@@ -18,6 +18,8 @@ Built for an 8 GB laptop GPU (RTX 5070 Laptop, 32 GB RAM): SDXL runs with CPU of
 | **Palette** | Import/export palettes (.hex .gpl .pal, swatch PNG), your own library, remap with dithering, merge/reduce, hue variants, shading ramps. |
 | **Template** | A neutral **mannequin** (with a ready rig) + a **reference image** produce a sprite with the template's exact size and silhouette. |
 | **Directions** | 4/8-direction characters (5 views + mirrors), view-aware walk cycles, one aligned sprite sheet per animation. |
+| **System Asset Studio (61R-A feature branch)** | Reusable UI PNG artwork, independent image/text/rectangle layout components, editable theme, preview PNG and portable JSON/project persistence. AI kits and functional preview planned. |
+| **World Studio (61Q-A–F merged)** | Layered painted/HD-2D map canvas, separate gameplay alpha masks, spawn metadata, portable map/project save, PNG/JSON. Shared-layout AI blockout merged; character-derived style profiles merged; suggested gameplay masks and depth hints merged; mask painting and targeted polish merged; interactive character playtest merged. |
 | **Tiles & props** | Seamless tiles, props, icons, UI elements, tileset workbench, 47-blob/16-edge autotiles, corner and multi-terrain sets, animated tiles, collision flags and AI seam repair. |
 | **Queue** | Queue generation jobs, pause/cancel, re-run or fork from history, compare results and save favourites. |
 
@@ -66,12 +68,13 @@ spriteforge/
 - `docs/TESTING_CHECKLIST.md`  ordered manual test plan for a real GPU
 - `docs/ROADMAP.md`  proposed work, verification priorities and known limits
 - `docs/REPOSITORY_WORKFLOW.md`  GitHub workflow, tracked runtime data and safe cleanup guidance
-- `docs/phases/`  historical notes for each delivered phase (through Phase 22)
+- `docs/phases/`  detailed implementation notes for delivered phases
+- [Living implementation diary](docs/IMPLEMENTATION_DIARY.md) — timestamped changes, PRs, decisions, failures and validation
 - `CHANGELOG.md`  historical phase notes; `HANDOFF.md`  current maintainer context
 
 ## Current project status
 
-The checked-in code and docs cover **Phase 22**. Earlier handoff notes record laptop testing through Phase 18; **Phases 19-22 (queue/history, tiles, terrain and tile follow-ups) still need real-device and Godot/Tiled validation**. The test suite checks logic with faked model calls but does not prove GPU inference, Tauri rendering, or game-engine imports. Start with [the manual testing checklist](docs/TESTING_CHECKLIST.md).
+The implementation baseline is **Phase 61Q-F**, merged 2026-11-27 at `0f3df14f4224`. Character Studio supports master artwork, framed portraits, identity profiles, sprite conversion, body templates, alpha cleanup, multi-model instruction edits, regional protection, edit presets and staged revision history. CPU validation passed for the latest implementation PR; real GPU output, desktop interactions and native engine imports still need verification. All seven reference-editing phases are merged. All seven alpha cleanup and modular asset phases are merged and CPU validated; 61N-A–D merged and CPU validated; standalone lossless WebP export merged and CPU validated; VFX Studio phases 61P-A–H merged and CPU-validated on their PRs (procedural slashes, projectiles, impact chaining, AI artwork, keyframes, combat integration, full-alpha APNG/WebP and pivot-correct exports); final main post-merge validation passed; 61Q-A World Studio foundation merged and CPU-validated; 61Q-B structured AI blockout merged and CPU-validated; 61Q-C environment style profiles merged and CPU-validated; 61Q-D gameplay masks and depth hints merged and CPU-validated; 61Q-E manual polish and regional regeneration merged and CPU-validated; 61Q-F interactive world playtest merged and CPU/JS-validated; initial 61Q A–F integrated, final main CI passed, real desktop/GPU acceptance pending; Phase 61R-A System Asset Studio foundation implemented on feature branch, CPU/JS validation pending; **Phase 62 Windows packaging** is on hold. See the [living diary](docs/IMPLEMENTATION_DIARY.md) and [manual testing checklist](docs/TESTING_CHECKLIST.md).
 
 **Repository hygiene:** projects, history, exports, local `config.json` and diagnostics are runtime/user data. Some of these files are already tracked in this initial Git snapshot. Review [the maintenance guide](docs/REPOSITORY_WORKFLOW.md#tracked-runtime-files--cleanup) before committing or sharing this repository; do not commit model files, logs or personal configuration changes.
 

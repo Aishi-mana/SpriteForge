@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const html=fs.readFileSync(path.join(__dirname,'../../ui/index.html'),'utf8'),c={};vm.createContext(c);vm.runInContext(html.split('/*WORLDPLAY-START*/')[1].split('/*WORLDPLAY-END*/')[0],c);
+const w=64,h=64,mask={width:w,height:h,has_walkable:true,collision:new Uint8Array(w*h),walkable:new Uint8Array(w*h).fill(1)};
+for(let y=0;y<h;y++)mask.collision[y*w+30]=1;
+assert(c.wpClear(mask,12,32,2));assert(!c.wpClear(mask,28,32,2));console.log('ok footprint');
+const m=c.wpMove(mask,10,32,45,0,0);assert(m.x<30&&m.blocked);console.log('ok swept thin wall');
+const slide=c.wpMove(mask,27,20,20,10,2);assert(slide.x<28&&slide.y>29);console.log('ok wall sliding');
+mask.walkable[10*w+10]=0;assert(!c.wpClear(mask,10,10,0));mask.has_walkable=false;assert(c.wpClear(mask,10,10,0));assert(!c.wpClear(mask,-1,10,0));console.log('ok walkable and bounds');
+const v=c.wpVector(new Set(['right','down']),8);assert(Math.abs(Math.hypot(...v)-1)<1e-9);assert(c.wpVector(new Set(['right','down']),4)[1]===0);console.log('ok normalized directions');
+const order=[{id:'tree',mode:'sorted',y:30,index:0},{id:'ground',mode:'ground',y:99,index:1},{id:'front',mode:'foreground',y:1,index:2}];
+assert.equal(c.wpDrawOrder(order,20).map(l=>l.id).join(','),'ground,@actor,tree,front');assert.equal(c.wpDrawOrder(order,40).map(l=>l.id).join(','),'ground,tree,@actor,front');console.log('ok actor depth');
+assert.equal(c.wpFrame({frames:[1,2,3],fps:4},1,true),1);assert.equal(c.wpFrame({frames:[1,2,3],fps:4},1,false),2);console.log('ok loop versus action');
+const cam=c.wpCamera(1280,720,768,432,1,true,1279,719);assert.equal(cam.x,512);assert.equal(cam.y,288);console.log('ok camera clamp');
+console.log('ALL PASSED');

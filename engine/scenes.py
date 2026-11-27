@@ -103,12 +103,16 @@ def compose(scene,decoded,index,cache):
     for _,kind,a in sorted(layers,key=lambda layer:(layer[0],layer[1])):
         if kind==1:
             if not vfx.active(a,index):continue
-            x,y=a["x"],a["y"]
+            x,y=a["x"],a["y"];mirror=a.get("world_flip",False)
             if a["actor"] is not None:
                 actor=by[a["actor"]]
                 if frame_index(actor,index,scene["fps"]) is None or not actor["opacity"]:continue
                 ax,ay=position(actor,index);x=ax+(-x if actor["flip"] else x);y=ay+y
+                mirror=actor["flip"] and a.get("face_actor",False)
+            dx,dy=vfx.motion_offset(a,index)
+            x+=-dx if mirror else dx;y+=dy
             im,(px,py)=vfx.surface(a,index)
+            if mirror:im=im.transpose(Image.Transpose.FLIP_LEFT_RIGHT);px=im.width-px
             composite(out,im,x-px,y-py)
             continue
         i=frame_index(a,index,scene["fps"])
@@ -141,7 +145,7 @@ def render(value,frame=None,preview=True):
                  for im in decoded[a["id"]]) for a in scene["actors"])
     # Prevent excessive repeated scaling of huge source clips.
     if work>72_000_000:raise ValueError("Scaled actors exceed CPU surface budget")
-    fxwork=sum((4*e["radius"]+8)**2*(1 if e["pixel"] else 4)*sum(vfx.active(e,i) for i in indices) for e in scene["effects"])
+    fxwork=sum(vfx.max_surface_side(e)**2*(1 if e["pixel"] else 4)*sum(vfx.active(e,i) for i in indices) for e in scene["effects"])
     if fxwork>120_000_000:raise ValueError("Effects exceed CPU surface budget; reduce size, duration or count")
     cache={};frames=[compose(scene,decoded,i,cache) for i in indices]
     meta=dict(name=scene["name"],fps=scene["fps"],loop=scene["loop"],size=[scene["width"],scene["height"]],

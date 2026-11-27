@@ -1,0 +1,5 @@
+# Phase 61P-G — Combat integration
+
+Select a scene effect and source actor, choose a 0-based source clip frame and delay in scene frames, and apply from the current playhead. First reachable frame honors scene FPS, clip FPS, actor speed, offset, loop/hold/hide and visibility. Follow mode attaches to actor pivot with scale-adjusted local offset and mirrored effect. Launch freezes world origin at cue time; target samples another actor at cue time; projectile-to-target samples destination at flight arrival and compensates arrival keyframe offsets. Targeted impacts are authored timing, not collision simulation. Cues overwrite selected effect timing/placement (not another effect); reapply after actor changes. Behavior sandbox can preload an actor-local effect, play it at attack clip frame, and mirror its launch facing. Preview does not change scene. No bone tracking, homing, actual hit detection or damage. CPU tests added; GPU and desktop acceptance pending. Next 61P-H export/stabilization; packaging on hold.
+
+CPU validation passed in run 45965257424; PR #87 merged at `e9719b541a02`. Desktop acceptance pending.

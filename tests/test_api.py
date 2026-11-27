@@ -75,6 +75,27 @@ ok(fails(M.pal_remap, 400, file=Up(sp), palette="not json"), "bad colour list ->
 def fake_generate(*a, **k):
     img = Image.new("RGB", (1024, 1024), (200, 200, 205)); ImageDraw.Draw(img).ellipse([300, 150, 700, 600], fill=(240, 200, 165)); n = a[13]; return [(img, a[8] + i) for i in range(n)]
 M.gen.generate = fake_generate
+calls=[]
+def capture_generate(*a,**k):
+    calls.append((a[17],a[4],k.get("art_style","pixel")))
+    return fake_generate(*a,**k)
+M.gen.generate=capture_generate
+try:
+    for heads in range(2,8):
+        style="head_"+str(heads)
+        for body_base in (False,True):
+            preview=M.generate_prompt_preview(M.GenParams(prompt="standing",checkpoint="",body_base=body_base,art_style=style))
+            ok(preview["art_style"]==style and preview["positive"].startswith(M.styles.PRESETS[style]),"proportion preview "+style+" "+str(body_base))
+    preview=M.generate_prompt_preview(M.GenParams(prompt="front view",negative="extra exclusion",checkpoint="",body_base=True,art_style="anime",bg="magenta"))
+    ok(preview["kind"]=="body_base" and preview["positive"]==M.gen.build_prompt("front view","magenta","body_base","anime"),"CPU prompt preview without checkpoint")
+    ok(preview["negative"]=="extra exclusion, "+M.gen.negative_for("body_base","anime"),"preview includes actual combined negatives")
+    ok(preview["style_text"]==M.styles.PRESETS["anime"] and "costume" not in preview["style_text"],"style text remains independent of outfit")
+    M.generate_ep(M.GenParams(prompt="front view",checkpoint="sd_xl_base_1.0.safetensors",body_base=True,art_style="anime",gen_size=640,seed=7))
+    ok(calls[-1]==("body_base","front view","anime"),"Generate routes mannequin mode to dedicated prompt kind")
+    M.generate_ep(M.GenParams(prompt="blue armor",checkpoint="sd_xl_base_1.0.safetensors",seed=7))
+    ok(calls[-1]==("sprite","blue armor","pixel"),"ordinary Generate remains unchanged")
+finally:
+    M.gen.generate=fake_generate
 r = A(M.portrait_base, prompt="knight", n=2, size=64, colors=12, seed=3, bg="light gray", ip_scale=.6); ok(len(r["results"]) == 2 and from_url(r["results"][0]["sprite"]).size == (64, 64), "portrait base: pixelised to the chosen size")
 base = from_url(r["results"][0]["sprite"]); response = A(M.portrait_expressions, base=Up(base), mask=json.dumps({"cx": .5, "cy": .45, "rx": .27, "ry": .3}), items=json.dumps([{"name": "happy", "text": ""}, {"name": "sad", "text": ""}]), character="x", strength=.82, extra=4)
 # Real FastAPI returns StreamingResponse; stubs return its iterable.

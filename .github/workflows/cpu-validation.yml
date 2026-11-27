@@ -1,13 +1,15 @@
 name: CPU validation
 on:
-  pull_request:
   push:
-    branches: [main, 'feature/**']
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   cpu:
+    # Do not use paid private-repository minutes automatically.
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.private == false
     strategy:
       fail-fast: false
       matrix:

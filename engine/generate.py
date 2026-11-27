@@ -23,9 +23,20 @@ NEGATIVE_TILE = ("3d, realistic, photo, blurry, gradient, soft shading, text, wa
                  "character, person, single object, centered object, lighting gradient")
 NEGATIVE_PROP = "3d, realistic, photo, blurry, gradient, soft shading, text, watermark, multiple objects, cropped, frame, character, hands"
 KINDS_PROP = ("prop", "icon", "ui")
+BODY_BASE_NEGATIVE = ("armor, cape, cloak, scarf, robe, shirt, trousers, skirt, coat, jacket, "
+                      "gloves, boots, shoes, belt, jewelry, weapon, accessories, costume, clothing, "
+                      "cast shadow, cropped feet, multiple views")
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind=="world_plate":
+        return "people, characters, text, watermark, border, user interface, sprite sheet, collage, blurry"
+    if kind=="world_prop":
+        return "people, characters, text, watermark, border, multiple objects, scenery, ground plane, cropped object, blurry"
+    if kind == "vfx_art":
+        return "scenery, character, person, hands, weapon held by a person, text, watermark, border, cropped effect, sprite sheet, multiple separate effects, blurry"
+    if kind == "body_base":
+        return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", " + BODY_BASE_NEGATIVE
     if kind == "instruction_edit":
         return "blurry, watermark, text, duplicate character, unintended changes"
     if kind in PORTRAIT_FRAMINGS:
@@ -90,6 +101,16 @@ PORTRAIT_FRAMINGS = {
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind=="world_plate":return user_prompt
+    if kind=="world_prop":return f"{user_prompt}, plain flat solid {bg} background"
+    if kind == "vfx_art":
+        style="pixel art" if art_style=="pixel" else "painted 2D game effect illustration"
+        return f"{style}, {user_prompt}, single isolated visual effect, centered with generous margins, plain flat solid {bg} background"
+    if kind == "body_base":
+        detail = (", " + user_prompt.strip()) if user_prompt.strip() else ""
+        return (f"{styles.PRESETS[art_style]}, smooth featureless mannequin body template for modular game sprites"
+                f"{detail}, clean continuous body silhouette, bare mannequin surface, no garments or equipment, "
+                f"single full body, head to toe visible, centered, plain flat solid {bg} background")
     if kind == "instruction_edit":
         return user_prompt
     if kind in PORTRAIT_FRAMINGS:
@@ -113,6 +134,11 @@ def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
     if kind == "expression":
         return f"pixel art, portrait, {user_prompt}, face close-up, expressive face"
     return f"pixel art, {user_prompt}, single character, full body, centered, plain flat solid {bg} background"
+
+
+def prompt_pair(prompt, negative="", bg="white", kind="sprite", art_style="pixel"):
+    """Exact engine-level positive/negative text shared by preview and generation."""
+    return build_prompt(prompt,bg,kind,art_style), (negative+", " if negative else "")+negative_for(kind,art_style)
 
 
 def prep_reference(sprite, bg="white", canvas=512, fill=0.8):
@@ -208,6 +234,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
     with _lock:
         from . import local_runtime as lr
         _check_cancelled()
+        positive,neg=prompt_pair(prompt,negative,bg,kind,art_style)
         if lr.route(ckpt):
             if control_image is not None:raise ValueError("Local model does not support SDXL ControlNet")
             _cache.update(key=None,pipe=None);gc.collect();torch.cuda.empty_cache()
@@ -215,7 +242,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
             out=[]
             for i in range(n):
                 _check_cancelled()
-                py,req=lr.request(ckpt,lora_dir,lora,lora_w,build_prompt(prompt,bg,kind,art_style),(negative+", " if negative else "")+negative_for(kind,art_style),steps,cfg,base+i,size,ip_image,bg,ip_scale)
+                py,req=lr.request(ckpt,lora_dir,lora,lora_w,positive,neg,steps,cfg,base+i,size,ip_image,bg,ip_scale)
                 out.append((lr.run(py,req,cancelled=getattr(_job_context,"cancelled",None)),req["seed"]))
                 _progress(i+1,n)
             return out
@@ -231,7 +258,6 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
             pipe.set_ip_adapter_scale(ip_scale)
             kw["ip_adapter_image"] = ip_image
         base = seed if seed is not None and seed >= 0 else int(torch.randint(0, 2**31 - 1 - n, (1,)).item())
-        neg = (negative + ", " if negative else "") + negative_for(kind, art_style)
         outs = []
         try:
             for i in range(n):
@@ -239,7 +265,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
                 gen = torch.Generator("cpu").manual_seed(base + i)
                 import inspect
                 allowed=inspect.signature(pipe.__call__).parameters
-                opts=dict(prompt=build_prompt(prompt,bg,kind,art_style),negative_prompt=neg,num_inference_steps=steps,guidance_scale=cfg,width=size,height=size,generator=gen,**kw)
+                opts=dict(prompt=positive,negative_prompt=neg,num_inference_steps=steps,guidance_scale=cfg,width=size,height=size,generator=gen,**kw)
                 if family=="qwen" and "true_cfg_scale" in allowed: opts["true_cfg_scale"]=cfg
                 if family in mf.FLOW: opts={k:v for k,v in opts.items() if k in allowed}
                 img=pipe(**opts).images[0]

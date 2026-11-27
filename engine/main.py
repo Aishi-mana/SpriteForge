@@ -51,6 +51,20 @@ def b64(img):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+class WebPExport(BaseModel):
+    image: str
+    scale: int = 1
+
+
+@app.post("/api/export/webp")
+def export_webp(p: WebPExport):
+    from . import webp_export
+    try:
+        return {"image":webp_export.encode(p.image,p.scale)}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+
+
 def scan(sub):
     d = Path(cfg()["models_dir"]) / sub
     if not cfg()["models_dir"]: return []
@@ -142,6 +156,7 @@ def _art_style(value):
 
 
 class GenParams(BaseModel):
+    body_base: bool = False  # Generate-only mannequin workflow
     art_style: str = "pixel"
     hd_size: int = 768
     gen_size: int = 1024
@@ -197,11 +212,29 @@ def _run(p_ckpt, lora_dir, lora, lw, prompt, neg, steps, cfg_, seed, bg, n, ip_i
     return {"results": results}
 
 
+def _generate_prompt_kind(p):
+    kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
+    art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
+    if p.body_base and kind == "sprite":
+        kind = "body_base"
+    return kind,art_style
+
+
+@app.post("/api/generate/prompt_preview")
+def generate_prompt_preview(p: GenParams):
+    """CPU-only preview of the text submitted to the runtime, without loading models."""
+    kind,art_style=_generate_prompt_kind(p)
+    positive,negative=gen.prompt_pair(p.prompt,p.negative,p.bg,kind,art_style)
+    return {"positive":positive,"negative":negative,"user_prompt":p.prompt,
+            "user_negative":p.negative,"default_negative":gen.negative_for(kind,art_style),
+            "style_text":styles.PRESETS[art_style],"art_style":art_style,"kind":kind,
+            "checkpoint":p.checkpoint,"lora":p.lora,"lora_weight":p.lora_weight,"background":p.bg}
+
+
 def _do_generate(p):
     ckpt, lora_dir = _paths(p.checkpoint)
     gen.set_sampler(p.sampler)
-    kind = p.kind if p.kind in ("sprite", "tile", "prop", "icon", "ui") else "sprite"
-    art_style = _art_style(p.art_style) if kind == "sprite" else "pixel"
+    kind,art_style=_generate_prompt_kind(p)
     if art_style != "pixel":
         post = lambda raw: styles.finish(raw, p.hd_size, p.remove_bg, p.bg_tol, gen.BG_RGB.get(p.bg))
     elif kind == "tile":
@@ -988,8 +1021,12 @@ class ModularAsset(BaseModel):
     recipe: dict
     category: str
     description: str
+    profile: str = "auto"
+    hand: str = "right"
     view: str = "front"
     source: str = "body"
+    fixed_canvas: bool = False
+    extraction: bool = False
     replace_category: bool = True
     checkpoint: str
     lora: str = ""
@@ -1013,30 +1050,92 @@ def modular_generate_asset(b: ModularAsset):
     from . import local_runtime as lr
     ckpt,lora_dir=_paths(b.checkpoint)
     try:
-        if not mf.describe(ckpt)["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
-        prompt=modular_assets.prompt(b.category,b.description,b.view)
+        if not 0<=b.ip_scale<=1 or not 0<=b.lora_weight<=2 or not -1<=b.seed<2**31 or not 1<=b.bg_tol<=100:
+            raise ValueError("Invalid modular generation settings")
+        model=mf.describe(ckpt)
+        from . import instruction_edit
+        backend=instruction_edit.capability(model)
+        if b.extraction and (not b.fixed_canvas or not backend):
+            raise ValueError("Extraction requires fixed canvas and a supported instruction editing checkpoint")
+        if not b.extraction and not model["reference"]:raise ValueError("Select an image-reference-capable checkpoint")
+        spec=modular_assets.asset_profile(b.category,b.profile,b.hand)
+        modular_assets.prompt(b.category,b.description,b.view)
+        description=b.description.strip()
+        if spec["description"]:
+            description=description[:1200-len(spec["description"])-2]+"; "+spec["description"]
+        prompt=(modular_assets.registered_prompt if b.fixed_canvas else modular_assets.prompt)(b.category,description,b.view)
         if b.bg not in ("white","green","magenta"):raise ValueError("Choose white, green or magenta background")
         if len(b.negative)>1800:raise ValueError("Negative prompt too long")
-        recipe,images,ref,bb=modular_assets.reference(b.recipe,b.source)
+        recipe,images,ref,bb=modular_assets.reference(b.recipe,"body" if b.fixed_canvas else b.source)
         if len(recipe["layers"])>=modular.MAX_LAYERS:raise ValueError("Remove a layer before generating another")
+        if b.fixed_canvas and sum(im.width*im.height for im in images)+recipe["width"]*recipe["height"]>modular.MAX_SOURCE_PIXELS:
+            raise ValueError("Not enough source pixel budget for a registered layer")
         art="pixel" if recipe["pixel"] else _art_style(b.art_style if b.art_style!="pixel" else "anime")
-        rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
-        # A square RGB reference preserves the full character silhouette for all three runtimes.
-        ref=gen.prep_reference(ref,b.bg,canvas=512)
-        seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
-        gen.set_sampler(b.sampler)
-        res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
-                 ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
-                 gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
-        info=res["info"]
+        guide=None
+        if b.fixed_canvas:
+            rect,guide,landmarks=modular_assets.specialized_guide(ref,b.category,b.profile,b.hand)
+        else:
+            rect=modular_assets.region(b.category,bb,(recipe["width"],recipe["height"]))
+        if b.extraction:
+            mf.check_lora(ckpt,lora_dir,b.lora)
+            seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+            gen.set_sampler(b.sampler)
+            asset,edited,info=modular_assets.edit_asset(ref,guide,model,ckpt,lora_dir,b.category,description,b.view,
+                size=min((640,768,896,1024),key=lambda v:abs(v-b.gen_size)),bg=b.bg,
+                tolerance=max(1,min(100,b.bg_tol)),pixel=recipe["pixel"],steps=max(1,min(50,b.steps)),
+                cfg=max(1,min(15,b.cfg)),seed=seed,negative=b.negative,lora=b.lora,lora_weight=b.lora_weight,
+                strength=max(.2,min(.75,1-b.ip_scale)))
+            info["landmarks"]=landmarks
+            res={"sprite":modular.png_uri(asset),"raw":modular.png_uri(edited)}
+        else:
+            # A square RGB reference preserves the full character silhouette for all three runtimes.
+            ref=gen.prep_reference(ref,b.bg,canvas=512)
+            seed=b.seed if b.seed>=0 else int(np.random.randint(0,2**31-1))
+            gen.set_sampler(b.sampler)
+            res=_run(ckpt,lora_dir,b.lora,b.lora_weight,prompt,b.negative,max(1,min(b.steps,50)),b.cfg,seed,b.bg,1,
+                     ref,max(.2,min(b.ip_scale,.8)),lambda raw:modular_assets.finish(raw,rect,recipe["pixel"],b.colors,b.bg_tol),
+                     gen_size=max(512,min(b.gen_size,1024))//64*64,kind="modular_asset",art_style=art)["results"][0]
+            info=res["info"]
+            if b.fixed_canvas:
+                registered,info=modular_assets.register_asset(modular.decode(res["sprite"]),info,(recipe["width"],recipe["height"]))
+                res["sprite"]=modular.png_uri(registered)
+                info.update(fit_method="silhouette_band_region",landmarks=landmarks,
+                            placement=modular_assets.placement_review(registered,guide))
         layer={"name":b.description.strip()[:80],"category":b.category,"image":res["sprite"],
                "x":info["x"],"y":info["y"],"scale":100,"opacity":100,"visible":True,"flip":False}
+        if b.profile!="auto":
+            layer.update(attachment=spec["attachment"],occlusion={"depth":spec["depth"],"bones":[]})
+        info.update(asset_profile=b.profile,attachment=spec["attachment"],depth=spec["depth"])
         # Validate the resulting recipe budget before presenting an addable candidate.
         modular.validate({**recipe,"layers":recipe["layers"]+[layer]})
         preview=modular_assets.candidate_preview(recipe,images,layer,b.replace_category)
-        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=lr.route(ckpt) or "sdxl_ip_adapter")
-        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info}
+        info.update(category=b.category,checkpoint=b.checkpoint,reference_method=backend if b.extraction else (lr.route(ckpt) or "sdxl_ip_adapter"))
+        return {"layer":layer,"preview":modular.png_uri(preview),"reference":modular.png_uri(ref),"raw":res["raw"],"info":info,"placement_mask":modular.png_uri(guide) if guide is not None else None}
     except ValueError as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:
+        if "out of memory" in str(e).lower():
+            raise HTTPException(503,"Modular generation ran out of memory. Reduce generation resolution to 640 and retry.")
+        if "Another instruction edit" in str(e):
+            raise HTTPException(409,str(e))
+        raise HTTPException(500,str(e))
+
+
+class ModularCandidateReview(BaseModel):
+    recipe: dict
+    layer: dict
+    replace_category: bool = True
+    placement_mask: Optional[str] = None
+
+
+@app.post("/api/modular/review_asset")
+def modular_review_asset(b: ModularCandidateReview):
+    """Re-render a staged asset without modifying a saved recipe."""
+    try:
+        guide=modular.decode(b.placement_mask).convert("L") if b.placement_mask is not None else None
+        layer,preview,placed,info=modular_assets.review_candidate(b.recipe,b.layer,b.replace_category,guide)
+        return {"layer":layer,"preview":modular.png_uri(preview),"registered":modular.png_uri(placed),"info":info}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
 
 
 class ModularAnimation(BaseModel):
@@ -1201,6 +1300,242 @@ def scene_project_actor(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/world/style/analyze")
+def world_style_analyze(body: dict=Body(...)):
+    from . import world_style
+    try:
+        return world_style.analyze(body.get("image"),body.get("name","Environment style"),
+                                   body.get("source","Character reference"),body.get("remove_bg",False),body.get("pixel",False))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/style/project")
+def world_style_project(body: dict=Body(...)):
+    from . import world_style
+    try:
+        source=body.get("source","charactersprite")
+        if source not in ("charactersprite","characterart","anim","customrig","ref"):raise ValueError("Invalid project art source")
+        doc=projects.load(ROOT,body.get("project"))
+        image=doc.get("images",{}).get(source)
+        if not image:raise ValueError("Saved project has no selected artwork")
+        name=doc["name"]
+        return world_style.analyze(image,(name+" style")[:60],(name+" / "+source)[:100],
+                                   body.get("remove_bg",False),body.get("pixel",False))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/style/validate")
+def world_style_validate(body: dict=Body(...)):
+    from . import world_style
+    try:return world_style.validate(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+class WorldAssetParams(GenParams):
+    world: dict
+    blockout: dict
+    role: str
+
+
+@app.post("/api/world/blockout/plan")
+def world_blockout_plan(body: dict=Body(...)):
+    from . import world_blockout as wb
+    try:
+        d,c=wb.inputs(body.get("world"),body.get("blockout"))
+        return {"layout":wb.layout(d,c),"roles":wb.needed(c),"blockout":c}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/blockout/asset")
+def world_blockout_asset(p: WorldAssetParams):
+    from . import world_blockout as wb
+    try:
+        d,c=wb.inputs(p.world,p.blockout)
+        prompt,kind=wb.prompt(d,c,p.role)
+        if p.bg not in gen.BG_RGB:raise ValueError("Choose a valid object background color")
+        side=max(512,min(1024,p.gen_size))//64*64
+        ckpt,lora_dir=_paths(p.checkpoint)
+        gen.set_sampler(p.sampler)
+        profile=d.get("style_profile");ref=None;strength=0
+        if profile and profile["enabled"] and profile["image_condition"]:
+            from . import world, local_runtime as lr
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support; switch to text guidance")
+            im=world.image(profile["reference"]);ref=im if lr.route(ckpt) else gen.prep_reference(im,p.bg)
+            strength=profile["strength"]
+        # Generation is single-image and uses the existing selected backend.
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,
+                              p.seed,side,p.bg,ref,strength,1,kind=kind,
+                              art_style="pixel" if d["pixel"] else "custom")[0]
+        return {"image":wb.normalize(raw,p.role,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"]),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/world/blockout/assemble")
+def world_blockout_assemble(body: dict=Body(...)):
+    from . import world_blockout as wb, world_masks
+    try:
+        result=wb.assemble(body.get("world"),body.get("blockout"),body.get("assets"))
+        auto=body.get("generate_masks",False)
+        if not isinstance(auto,bool):raise ValueError("Invalid mask generation flag")
+        if auto:result,_=world_masks.generate(result,body.get("gameplay"))
+        else:result.pop("gameplay",None)
+        return result
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/polish/stroke")
+def world_polish_stroke(body: dict=Body(...)):
+    from . import world_polish
+    try:return world_polish.stroke(body.get("world"),body.get("stroke"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/polish/transform")
+def world_polish_transform(body: dict=Body(...)):
+    from . import world_polish
+    try:
+        doc,key=world_polish.transform(body.get("world"),body.get("layer"),body.get("transform"))
+        return {"world":doc,"selected":key}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/polish/replace")
+def world_polish_replace(body: dict=Body(...)):
+    from . import world_polish
+    try:return world_polish.replace(body.get("world"),body.get("layer"),body.get("image"),body.get("rect"),body.get("feather",8))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+class WorldPolishParams(GenParams):
+    world: dict
+    layer: str
+    rect: list | None = None
+    instruction: str
+    feather: int = 8
+
+
+@app.post("/api/world/polish/regenerate")
+def world_polish_regenerate(p: WorldPolishParams):
+    from . import world_polish as wp, world_blockout as wb, world, local_runtime as lr
+    try:
+        d,l,im,box=wp.region(p.world,p.layer,p.rect)
+        prompt,kind=wp.prompt(d,p.layer,p.rect,p.instruction)
+        if p.bg not in gen.BG_RGB:raise ValueError("Invalid object background")
+        ckpt,lora_dir=_paths(p.checkpoint);gen.set_sampler(p.sampler)
+        ref=None;strength=0;profile=d.get("style_profile")
+        if profile and profile["enabled"] and profile["image_condition"]:
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support")
+            image=world.image(profile["reference"]);ref=image if lr.route(ckpt) else gen.prep_reference(image,p.bg)
+            strength=profile["strength"]
+        side=max(512,min(1024,p.gen_size))//64*64
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,p.seed,side,p.bg,ref,strength,1,kind=kind,art_style="pixel" if d["pixel"] else "custom")[0]
+        uri=wb.normalize(raw,wp.ROLE_MAP[l["role"]],gen.BG_RGB[p.bg],p.bg_tol,d["pixel"])
+        return {"world":wp.replace(d,p.layer,uri,p.rect,p.feather,True),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/world/masks/generate")
+def world_masks_generate(body: dict=Body(...)):
+    from . import world_masks
+    try:
+        doc,status=world_masks.generate(body.get("world"),body.get("options"))
+        return {"world":doc,"status":status}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/masks/inspect")
+def world_masks_inspect(body: dict=Body(...)):
+    from . import world_masks
+    try:return world_masks.inspect(body.get("world"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/playtest/prepare")
+def world_playtest_prepare(body: dict=Body(...)):
+    from . import world_playtest as wp
+    try:return wp.prepare(body.get("world"),body.get("clips"),body.get("options"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/playtest/project")
+def world_playtest_project(body: dict=Body(...)):
+    from . import world_playtest as wp
+    try:return wp.saved_clips(projects.load(ROOT,body.get("project")))
+    except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+class SystemKitParams(GenParams):
+    theme: dict
+    kit: str
+    role: str
+
+
+@app.post("/api/system/kit/plan")
+def system_kit_plan(body: dict=Body(...)):
+    from . import system_kit
+    try:
+        _, roles = system_kit.plan(body.get("theme"), body.get("kit"))
+        return {"roles": roles}
+    except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/system/kit/asset")
+def system_kit_asset(p: SystemKitParams):
+    from . import system_kit, system_assets, world, local_runtime as lr
+    try:
+        d = system_assets.validate(p.theme)
+        prompt = system_kit.prompt(d, p.kit, p.role)
+        if p.bg not in gen.BG_RGB:raise ValueError("Choose a valid background color")
+        ckpt,lora_dir=_paths(p.checkpoint)
+        gen.set_sampler(p.sampler)
+        ref=None;strength=0;profile=d.get("style_profile")
+        if profile and profile["enabled"] and profile["image_condition"]:
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support")
+            im=world.image(profile["reference"])
+            ref=im if lr.route(ckpt) else gen.prep_reference(im,p.bg)
+            strength=profile["strength"]
+        side=max(512,min(1024,p.gen_size))//64*64
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,p.seed,side,p.bg,ref,strength,1,kind="world_prop",art_style="pixel" if d["pixel"] else "custom")[0]
+        return {"image":system_kit.normalize(raw,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"]),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/system/kit/assemble")
+def system_kit_assemble(body: dict=Body(...)):
+    from . import system_kit
+    try:return system_kit.assemble(body.get("theme"),body.get("kit"),body.get("assets"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/system/validate")
+def system_validate(body: dict=Body(...)):
+    from . import system_assets
+    try:return system_assets.validate(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/validate")
+def world_validate(body: dict=Body(...)):
+    from . import world
+    try:return world.validate(body)[0]
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/world/render")
+def world_render(body: dict=Body(...)):
+    from . import world
+    try:
+        im,doc=world.render(body.get("world"),body.get("show_masks",False))
+        return {"image":b64(im),"width":doc["width"],"height":doc["height"]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/validate")
 def scene_validate(body: dict=Body(...)):
     try:return scenes.validate(body)[0]
@@ -1213,6 +1548,22 @@ def scene_validate_actor(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/scenes/combat_cue")
+def scene_combat_cue(body: dict=Body(...)):
+    from . import combat_vfx
+    try:return combat_vfx.cue(body.get("scene"),body.get("cue"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/combat_preview")
+def scene_combat_preview(body: dict=Body(...)):
+    from . import combat_vfx
+    try:
+        frames,meta=combat_vfx.behavior_clip(body.get("scene"),body.get("effect"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/render")
 def scene_render(body: dict=Body(...)):
     try:
@@ -1221,33 +1572,93 @@ def scene_render(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
-@app.post("/api/scenes/export_effect")
-def scene_export_effect(body: dict=Body(...)):
+@app.post("/api/vfx/artwork/import")
+def vfx_artwork_import(body: dict=Body(...)):
+    from . import vfx_art, alpha_cleanup
     try:
-        scene,_=scenes.validate(body.get("scene"))
-        effect=next((e for e in scene["effects"] if e["id"]==body.get("effect")),None)
-        if effect is None:raise ValueError("Choose an effect to export")
-        count=effect["end"]-effect["start"]+1
-        if count<2:raise ValueError("Standalone export needs at least two active frames")
-        side=4*effect["radius"]+8
-        single={**effect,"actor":None,"start":0,"end":count-1,"x":side//2,"y":side//2,"visible":True}
-        recipe={"version":1,"name":effect["name"],"width":side,"height":side,"count":count,
-                "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
-        frames,meta=scenes.render(recipe,preview=False)
+        im=modular.decode(body.get("image"))
+        pixel=body.get("pixel",True)
+        if not isinstance(pixel,bool):raise ValueError("Invalid sampling mode")
+        if body.get("remove_bg",False):
+            tol=modular.integer(body.get("bg_tol",40),1,100,"background tolerance")
+            im,_=alpha_cleanup.clean(im,tol,mode="smart",soft=not pixel)
+        return {"artwork":vfx_art.normalize(im,pixel)}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+class VfxArtworkParams(GenParams):
+    kind: str = "vfx_art"
+
+
+@app.post("/api/vfx/artwork/generate")
+def vfx_artwork_generate(p: VfxArtworkParams):
+    from . import vfx_art, alpha_cleanup
+    if not p.prompt.strip() or len(p.prompt)>2000:raise HTTPException(400,"Enter effect artwork prompt (1–2000 characters)")
+    if p.art_style not in ("pixel","custom"):raise HTTPException(400,"Choose pixel or painted artwork")
+    if p.bg not in gen.BG_RGB:raise HTTPException(400,"Invalid artwork background")
+    ckpt,lora_dir=_paths(p.checkpoint)
+    gen.set_sampler(p.sampler)
+    pixel=p.art_style=="pixel"
+    def post(raw):
+        im=raw.convert("RGBA")
+        if p.remove_bg:
+            im,_=alpha_cleanup.clean(im,max(1,min(100,p.bg_tol)),mode="smart",background=gen.BG_RGB[p.bg],soft=not pixel)
+        uri=vfx_art.normalize(im,pixel)
+        return vfx_art.decoded(uri),{"pipeline":"vfx_art"}
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,p.prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,1,None,0,post,
+                gen_size=max(512,min(p.gen_size,1024))//64*64,kind="vfx_art",art_style=p.art_style)
+
+
+@app.get("/api/vfx/presets")
+def vfx_presets():
+    from . import vfx_studio
+    return {"presets":vfx_studio.presets()}
+
+
+@app.post("/api/vfx/validate")
+def vfx_validate(body: dict=Body(...)):
+    from . import vfx_studio
+    try:return vfx_studio.validate(body)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/vfx/render")
+def vfx_render(body: dict=Body(...)):
+    from . import vfx_studio
+    try:
+        frames,meta=vfx_studio.render(body.get("recipe"),body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/vfx/export")
+def vfx_export(body: dict=Body(...)):
+    from . import vfx_export as vx
+    try:
         opts=body.get("options") or {}
         if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
-        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not effect["pixel"]),meta["name"],ROOT)
-    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+        return vx.effect_pack(body.get("recipe"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/scenes/export_effect")
+def scene_export_effect(body: dict=Body(...)):
+    from . import vfx_export as vx
+    try:
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
+        return vx.scene_effect_pack(body.get("scene"),body.get("effect"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/scenes/export")
 def scene_export(body: dict=Body(...)):
+    from . import vfx_export as vx
     try:
-        frames,meta=scenes.render(body.get("scene"),preview=False)
         opts=body.get("options") or {}
         if not isinstance(opts,dict):raise ValueError("Invalid scene export options")
-        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True),meta["name"],ROOT)
-    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+        return vx.scene_pack(body.get("scene"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/retarget_suggest")
@@ -1525,16 +1936,28 @@ class AlphaCleanupParams(BaseModel):
     tolerance: int = 40
     points: List[List[int]] = []
     soft: bool = True
+    shadow_strength: int = 50
+    edge_strength: int = 50
+    alpha_cutoff: int = 12
+    hard_edges: bool = True
+    protection: Optional[str] = None
 
 
 @app.post("/api/alpha/cleanup")
 def alpha_cleanup_ep(p: AlphaCleanupParams):
     from . import alpha_cleanup
-    if p.background not in ("auto", *gen.BG_RGB) or not 1<=p.tolerance<=100 or len(p.points)>64 or any(len(q)!=2 for q in p.points):
+    if p.background not in ("auto", *gen.BG_RGB) or not 1<=p.tolerance<=100 or not 0<=p.shadow_strength<=100 or not 0<=p.edge_strength<=100 or not 0<=p.alpha_cutoff<=254 or len(p.points)>64 or any(len(q)!=2 for q in p.points):
         raise HTTPException(400,"Invalid alpha cleanup settings")
     try:
         im=_character_reference(p.image)
-        out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft)
+        mask=_character_reference(p.protection) if p.protection is not None else None
+        if mask is not None and mask.size!=im.size:
+            raise ValueError("Protection mask must match source dimensions")
+        out,info=alpha_cleanup.clean(im,p.tolerance,p.mode,gen.BG_RGB.get(p.background),p.points,p.soft,p.shadow_strength,p.edge_strength,p.alpha_cutoff,p.hard_edges)
+        if mask is not None:
+            out,info=alpha_cleanup.preserve_regions(im,out,mask,info)
+        if not out.getchannel("A").getbbox():
+            out,info=im,dict(info,removed=0,note="Cleanup would erase every visible pixel; adjust settings or protection.")
     except ValueError as e:
         raise HTTPException(400,str(e))
     return {"sprite":b64(out),"info":info}
@@ -1559,6 +1982,12 @@ class InstructionEditParams(BaseModel):
     lora_weight: float = 1.0
 
 
+    mask: Optional[str] = None
+
+
+    locks: Optional[List[str]] = None
+
+
 @app.post("/api/character/instruction_edit")
 def character_instruction_edit(p: InstructionEditParams):
     from . import instruction_edit
@@ -1572,12 +2001,13 @@ def character_instruction_edit(p: InstructionEditParams):
     try:
         mf.check_lora(ckpt,lora_dir,p.lora)
         gen.set_sampler("euler_a")
-        out,info=instruction_edit.edit(source,model,ckpt,lora_dir,**p.model_dump(exclude={"image","checkpoint"}))
+        out,info=instruction_edit.run_edit(source,model,ckpt,lora_dir,**p.model_dump(exclude={"image","checkpoint"}))
         return {"sprite":b64(out),"info":info}
     except ValueError as e:
         raise HTTPException(400,str(e))
     except Exception as e:
-        raise HTTPException(500,"Instruction edit failed: "+str(e))
+        hint=" Reduce resolution to 640, close other GPU applications, and retry." if "out of memory" in str(e).lower() else ""
+        raise HTTPException(500,"Instruction edit failed: "+str(e)+hint)
 
 
 class BodyBaseParams(BaseModel):
