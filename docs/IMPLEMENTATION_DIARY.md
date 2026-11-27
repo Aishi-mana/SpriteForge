@@ -738,3 +738,7 @@ Use the following template for each future change (replace placeholders with act
 
 - Added four projectile presets, exact endpoint displacement, straight/arc/ease-in/ease-out trajectories, tangent-oriented procedural artwork, fixed path-enclosing standalone canvas, Studio and Scene controls, standalone scene effect export and CPU regressions. Files: `engine/vfx.py`, `engine/vfx_studio.py`, `engine/scenes.py`, `engine/main.py`, `ui/index.html`, `tests/test_vfx_studio.py`.
 - User approved resuming CI following reported public visibility; connected metadata still reported private. Restored automatic push/PR triggers with public-only automatic job condition (manual dispatch retained). No test success claimed; CPU and desktop validation pending. Stacked on #82; explosion chaining, actual weapon attachment, AI art and packaging remain future work. [Phase notes](phases/PHASE61PC.md).
+
+### 2026-11-27T04:37:16Z — 61P-C validation status
+
+- PR #83 opened at `6da666e8cafa`. [CPU validation run 45941010590](https://github.com/Aishi-mana/SpriteForge/actions/runs/45941010590) completed with skipped conclusion, not a pass. Repository metadata still reported private; public-only condition prevented automatic CPU jobs. PRs #81–83 remain open. Manual dispatch or confirmed public visibility and another PR event are needed for actual validation.
