@@ -903,3 +903,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61R-I: Interactive testing and World integration
 
 - Reuse the System Studio renderer in the World playtest as a viewport-fixed aspect-fit overlay; preserve nine-slice, text, controls, HUD fills and motion recipes. Add pointer testing, role-wide resource simulation, reset and independent runtime image cache. Map/theme authoring and static export remain unchanged. JS regression tests added. Stacked on 61R-H pending validation. Runtime inventory/dialogue scripts, game-event bindings and keyboard UI navigation deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-J: Exports and stabilization
+
+- PR #102 and #103 passed CPU validation and merged. Added validated UI ZIP export with RGBA PNGs, categorized icons, external-path manifest, editable theme roundtrip, Godot and Unity layout hints and integration README. Added archive integrity, metadata, coordinate/border mapping, empty theme and invalid-reference tests. Native engine scenes/importers and desktop acceptance deferred. No manual CI dispatch.
