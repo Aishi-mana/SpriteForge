@@ -713,3 +713,8 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T00:21:58Z — 61N-D integration
 
 - PR #79 passed CPU validation run 45913273985 and merged at `29b4437f72da`. All 61N phases merged and CPU validated. Real model inference, desktop acceptance and head-height quality remain unverified. Phase 62 remains on hold.
+
+### 2026-11-27 (Manila) — Phase 61O: lightweight WebP export
+
+- Added lossless exact-RGBA Pillow encoder and bounded scale (`8292593f1bfb`), CPU API (`a0c28373cc89`), shared image download selector and routing (`545a5fef6c3c`), CPU roundtrip tests (`f847dba40639`) and JS download format/error tests (`0bf917d77c80`, `70da2e8d8295`).
+- PNG remains default; standalone static WebP only, project data and engine export packs unchanged. No measured size savings or desktop acceptance. CPU CI pending. [Phase notes](phases/PHASE61O.md). Packaging on hold.
