@@ -742,3 +742,8 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T04:37:16Z — 61P-C validation status
 
 - PR #83 opened at `6da666e8cafa`. [CPU validation run 45941010590](https://github.com/Aishi-mana/SpriteForge/actions/runs/45941010590) completed with skipped conclusion, not a pass. Repository metadata still reported private; public-only condition prevented automatic CPU jobs. PRs #81–83 remain open. Manual dispatch or confirmed public visibility and another PR event are needed for actual validation.
+
+### 2026-11-27 (Manila) — Phase 61P-D: explosion and impact chaining
+
+- Three standalone burst presets (explosion, shockwave, frost burst), optional impact flash or burst on projectile arrival, independent impact duration/color/scale, deterministic flight/impact stage timing, fixed canvas and shared scene/standalone export. Updated `engine/vfx.py`, `engine/vfx_studio.py`, `engine/scenes.py`, `ui/index.html`, `tests/test_vfx_studio.py`. Corrected 61P-C misplaced Scene trajectory controls and added a regression assertion. Old recipes default to no impact; no arbitrary recursive chains or collision detection. Actor-attached effects retain current anchor semantics. CPU tests added, not run locally; desktop pending.
+- User approved public auto CI. Restored push/main and PR triggers directly on main (`1146a683f037`), retaining public-only automatic execution because connected metadata still reports private. Stacked on #83. [Phase notes](phases/PHASE61PD.md). Next 61P-E AI effect artwork; packaging on hold.

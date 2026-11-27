@@ -8,7 +8,9 @@ from . import modular
 SLASH_KINDS=("slash_horizontal","slash_vertical","slash_diagonal","slash_crescent","slash_spin","slash_double","weapon_trail")
 PROJECTILE_KINDS=("fireball","energy_bolt","ice_shard","magic_orb")
 PATHS=("linear","arc","ease_in","ease_out")
-KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")+SLASH_KINDS+PROJECTILE_KINDS
+BURST_KINDS=("explosion","shockwave","frost_burst")
+IMPACT_KINDS=("none","impact")+BURST_KINDS
+KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")+SLASH_KINDS+PROJECTILE_KINDS+BURST_KINDS
 MAX_EFFECTS=12
 
 def validate(effects,count,actor_ids):
@@ -32,6 +34,14 @@ def validate(effects,count,actor_ids):
         if emission not in ("burst","continuous"):raise ValueError("Invalid particle emission")
         path=e.get("path","linear")
         if path not in PATHS:raise ValueError("Invalid projectile path")
+        impact_kind=e.get("impact_kind","none")
+        if impact_kind not in IMPACT_KINDS:raise ValueError("Invalid impact kind")
+        impact_frames=n(e,"impact_frames",1,30,6)
+        impact_scale=n(e,"impact_scale",50,200,150)
+        impact_color=e.get("impact_color",color)
+        if not isinstance(impact_color,str) or not re.fullmatch(r"#[0-9a-fA-F]{6}",impact_color):raise ValueError("Invalid impact color")
+        if impact_kind!="none" and (kind not in PROJECTILE_KINDS or end-start+1<impact_frames+2):
+            raise ValueError("Impact chain needs a projectile and at least two flight frames")
         out.append(dict(id=key,name=name.strip(),kind=kind,actor=actor,color=color.lower(),start=start,end=end,
             x=n(e,"x",-2048,2048,0),y=n(e,"y",-2048,2048,0),z=n(e,"z",-100,100,0),
             radius=n(e,"radius",4,128,32),opacity=n(e,"opacity",0,100,100),rotation=n(e,"rotation",-180,180,0),
@@ -41,7 +51,8 @@ def validate(effects,count,actor_ids):
             sweep=n(e,"sweep",30,360,180),thickness=n(e,"thickness",5,70,24),
             trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60),path=path,
             travel_x=n(e,"travel_x",-512,512,96),travel_y=n(e,"travel_y",-512,512,0),
-            arc_height=n(e,"arc_height",-256,256,48)))
+            arc_height=n(e,"arc_height",-256,256,48),impact_kind=impact_kind,
+            impact_frames=impact_frames,impact_scale=impact_scale,impact_color=impact_color.lower()))
     return out
 
 def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"]
@@ -49,10 +60,28 @@ def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame
 def phase(e,frame):
     return (frame-e["start"])/max(1,e["end"]-e["start"])
 
+def flight_end(e):
+    return e["end"]-(e.get("impact_frames",6) if e.get("impact_kind","none")!="none" else 0)
+
+def impact_radius(e):
+    return min(128,max(4,round(e["radius"]*e.get("impact_scale",150)/100)))
+
+def stage(e,frame):
+    """Non-recursive impact stage; the flight and burst share one recipe and clock."""
+    if e["kind"] not in PROJECTILE_KINDS or e.get("impact_kind","none")=="none":return e
+    end=flight_end(e)
+    if frame<=end:return {**e,"end":end,"impact_kind":"none"}
+    return {**e,"kind":e["impact_kind"],"start":end+1,"radius":impact_radius(e),
+            "color":e.get("impact_color",e["color"]),"impact_kind":"none"}
+
+def max_surface_side(e):
+    r=max(e["radius"],impact_radius(e)) if e.get("impact_kind","none")!="none" else e["radius"]
+    return 4*r+8
+
 def projectile_offset(e,frame):
     """Integer world-space translation; endpoints are exact and frame-order independent."""
     if e["kind"] not in PROJECTILE_KINDS:return (0,0)
-    t=max(0,min(1,phase(e,frame)))
+    t=max(0,min(1,(frame-e["start"])/max(1,flight_end(e)-e["start"])))
     path=e.get("path","linear")
     u=t*t if path=="ease_in" else 1-(1-t)**2 if path=="ease_out" else t
     arc=4*u*(1-u)*e.get("arc_height",48) if path=="arc" else 0
@@ -60,13 +89,14 @@ def projectile_offset(e,frame):
 
 def effect_canvas(e):
     """Fixed canvas enclosing every local cell along the sampled path."""
-    side=4*e["radius"]+8
+    side=max_surface_side(e)
     offsets=[projectile_offset(e,i) for i in range(e["start"],e["end"]+1)]
     xs,ys=zip(*offsets)
     return (side+max(xs)-min(xs),side+max(ys)-min(ys),side//2-min(xs),side//2-min(ys))
 
 def surface(e,frame):
     """Return a transparent local cell and center pivot. Randomness is frame-order independent."""
+    e=stage(e,frame)
     r=e["radius"];side=4*r+8;c=side/2
     ss=1 if e["pixel"] else 2
     im=Image.new("RGBA",(side*ss,side*ss));d=ImageDraw.Draw(im)
@@ -178,6 +208,33 @@ def surface(e,frame):
             disk(0,0,core,.95,.2)
             disk(*q(core*.16,0),core*.6,1,.8 if kind=="fireball" else .65)
             if kind=="magic_orb":ring(core*1.25,.85,max(1,r*.045),.55)
+    elif kind in BURST_KINDS:
+        # A bright contact flash, expansion, then dissipating fragments.
+        fade=max(0,1-t)
+        extent=r*(.25+.9*t)
+        if kind=="shockwave":
+            ring(extent,fade,max(1,r*.09*(.4+fade)),.55)
+            ring(extent*.73,fade*.5,max(1,r*.035),.25)
+        elif kind=="frost_burst":
+            for j in range(8):
+                a=rot+j*math.tau/8
+                x,y=polar(extent,a)
+                line([(0,0),(x,y)],fade,max(1,r*.055),.7)
+                for sign in (-1,1):
+                    bx,by=polar(extent*.7,a+sign*.25)
+                    line([(x*.65,y*.65),(bx,by)],fade*.8,max(1,r*.035),.45)
+            ring(extent*.85,fade*.5,max(1,r*.04),.6)
+        else:
+            ring(extent,fade*.85,max(1,r*.07),.5)
+            for j in range(12):
+                a=rng.uniform(0,math.tau);dist=extent*rng.uniform(.15,.85)
+                x,y=polar(dist,a)
+                disk(x,y,max(1,r*rng.uniform(.09,.25)*(.5+t)),fade*.85,.35*fade)
+        for j in range(min(e["particles"],32)):
+            a=rng.uniform(0,math.tau);dist=extent*rng.uniform(.5,1.25)
+            x,y=polar(dist,a)
+            disk(x,y,max(.6,r*.035),fade,.65)
+        if t<.4:disk(0,0,max(1,r*.28*(1-t)),1-t,.95)
     elif kind=="impact":
         a=1-t*.95;rr=r*(.24+.9*t)
         ring(rr,a*.7,max(1,r*.07),.35)

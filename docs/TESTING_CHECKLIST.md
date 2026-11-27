@@ -61,3 +61,6 @@ Render all seven new presets in pixel and smooth mode; scrub and replay. Compare
 
 ## Phase 61P-C — Projectile motion
 Select fireball, energy bolt, ice shard and magic orb. Test straight, arc, acceleration and deceleration with positive/negative X/Y, signed arc height, short clips, pixel/smooth sampling and transparent fixed cells. Scrub first/mid/last; save/load/import JSON, export atlas and insert into scene. Edit path in Scenes and export the selected effect. Confirm the projectile travels rather than the camera and no standalone frames clip. CPU CI and desktop acceptance pending.
+
+## Phase 61P-D — Explosion and impact chaining
+Render each standalone burst. In VFX Studio select a projectile, choose an impact and reserve final frames; test straight/arc and signed endpoints, independent impact color/size, single-frame impact, inactive frames, malformed timing, old recipes, pixel/smooth sampling, saved/imported recipes, transparent atlas and scene export. Confirm impact starts immediately after arrival and stays at the endpoint relative to the current scene anchor. Inspect trajectory and impact controls in both workspaces. CPU and desktop acceptance pending.
