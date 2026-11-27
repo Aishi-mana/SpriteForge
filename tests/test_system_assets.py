@@ -97,4 +97,17 @@ for bad in ({"maximum":0},{"maximum":10,"value":11},{"direction":"diagonal"},{"r
     except ValueError:ok(True,"invalid HUD rejected")
 projects.save(root,"HUD",{"system_theme":hud})
 ok(projects.load(root,"HUD")["system_theme"]==hud,"HUD persistence")
+animated=copy.deepcopy(hud)
+animated["components"][0]["motion"]=dict(effect="resource",duration=600,delay=120,ease="smooth",loop=True,amount=80)
+animated=S.validate(animated)
+ok(S.validate(json.loads(json.dumps(animated)))==animated,"UI motion roundtrip")
+for motion in ({"effect":"bad"},{"ease":"bad"},{"duration":0},{"delay":-1},{"amount":101},{"loop":"yes"}):
+    broken=copy.deepcopy(animated);broken["components"][0]["motion"]=motion
+    try:S.validate(broken);ok(False,"invalid UI motion")
+    except ValueError:ok(True,"invalid UI motion rejected")
+broken=copy.deepcopy(animated);del broken["components"][0]["resource"]
+try:S.validate(broken);ok(False,"resource motion without binding")
+except ValueError:ok(True,"resource motion requires binding")
+projects.save(root,"AnimatedHUD",{"system_theme":animated})
+ok(projects.load(root,"AnimatedHUD")["system_theme"]==animated,"UI motion persistence")
 done("test_system_assets")

@@ -39,4 +39,13 @@ const td=c.sysDefault();td.assets=[{id:'art_1',role:'panel',width:24,height:16},
 assert.throws(()=>c.sysTemplateParts({...td,components:Array.from({length:64},(_,i)=>({id:'part_'+(i+1)}))},'menu'));
 assert.throws(()=>c.sysTemplateParts({...td,components:[{id:'part_1',locked:true}]},'menu',false,true));
 console.log('ok editable templates, reuse, bounds and atomic limits');
+const motion={effect:'fade',duration:1000,delay:100,ease:'linear',amount:100,loop:false,reverse:false};
+assert.equal(c.sysMotionSample(motion,0).alpha,0);assert.equal(c.sysMotionSample(motion,600).alpha,.5);assert.equal(c.sysMotionSample(motion,1100).alpha,1);
+assert.equal(c.sysMotionSample({...motion,reverse:true},0).alpha,1);
+assert.equal(c.sysMotionSample({...motion,loop:true},1600).alpha,.5);
+assert.equal(c.sysMotionSample({...motion,effect:'slide'},0).dx,-100);
+assert.equal(c.sysMotionSample({...motion,effect:'resource'},600).resource,.5);
+assert(c.sysMotionSample({...motion,effect:'pulse'},600).scale>1);
+assert(c.sysMotionSample({...motion,effect:'glow'},600).glow>0);
+console.log('ok UI motion sampling, delay, loop and reverse');
 console.log('ALL PASSED');

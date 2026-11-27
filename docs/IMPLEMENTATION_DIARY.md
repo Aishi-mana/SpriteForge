@@ -893,3 +893,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61R-G: Inventory, dialogue and menus
 
 - Added four editable layout recipes, proportional canvas sizing, optional role-based artwork reuse and nine-slice, interactive slots and buttons, independent labels, inventory icon placement, atomic append/replace with component budget and locked-layout protection. JS regression coverage added. Stacked on 61R-F queue fix pending validation. Runtime inventory data, dialogue branching, and actual menu actions are deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-H: Animated UI effects
+
+- PR #100 and #101 passed CPU validation and merged. Add per-component fade, slide, scale, pulse, highlight glow and resource sweep recipes with delay, easing, duration, intensity, looping and reverse; non-destructive requestAnimationFrame preview, static PNG export and persisted validated motion metadata. CPU and JS tests added. Timed gameplay cooldowns, floating damage text, event-driven transitions and animated export deferred. No manual CI dispatch.
