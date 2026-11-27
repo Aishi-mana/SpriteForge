@@ -759,3 +759,7 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — 61P-E PR status
 
 - PR #85 opened at `aeb49b7b5574`. [CPU run 45942676416](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942676416) reported completed/skipped; no test pass claimed unless completed successfully. Repository metadata still private, automatic CPU jobs remain public-only. PRs #81–85 remain open; #81 mergeability needs rechecking after the main CI update. No real model inference or desktop acceptance claimed.
+
+### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
+
+- PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.
