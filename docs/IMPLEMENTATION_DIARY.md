@@ -888,3 +888,8 @@ Use the following template for each future change (replace placeholders with act
 
 
 - 61R-F validation #239: Windows passed; Ubuntu HUD tests passed but queue FIFO/history checks failed. Fix job ID timestamp sampling and sort queue/history by creation timestamp with ID tie-breaker; add clock rollback regression. Awaiting fresh validation.
+
+
+## 2026-11-28 PHT — Phase 61R-G: Inventory, dialogue and menus
+
+- Added four editable layout recipes, proportional canvas sizing, optional role-based artwork reuse and nine-slice, interactive slots and buttons, independent labels, inventory icon placement, atomic append/replace with component budget and locked-layout protection. JS regression coverage added. Stacked on 61R-F queue fix pending validation. Runtime inventory data, dialogue branching, and actual menu actions are deferred. No manual CI dispatch.
