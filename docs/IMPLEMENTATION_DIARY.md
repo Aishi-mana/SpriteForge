@@ -861,3 +861,10 @@ Use the following template for each future change (replace placeholders with act
 - Reuse validated World/character style profiles in system themes, including project and portable JSON persistence.
 - Add starter, menu and HUD six-role kits, separate selected-model generation passes, transparent artwork normalization and atomic append preserving layouts.
 - Add CPU coverage for style guidance, kit validation, append and persistence. CI and desktop/GPU acceptance not yet verified. No manual workflow dispatch.
+
+
+## 2026-11-27 PHT — Phase 61R-C: Panels, frames and nine-slice
+
+- Add per-instance source margins and nine-slice rendering for reusable image panels and frames, including transparent centers, integer destination cuts and proportional border compression for small layouts.
+- Add editor toggle, editable margins and quarter-margin suggestion; preview/export use the same renderer. Legacy image instances retain stretch rendering.
+- Add CPU validation, archive roundtrip and JS geometry coverage. Stacked on 61R-B while its validation is running; no manual CI dispatch. Desktop visual acceptance pending.
