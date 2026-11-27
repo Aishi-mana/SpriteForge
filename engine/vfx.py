@@ -77,6 +77,8 @@ def surface(e,frame):
         points=[polar(r*(.75+.24*math.sin(math.pi*i/24)),angle-1.35+2.7*i/24) for i in range(25)]
         line(points,a*.5,max(2,r*.23));line(points,a,max(1,r*.11),.35);line(points,a,max(1,r*.035),.85)
     elif kind in SLASH_KINDS:
+        # Sample inside the envelope for very short active ranges.
+        if e["end"]-e["start"]<=1:t=.35+.3*t
         # Keep the original Phase 47 slash untouched. New crescents use tapered
         # ribbons, a traveling leading edge, and deterministic fading echoes.
         offset={"slash_horizontal":0,"slash_vertical":-math.pi/2,"slash_diagonal":-math.pi/4,
