@@ -1540,6 +1540,16 @@ def system_icon_generate(p: SystemIconParams):
     except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
 
 
+@app.post("/api/system/export")
+def system_export(body: dict=Body(...)):
+    import io
+    from . import system_export as exporter
+    try:
+        data=exporter.bundle(body)
+        return StreamingResponse(io.BytesIO(data),media_type="application/zip",headers={"Content-Disposition":'attachment; filename="spriteforge-system.zip"'})
+    except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/system/validate")
 def system_validate(body: dict=Body(...)):
     from . import system_assets

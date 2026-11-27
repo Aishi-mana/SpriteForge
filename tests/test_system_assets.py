@@ -110,4 +110,23 @@ try:S.validate(broken);ok(False,"resource motion without binding")
 except ValueError:ok(True,"resource motion requires binding")
 projects.save(root,"AnimatedHUD",{"system_theme":animated})
 ok(projects.load(root,"AnimatedHUD")["system_theme"]==animated,"UI motion persistence")
+import io, zipfile
+from engine import system_export as X
+with zipfile.ZipFile(io.BytesIO(X.bundle(animated))) as z:
+    manifest=json.loads(z.read("manifest.json"))
+    ok(z.testzip() is None,"UI archive integrity")
+    ok(json.loads(z.read("theme.json"))["theme"]==animated,"UI pack editable roundtrip")
+    ok(len(manifest["assets"])==len(animated["assets"]) and all("image" not in a for a in manifest["assets"]),"manifest external PNG paths")
+    ok(all(Image.open(io.BytesIO(z.read(a["path"]))).mode=="RGBA" for a in manifest["assets"]),"RGBA artwork")
+    ok(any(a["path"].startswith("icons/weapon/") for a in manifest["assets"]),"categorized icon export")
+    p=manifest["components"][0]
+    ok(p["motion"]==animated["components"][0]["motion"] and p["resource"]==animated["components"][0]["resource"] and p["state_paths"]["hovered"] in z.namelist(),"runtime metadata")
+    g=json.loads(z.read("godot/layout.json"))["components"][0]
+    q=json.loads(z.read("unity/layout.json"))["components"][0]
+    ok(g["node"]=="NinePatchRect" and q["sprite_border"]==[4,3,5,3],"engine border mapping")
+    ok(q["anchored_position"]==[p["x"],-p["y"]],"Unity coordinate mapping")
+try:X.bundle({**animated,"assets":[]});ok(False,"invalid export")
+except ValueError:ok(True,"broken export references rejected")
+with zipfile.ZipFile(io.BytesIO(X.bundle(S.default()))) as z:
+    ok(json.loads(z.read("manifest.json"))["assets"]==[],"empty theme pack")
 done("test_system_assets")
