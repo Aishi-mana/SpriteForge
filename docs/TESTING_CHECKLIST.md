@@ -54,3 +54,7 @@ Choose WebP in Image download format and download a generated sprite, editor sel
 ## Phase 61P-A — Standalone VFX Studio
 
 Open VFX Studio without a model or actor. Select each built-in effect, change color/radius/FPS/duration/seed, render, scrub, play and stop; compare pixel and smooth sampling. Confirm changing fields invalidates stale previews; leaving the workspace stops playback. Save/load/delete a custom preset, reload the app, export/import a recipe JSON and reject malformed inputs. Download one frame in PNG and WebP. Export a fixed-canvas sprite sheet, individual PNGs, GIF and metadata; check transparent alpha and playback. Insert into a scene with sufficient duration; verify insufficient duration is reported and scene data remains unchanged. CPU and desktop acceptance pending; automated Actions paused.
+
+## Phase 61P-B — Slash and weapon trails
+
+Render all seven new presets in pixel and smooth mode; scrub and replay. Compare horizontal/vertical/diagonal, crescent and circular arcs, sequential double slashes, and weapon trails. Change sweep, thickness, trail, glow, radius, color, speed and rotation; verify visible changes, transparency and no unexpected cropping. Render short 2-frame clips and longer ranges; confirm repeatability, save/import recipe and add to scene. Export PNG sheet, GIF and frame downloads; verify original slash and older recipes still work. Weapon trails are procedural, not bone-driven. CPU and desktop testing pending; no Actions run.
