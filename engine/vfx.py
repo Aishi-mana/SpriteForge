@@ -6,7 +6,9 @@ from PIL import Image, ImageDraw
 from . import modular
 
 SLASH_KINDS=("slash_horizontal","slash_vertical","slash_diagonal","slash_crescent","slash_spin","slash_double","weapon_trail")
-KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")+SLASH_KINDS
+PROJECTILE_KINDS=("fireball","energy_bolt","ice_shard","magic_orb")
+PATHS=("linear","arc","ease_in","ease_out")
+KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")+SLASH_KINDS+PROJECTILE_KINDS
 MAX_EFFECTS=12
 
 def validate(effects,count,actor_ids):
@@ -28,6 +30,8 @@ def validate(effects,count,actor_ids):
         if not isinstance(visible,bool) or not isinstance(pixel,bool):raise ValueError("Invalid effect visibility/sampling")
         emission=e.get("emission","burst")
         if emission not in ("burst","continuous"):raise ValueError("Invalid particle emission")
+        path=e.get("path","linear")
+        if path not in PATHS:raise ValueError("Invalid projectile path")
         out.append(dict(id=key,name=name.strip(),kind=kind,actor=actor,color=color.lower(),start=start,end=end,
             x=n(e,"x",-2048,2048,0),y=n(e,"y",-2048,2048,0),z=n(e,"z",-100,100,0),
             radius=n(e,"radius",4,128,32),opacity=n(e,"opacity",0,100,100),rotation=n(e,"rotation",-180,180,0),
@@ -35,13 +39,31 @@ def validate(effects,count,actor_ids):
             gravity=n(e,"gravity",-100,100,0),seed=n(e,"seed",0,2147483647,0),
             visible=visible,pixel=pixel,emission=emission,
             sweep=n(e,"sweep",30,360,180),thickness=n(e,"thickness",5,70,24),
-            trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60)))
+            trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60),path=path,
+            travel_x=n(e,"travel_x",-512,512,96),travel_y=n(e,"travel_y",-512,512,0),
+            arc_height=n(e,"arc_height",-256,256,48)))
     return out
 
 def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"]
 
 def phase(e,frame):
     return (frame-e["start"])/max(1,e["end"]-e["start"])
+
+def projectile_offset(e,frame):
+    """Integer world-space translation; endpoints are exact and frame-order independent."""
+    if e["kind"] not in PROJECTILE_KINDS:return (0,0)
+    t=max(0,min(1,phase(e,frame)))
+    path=e.get("path","linear")
+    u=t*t if path=="ease_in" else 1-(1-t)**2 if path=="ease_out" else t
+    arc=4*u*(1-u)*e.get("arc_height",48) if path=="arc" else 0
+    return (round(e.get("travel_x",96)*u),round(e.get("travel_y",0)*u-arc))
+
+def effect_canvas(e):
+    """Fixed canvas enclosing every local cell along the sampled path."""
+    side=4*e["radius"]+8
+    offsets=[projectile_offset(e,i) for i in range(e["start"],e["end"]+1)]
+    xs,ys=zip(*offsets)
+    return (side+max(xs)-min(xs),side+max(ys)-min(ys),side//2-min(xs),side//2-min(ys))
 
 def surface(e,frame):
     """Return a transparent local cell and center pivot. Randomness is frame-order independent."""
@@ -126,6 +148,36 @@ def surface(e,frame):
             if 0<age<.6:
                 rad=r*v*(.75+age*.5);x,y=polar(rad,ang)
                 disk(x,y,max(.6,r*.025),(1-age/.6)*tail,.65)
+    elif kind in PROJECTILE_KINDS:
+        # Heading follows the sampled motion, plus optional artwork rotation.
+        before=projectile_offset(e,max(e["start"],frame-1))
+        after=projectile_offset(e,min(e["end"],frame+1))
+        dx,dy=after[0]-before[0],after[1]-before[1]
+        heading=(math.atan2(dy,dx) if dx or dy else math.atan2(e.get("travel_y",0),e.get("travel_x",96)))+rot
+        def q(x,y):return (x*math.cos(heading)-y*math.sin(heading),x*math.sin(heading)+y*math.cos(heading))
+        tail=e.get("trail",45)/100
+        glow=e.get("glow",60)/100
+        pulse=.9+.1*math.sin(t*math.tau*speed)
+        core=r*(.35 if kind=="energy_bolt" else .48)*pulse
+        if tail:
+            for j in range(12,0,-1):
+                u=j/12;cx,cy=q(-r*u*1.55,0)
+                disk(cx,cy,max(1,core*(1-u*.85)),tail*(1-u*.88)*.65,.2)
+            for j in range(min(24,e["particles"])):
+                u=rng.uniform(.25,1.6);wiggle=rng.uniform(-.35,.35)*r*math.sin(t*math.tau*speed+j)
+                cx,cy=q(-r*u,wiggle)
+                disk(cx,cy,max(.6,r*.025),tail*(1-u/1.8)*.8,.65)
+        if glow:disk(0,0,core*1.45,glow*.32,.2)
+        if kind=="ice_shard":
+            d.polygon([p(*q(x*core,y*core)) for x,y in ((1.6,0),(.1,-.75),(-1,0),(.1,.75))],fill=rgba(.95,.25))
+            line([q(-core,0),q(core*1.6,0)],.95,max(1,r*.05),.9)
+        elif kind=="energy_bolt":
+            line([q(-core,0),q(core*1.4,0)],.9,max(2,core),.35)
+            line([q(-core*.7,0),q(core*1.1,0)],1,max(1,core*.32),.9)
+        else:
+            disk(0,0,core,.95,.2)
+            disk(*q(core*.16,0),core*.6,1,.8 if kind=="fireball" else .65)
+            if kind=="magic_orb":ring(core*1.25,.85,max(1,r*.045),.55)
     elif kind=="impact":
         a=1-t*.95;rr=r*(.24+.9*t)
         ring(rr,a*.7,max(1,r*.07),.35)

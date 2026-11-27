@@ -733,3 +733,8 @@ Use the following template for each future change (replace placeholders with act
 
 - Shared renderer seven advanced kinds, tapered ribbon/echo/glow/spark controls (`c4bc6b149e11`), preset schema (`815a311e249d`), Studio/Scenes preset UI (`1cb429a4358d`), short active-range correction (`625bb052e6e2`), CPU regressions (`681c8f55748a`).
 - Original slash preserved. Procedural trails are not sampled weapon-bone motion; glow baked, no additive shader. Tests added but not executed; no Actions dispatch, desktop acceptance pending. Stacked on PR #81. [Phase notes](phases/PHASE61PB.md). Next 61P-C; packaging on hold.
+
+### 2026-11-27 (Manila) — Phase 61P-C: projectile motion paths
+
+- Added four projectile presets, exact endpoint displacement, straight/arc/ease-in/ease-out trajectories, tangent-oriented procedural artwork, fixed path-enclosing standalone canvas, Studio and Scene controls, standalone scene effect export and CPU regressions. Files: `engine/vfx.py`, `engine/vfx_studio.py`, `engine/scenes.py`, `engine/main.py`, `ui/index.html`, `tests/test_vfx_studio.py`.
+- User approved resuming CI following reported public visibility; connected metadata still reported private. Restored automatic push/PR triggers with public-only automatic job condition (manual dispatch retained). No test success claimed; CPU and desktop validation pending. Stacked on #82; explosion chaining, actual weapon attachment, AI art and packaging remain future work. [Phase notes](phases/PHASE61PC.md).

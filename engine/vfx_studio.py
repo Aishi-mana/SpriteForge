@@ -10,6 +10,10 @@ PRESETS = (
     ("slash_spin","Circular slash","#79f5d0",16,False,"burst"),
     ("slash_double","Double slash","#ffbe7d",16,False,"burst"),
     ("weapon_trail","Weapon trail","#b8e8ff",12,False,"burst"),
+    ("fireball","Fireball","#ff7838",16,False,"burst"),
+    ("energy_bolt","Energy bolt","#65d7ff",12,False,"burst"),
+    ("ice_shard","Ice shard","#a4eaff",16,False,"burst"),
+    ("magic_orb","Magic orb","#b994ff",20,False,"burst"),
     ("impact","Impact flash","#ffe29b",8,False,"burst"),
     ("sparks","Sparks","#ffc861",16,False,"burst"),
     ("fire","Fire","#ff793c",24,True,"continuous"),
@@ -30,14 +34,14 @@ def validate(value):
     if not isinstance(loop,bool):raise ValueError("Invalid effect loop")
     raw={**value,"id":"effect","actor":None,"x":0,"y":0,"z":0,"visible":True}
     e=vfx.validate([raw],count,set())[0]
-    side=4*e["radius"]+8
-    if side*side*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
-    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow")},"version":1,"count":count,"fps":fps,"loop":loop}
+    w,h,_,_=vfx.effect_canvas(e)
+    if max(w,h)>1024 or w*h*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
+    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow","path","travel_x","travel_y","arc_height")},"version":1,"count":count,"fps":fps,"loop":loop}
 
 def scene(value):
-    r=validate(value);side=4*r["radius"]+8
-    effect={**r,"id":"effect","actor":None,"x":side//2,"y":side//2,"z":0,"visible":True}
-    return {"version":1,"name":r["name"],"width":side,"height":side,"count":r["count"],"fps":r["fps"],"loop":r["loop"],"actors":[],"effects":[effect]}
+    r=validate(value);w,h,x,y=vfx.effect_canvas(r)
+    effect={**r,"id":"effect","actor":None,"x":x,"y":y,"z":0,"visible":True}
+    return {"version":1,"name":r["name"],"width":w,"height":h,"count":r["count"],"fps":r["fps"],"loop":r["loop"],"actors":[],"effects":[effect]}
 
 def render(value,frame=None,preview=True):
     return scenes.render(scene(value),frame,preview)

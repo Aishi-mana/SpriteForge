@@ -44,4 +44,21 @@ for key,val in (("sweep",361),("thickness",0),("trail",-1),("glow",101)):
     except ValueError:ok(True,"reject invalid "+key)
 legacy={k:v for k,v in presets[0].items() if k not in ("sweep","thickness","trail","glow")}
 ok(V.validate(legacy)==presets[0],"old recipes get compatible defaults")
+# Exact path endpoints, arc height, fixed canvas, portable recipes.
+for kind in vfx.PROJECTILE_KINDS:
+    recipe=next(p for p in presets if p["kind"]==kind)
+    for path in vfx.PATHS:
+        custom=V.validate({**recipe,"count":9,"start":0,"end":8,"path":path,"travel_x":-120,"travel_y":40,"arc_height":64})
+        ok(vfx.projectile_offset(custom,0)==(0,0) and vfx.projectile_offset(custom,8)==(-120,40),"exact endpoints "+kind+" "+path)
+        expected={"linear":(-60,20),"arc":(-60,-44),"ease_in":(-30,10),"ease_out":(-90,30)}[path]
+        ok(vfx.projectile_offset(custom,4)==expected,"midpoint "+path)
+        frames,meta=V.render(custom)
+        ok(len(frames)==9 and all(im.getbbox() and im.size==tuple(meta["size"]) for im in frames),"visible fixed cells "+kind)
+        ok(all(0<im.getbbox()[0]<im.getbbox()[2]<im.width and 0<im.getbbox()[1]<im.getbbox()[3]<im.height for im in frames),"unclipped projectile "+kind)
+        single,_=V.render(custom,4)
+        ok(single[0].tobytes()==frames[4].tobytes(),"deterministic projectile scrub")
+        ok(V.validate(json.loads(json.dumps(custom)))==custom,"projectile portable recipe")
+for key,val in (("path","unknown"),("travel_x",513),("travel_y",-513),("arc_height",257)):
+    try:V.validate({**r,key:val});ok(False,"reject invalid "+key)
+    except ValueError:ok(True,"reject invalid "+key)
 done("test_vfx_studio")

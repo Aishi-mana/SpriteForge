@@ -1362,9 +1362,10 @@ def scene_export_effect(body: dict=Body(...)):
         if effect is None:raise ValueError("Choose an effect to export")
         count=effect["end"]-effect["start"]+1
         if count<2:raise ValueError("Standalone export needs at least two active frames")
-        side=4*effect["radius"]+8
-        single={**effect,"actor":None,"start":0,"end":count-1,"x":side//2,"y":side//2,"visible":True}
-        recipe={"version":1,"name":effect["name"],"width":side,"height":side,"count":count,
+        from . import vfx
+        w,h,x,y=vfx.effect_canvas(effect)
+        single={**effect,"actor":None,"start":0,"end":count-1,"x":x,"y":y,"visible":True}
+        recipe={"version":1,"name":effect["name"],"width":w,"height":h,"count":count,
                 "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
         frames,meta=scenes.render(recipe,preview=False)
         opts=body.get("options") or {}
