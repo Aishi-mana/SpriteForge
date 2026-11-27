@@ -1,0 +1,3 @@
+# Phase 61R-G — Inventory, dialogue and menus
+
+Add or replace editable layouts using Inventory (24 slots), Equipment (six slots and portrait), Dialogue (portrait and two choices), and Main/Pause Menu templates. Optionally reuse matching library artwork with suggested nine-slice margins; fallback rectangles and labels remain editable. Templates scale to the current canvas and preserve theme settings and artwork. Locked layouts cannot be replaced; capacity errors leave the original intact. Existing control preview is supported. Runtime inventory data, dialogue branching and menu actions are deferred. JS tests added; desktop acceptance pending.

@@ -31,4 +31,12 @@ bar.resource.direction='up';assert.deepEqual(Array.from(c.sysResourceClip(bar)),
 bar.resource.direction='down';assert.deepEqual(Array.from(c.sysResourceClip(bar)),[10,20,100,10]);
 assert.equal(c.sysResourceFraction(bar.resource,200),1);assert.equal(c.sysResourceFraction(bar.resource,-1),0);assert.equal(c.sysResourceText(bar.resource),'25 / 100');
 console.log('ok HUD clipping and labels');
+for(const type of ['inventory','equipment','dialogue','menu']){
+ const doc=c.sysDefault(),out=c.sysTemplateParts(doc,type,false);assert(out.components.length>5);assert.equal(doc.components.length,0);assert.equal(new Set(out.components.map(p=>p.id)).size,out.components.length);assert(out.components.some(p=>p.control));assert(out.components.some(p=>p.kind==='text'));
+ const small={...doc,width:64,height:64};assert(c.sysTemplateParts(small,type,false).components.every(p=>p.width>=1&&p.height>=1));
+}
+const td=c.sysDefault();td.assets=[{id:'art_1',role:'panel',width:24,height:16},{id:'art_2',role:'icon',width:64,height:64}];const inventory=c.sysTemplateParts(td,'inventory',true);assert(inventory.components.some(p=>p.asset==='art_1'&&p.slice));assert(inventory.components.some(p=>p.asset==='art_2'));
+assert.throws(()=>c.sysTemplateParts({...td,components:Array.from({length:64},(_,i)=>({id:'part_'+(i+1)}))},'menu'));
+assert.throws(()=>c.sysTemplateParts({...td,components:[{id:'part_1',locked:true}]},'menu',false,true));
+console.log('ok editable templates, reuse, bounds and atomic limits');
 console.log('ALL PASSED');

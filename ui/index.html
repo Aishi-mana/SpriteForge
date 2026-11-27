@@ -438,6 +438,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <div class="card hide" id="systemCard" style="max-width:none">
 <h2>System Asset Studio</h2><div class="mut">Reusable artwork library and editable UI layout. Import transparent PNGs or build a layout using text and rectangles. AI kits, nine-slice and interactive states follow in later phases.</div>
 <div class="row"><div><label>Theme name</label><input id="sysName" maxlength="60" onchange="sysSettings()"></div><div><label>Preview width</label><input id="sysW" type="number" min="64" max="3072"></div><div><label>Preview height</label><input id="sysH" type="number" min="64" max="3072"></div><button class="sec" onclick="sysSettings()">Apply size</button><button class="sec" onclick="sysNew(false)">New blank</button><button class="sec" onclick="sysNew(true)">Starter layout</button></div>
+<details class="sf-fold"><summary>Game interface templates</summary><div class="row"><select id="sysTemplate"><option value="inventory">Inventory grid</option><option value="equipment">Equipment screen</option><option value="dialogue">Dialogue with choices</option><option value="menu">Main / pause menu</option></select><button class="sec" onclick="sysApplyTemplate()">Add layout</button><button class="sec" onclick="sysApplyTemplate(true)">Replace layout</button></div><label class="chk"><input id="sysTemplateArt" type="checkbox" checked>Use matching artwork from library</label><div class="mut">Templates preserve theme, artwork, style and canvas size. Every element remains independently editable.</div><div id="sysTemplateStatus" class="mut" role="status"></div></details>
 <div class="row"><div><label>Art direction</label><select id="sysStyle" onchange="sysSettings()"><option value="anime">Modern anime</option><option value="hd2d">HD-2D</option><option value="painted">Painted</option><option value="pixel">Pixel art</option><option value="custom">Custom</option></select></div><label class="chk"><input id="sysPixel" type="checkbox" onchange="sysSettings()">Nearest-neighbor sampling</label></div>
 <label>Theme prompt / notes</label><textarea id="sysPrompt" maxlength="2000" onchange="sysSettings()" placeholder="Elegant silver borders, dark translucent panels, blue magical accents…"></textarea><label>Optional palette suggestions (up to 8 hex colors, comma-separated)</label><input id="sysPalette" maxlength="80" onchange="sysSettings()"><div id="sysSwatches" style="display:flex;gap:4px"></div>
 <details class="sf-fold"><summary>Shared style and AI UI kits</summary>
@@ -2782,6 +2783,39 @@ function sysResourceClip(p,value=p.resource.value){
  switch(p.resource.direction){case 'left':return [p.x+p.width-w,p.y,w,p.height];case 'up':return [p.x,p.y+p.height-h,p.width,h];case 'down':return [p.x,p.y,p.width,h];default:return [p.x,p.y,w,p.height]}
 }
 function sysResourceText(q,value=q.value){return value+' / '+q.maximum}
+function sysTemplateParts(doc,type,useArt=true,replace=false){
+ if(!['inventory','equipment','dialogue','menu'].includes(type))throw Error('Unknown template');
+ if(replace&&doc.components.some(p=>p.locked))throw Error('Unlock components before replacing layout');
+ const parts=replace?[]:doc.components.slice(),start=parts.length;
+ const sx=doc.width/1280,sy=doc.height/720,scale=Math.min(sx,sy),pal=doc.palette||[];
+ const bg=pal[0]||'#243245',border=pal[1]||'#a6b2c5',fg='#ffffff';
+ const add=(kind,name,x,y,w,h,extra)=>{if(parts.length>=64)throw Error('Template exceeds 64 component limit');const p=sysPart(kind,sysId(parts,'part_'),name,Math.round(x*sx),Math.round(y*sy),Math.max(1,Math.round(w*sx)),Math.max(1,Math.round(h*sy)),extra);parts.push(p);return p};
+ const art=role=>useArt?doc.assets.find(a=>a.role===role):null;
+ const block=(role,name,x,y,w,h,interactive=false)=>{
+ const a=art(role),extra=a?{asset:a.id,slice:sysSliceDefault(a)}:{color:bg,border,border_width:Math.max(1,Math.round(2*scale))};
+ if(interactive)extra.control={mode:role==='slot'?'toggle':'button',enabled:true,selected:false,states:a?{}:{hovered:'#435b78',pressed:'#182334',selected:'#566b83',disabled:'#343840'}};
+ return add(a?'image':'rect',name,x,y,w,h,extra)};
+ const label=(name,text,x,y,w,h,size=24,align='left')=>add('text',name,x,y,w,h,{text,font:'sans',font_size:Math.max(6,Math.min(256,Math.round(size*scale))),align,color:fg});
+ const icon=(a,name,x,y,w,h)=>add('image',name,x,y,w,h,{asset:a.id});
+ const icons=useArt?doc.assets.filter(a=>a.role==='icon'):[];
+ if(type==='inventory'){
+ block('panel','Inventory panel',280,80,720,560);label('Inventory heading','Inventory',310,105,660,40,32);
+ for(let i=0;i<24;i++){const x=315+(i%6)*108,y=170+Math.floor(i/6)*105;block('slot','Inventory slot '+(i+1),x,y,88,88,true);if(icons[i])icon(icons[i],'Item '+(i+1),x+12,y+12,64,64)}
+ }else if(type==='equipment'){
+ block('panel','Equipment panel',220,65,840,590);label('Equipment heading','Equipment',250,90,780,45,32);
+ block('portrait','Character portrait',475,160,330,420);
+ const roles=['Weapon','Armor','Accessory','Off hand','Head','Feet'];
+ for(let i=0;i<6;i++){const x=i<3?260:840,y=160+(i%3)*145;block('slot',roles[i]+' slot',x,y,120,100,true);label(roles[i]+' label',roles[i],x,y+104,120,32,18,'center')}
+ }else if(type==='dialogue'){
+ block('dialogue','Dialogue panel',80,450,1120,220);block('portrait','Speaker portrait',100,470,150,170);label('Speaker','Speaker name',275,465,880,38,28);
+ label('Dialogue text','What would you like to do?',275,515,880,45,24);
+ for(let i=0;i<2;i++){const x=275+i*440;block('button','Choice '+(i+1),x,580,410,60,true);label('Choice label '+(i+1),i?'Leave':'Continue',x,594,410,35,22,'center')}
+ }else{
+ block('panel','Menu panel',410,70,460,580);label('Menu heading','Adventure',430,110,420,60,42,'center');
+ for(const [i,name] of ['Continue','New game','Settings','Exit'].entries()){const y=210+i*95;block('button',name+' button',460,y,360,70,true);label(name+' label',name,460,y+18,360,40,25,'center')}
+ }
+ return {components:parts,first:parts[start]?.id||null};
+}
 /*SYSTEM-ASSETS-END*/
 const SYS={doc:sysDefault(),selected:null,asset:null,undo:[],rev:0,busy:false,drag:null,images:new Map(),preview:{hover:null,down:null,selected:{}}};
 function sysSelected(){return SYS.doc.components.find(c=>c.id===SYS.selected)}
@@ -2790,6 +2824,12 @@ function sysSnapshot(){SYS.undo.push({doc:{...SYS.doc,palette:[...SYS.doc.palett
 function sysChanged(){SYS.hudPreview={};SYS.preview={hover:null,down:null,selected:{}};SYS.rev++;markDirty();sysRefresh()}
 function sysLoad(d){SYS.doc=d||sysDefault();SYS.selected=null;SYS.asset=null;SYS.undo=[];SYS.drag=null;SYS.images.clear();SYS.rev++;sysRefresh()}
 function sysUndo(){if(SYS.busy||SYS.drag)return;const u=SYS.undo.pop();if(u){Object.assign(SYS,u);sysChanged()}}
+async function sysApplyTemplate(replace=false){
+ if(SYS.busy||SYS.drag)return;if(replace&&SYS.doc.components.length&&!confirm('Replace layout components? Artwork is retained.'))return;
+ const rev=SYS.rev;SYS.busy=true;
+ try{const plan=sysTemplateParts(SYS.doc,$('sysTemplate').value,$('sysTemplateArt').checked,replace);const doc=await sysValidate({...SYS.doc,components:plan.components});if(rev!==SYS.rev)return;sysSnapshot();SYS.doc=doc;SYS.selected=plan.first;sysChanged();$('sysTemplateStatus').textContent='Editable layout added.'}
+ catch(e){$('sysTemplateStatus').textContent='Template not applied: '+e.message}finally{SYS.busy=false}
+}
 function sysNew(starter){if(SYS.busy||SYS.drag)return;if((SYS.doc.assets.length||SYS.doc.components.length)&&!confirm('Replace this theme?'))return;sysSnapshot();SYS.doc=starter?sysStarter():sysDefault();SYS.selected=null;SYS.asset=null;sysChanged()}
 function sysSettings(){if(SYS.busy||SYS.drag)return;const d=SYS.doc,w=mdInt($('sysW').value,64,3072,d.width),h=mdInt($('sysH').value,64,3072,d.height),pal=$('sysPalette').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);if(w*h>6000000||pal.length>8||pal.some(c=>!/^#[0-9a-f]{6}$/.test(c))){sysRefresh();$('sysStatus').textContent='Invalid preview size or palette (up to eight hex colors).';return}sysSnapshot();Object.assign(d,{name:$('sysName').value.trim()||'New UI theme',width:w,height:h,style:$('sysStyle').value,pixel:$('sysPixel').checked,prompt:$('sysPrompt').value.trim(),palette:[...new Set(pal)]});sysChanged()}
 function sysRefresh(){const d=SYS.doc,p=sysSelected();$('sysProfileLabel').textContent=d.style_profile?d.style_profile.name+' · '+d.style_profile.source:'No shared style profile';for(const [id,v] of Object.entries({sysName:d.name,sysW:d.width,sysH:d.height,sysStyle:d.style,sysPrompt:d.prompt,sysPalette:d.palette.join(', ')}))$(id).value=v;$('sysPixel').checked=d.pixel;
