@@ -1468,6 +1468,51 @@ def world_playtest_project(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+class SystemKitParams(GenParams):
+    theme: dict
+    kit: str
+    role: str
+
+
+@app.post("/api/system/kit/plan")
+def system_kit_plan(body: dict=Body(...)):
+    from . import system_kit
+    try:
+        _, roles = system_kit.plan(body.get("theme"), body.get("kit"))
+        return {"roles": roles}
+    except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/system/kit/asset")
+def system_kit_asset(p: SystemKitParams):
+    from . import system_kit, system_assets, world, local_runtime as lr
+    try:
+        d = system_assets.validate(p.theme)
+        prompt = system_kit.prompt(d, p.kit, p.role)
+        if p.bg not in gen.BG_RGB:raise ValueError("Choose a valid background color")
+        ckpt,lora_dir=_paths(p.checkpoint)
+        gen.set_sampler(p.sampler)
+        ref=None;strength=0;profile=d.get("style_profile")
+        if profile and profile["enabled"] and profile["image_condition"]:
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support")
+            im=world.image(profile["reference"])
+            ref=im if lr.route(ckpt) else gen.prep_reference(im,p.bg)
+            strength=profile["strength"]
+        side=max(512,min(1024,p.gen_size))//64*64
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,p.seed,side,p.bg,ref,strength,1,kind="world_prop",art_style="pixel" if d["pixel"] else "custom")[0]
+        return {"image":system_kit.normalize(raw,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"]),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/system/kit/assemble")
+def system_kit_assemble(body: dict=Body(...)):
+    from . import system_kit
+    try:return system_kit.assemble(body.get("theme"),body.get("kit"),body.get("assets"))
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/system/validate")
 def system_validate(body: dict=Body(...)):
     from . import system_assets
