@@ -25,4 +25,23 @@ ok(out["frames"]==8 and out["cell"]==meta["size"],"fixed canvas sheet export")
 for bad in ({**r,"kind":"unknown"},{**r,"end":9},{**r,"count":33},{**r,"color":"bad"},{**r,"loop":"yes"},None):
     try:V.validate(bad);ok(False,"reject malformed recipe")
     except ValueError:ok(True,"reject malformed recipe")
+# Advanced ribbons preserve recipe fields and are deterministic in pixel/smooth modes.
+for kind in vfx.SLASH_KINDS:
+    recipe=next(p for p in presets if p["kind"]==kind)
+    for pixel in (True,False):
+        custom={**recipe,"sweep":135,"thickness":35,"trail":70,"glow":90,"pixel":pixel,"seed":91}
+        normalized=V.validate(custom)
+        ok(all(normalized[k]==custom[k] for k in ("sweep","thickness","trail","glow")),"advanced settings roundtrip "+kind)
+        frames,_=V.render(custom)
+        ok(len({im.tobytes() for im in frames})>2,"animated ribbon "+kind)
+        ok(all(im.getchannel("A").getextrema()[0]==0 for im in frames),"transparent background "+kind)
+        same,_=V.render(custom,len(frames)//2)
+        ok(same[0].tobytes()==frames[len(frames)//2].tobytes(),"deterministic scrub "+kind)
+    short,_=V.render({**recipe,"count":2,"start":0,"end":1})
+    ok(any(im.getchannel("A").getbbox() for im in short),"short clip visible "+kind)
+for key,val in (("sweep",361),("thickness",0),("trail",-1),("glow",101)):
+    try:V.validate({**r,key:val});ok(False,"reject invalid "+key)
+    except ValueError:ok(True,"reject invalid "+key)
+legacy={k:v for k,v in presets[0].items() if k not in ("sweep","thickness","trail","glow")}
+ok(V.validate(legacy)==presets[0],"old recipes get compatible defaults")
 done("test_vfx_studio")
