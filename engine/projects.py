@@ -179,11 +179,12 @@ def save(root, name, data):
 
 
 def _save(root, name, data):
-    from . import modular, custom_skeleton, custom_cleanup, scenes, character_identity, world
+    from . import modular, custom_skeleton, custom_cleanup, scenes, character_identity, world, system_assets
     identity = character_identity.validate(data.get('character_identity'))
     scene=data.get('scene')
     clean_scene=scenes.validate(scene)[0] if scene is not None else None
     clean_world=world.validate(data['world'])[0] if data.get('world') is not None else None
+    clean_system=system_assets.validate(data['system_theme']) if data.get('system_theme') is not None else None
     clean_cleanup=custom_cleanup.validate_saved(data.get('custom_cleanup'))
     profile=data.get("custom_skeleton")
     clean_profile=custom_skeleton.validate(profile) if profile is not None else None
@@ -206,7 +207,7 @@ def _save(root, name, data):
     _save_portrait(d, data.get("portrait"))
     _save_tileset(d, data.get("tileset"))
     doc = {"version": 1, "name": d.name, "saved_at": time.time(),
-           "settings": data.get("settings", {}), "character_identity": identity, "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_clips": clean_clips, "custom_cleanup": clean_cleanup, "scene": clean_scene, "world": clean_world, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
+           "settings": data.get("settings", {}), "character_identity": identity, "modular": clean_recipe, "custom_skeleton": clean_profile, "custom_clips": clean_clips, "custom_cleanup": clean_cleanup, "scene": clean_scene, "world": clean_world, "system_theme": clean_system, "rig": data.get("rig"), "skeleton": data.get("skeleton"),
            "anim_params": data.get("anim_params", {}), "tab": data.get("tab", 1), "palette": data.get("palette"), "template": data.get("template"), "directions": data.get("directions"),
            "has_ref": (d / "ref.png").exists(), "has_anim": (d / "anim.png").exists()}
     tmp = d / "project.json.tmp"
@@ -221,6 +222,9 @@ def load(root, name):
     if not f.exists():
         raise ProjectError(f"project not found: {name}")
     doc = json.loads(f.read_text())
+    if doc.get("system_theme") is not None:
+        from . import system_assets
+        doc["system_theme"]=system_assets.validate(doc["system_theme"])
     doc["results"] = _load_results(d)
     doc["portrait"] = _load_portrait(d)
     doc["tileset"] = _load_tileset(d)
@@ -335,11 +339,12 @@ def _restore(root, name, raw):
         doc = json.loads((temp / "project.json").read_bytes())
         if not isinstance(doc, dict) or doc.get("version") != 1:
             raise ProjectError("Unsupported project version")
-        from . import custom_skeleton, custom_cleanup, modular, scenes, world
+        from . import custom_skeleton, custom_cleanup, modular, scenes, world, system_assets
         profile = custom_skeleton.validate(doc["custom_skeleton"]) if doc.get("custom_skeleton") is not None else None
         validate_clips(doc.get("custom_clips"), profile)
         if doc.get("scene") is not None: scenes.validate(doc["scene"])
         if doc.get("world") is not None: doc["world"]=world.validate(doc["world"])[0]
+        if doc.get("system_theme") is not None: doc["system_theme"]=system_assets.validate(doc["system_theme"])
         if doc.get("modular") is not None: modular.validate(doc["modular"])
         custom_cleanup.validate_saved(doc.get("custom_cleanup"))
         doc["name"] = dest.name

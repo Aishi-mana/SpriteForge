@@ -1468,6 +1468,13 @@ def world_playtest_project(body: dict=Body(...)):
     except (projects.ProjectError,ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/system/validate")
+def system_validate(body: dict=Body(...)):
+    from . import system_assets
+    try:return system_assets.validate(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/world/validate")
 def world_validate(body: dict=Body(...)):
     from . import world
