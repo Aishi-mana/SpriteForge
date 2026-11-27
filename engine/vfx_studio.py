@@ -1,0 +1,36 @@
+"""Phase 61P-A: reusable standalone procedural effect recipes."""
+from . import scenes, vfx, modular
+
+PRESETS = (
+    ("slash","Sword slash","#9ceaff",8,False,"burst"),
+    ("impact","Impact flash","#ffe29b",8,False,"burst"),
+    ("sparks","Sparks","#ffc861",16,False,"burst"),
+    ("fire","Fire","#ff793c",24,True,"continuous"),
+    ("smoke","Smoke","#9299ab",24,True,"continuous"),
+    ("lightning","Lightning","#8ccfff",12,False,"burst"),
+    ("aura","Aura","#65e0af",24,True,"continuous"),
+    ("magic_circle","Magic circle","#a78bfa",24,True,"continuous"),
+)
+
+def presets():
+    return [validate(dict(name=name,kind=kind,color=color,count=count,loop=loop,emission=emission)) for kind,name,color,count,loop,emission in PRESETS]
+
+def validate(value):
+    if not isinstance(value,dict) or value.get("version",1)!=1:raise ValueError("Invalid VFX recipe")
+    count=modular.integer(value.get("count",16),2,32,"effect frame count")
+    fps=modular.integer(value.get("fps",12),1,60,"effect FPS")
+    loop=value.get("loop",False)
+    if not isinstance(loop,bool):raise ValueError("Invalid effect loop")
+    raw={**value,"id":"effect","actor":None,"x":0,"y":0,"z":0,"visible":True}
+    e=vfx.validate([raw],count,set())[0]
+    side=4*e["radius"]+8
+    if side*side*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
+    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end")},"version":1,"count":count,"fps":fps,"loop":loop}
+
+def scene(value):
+    r=validate(value);side=4*r["radius"]+8
+    effect={**r,"id":"effect","actor":None,"x":side//2,"y":side//2,"z":0,"visible":True}
+    return {"version":1,"name":r["name"],"width":side,"height":side,"count":r["count"],"fps":r["fps"],"loop":r["loop"],"actors":[],"effects":[effect]}
+
+def render(value,frame=None,preview=True):
+    return scenes.render(scene(value),frame,preview)
