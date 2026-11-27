@@ -1,6 +1,6 @@
 """Versioned reusable game UI artwork library and editable layout foundation."""
 import re
-from . import world
+from . import world, world_style
 
 MAX_ASSETS=32
 MAX_COMPONENTS=64
@@ -75,6 +75,10 @@ def validate(value):
             part.update(color=color(c.get("color","#263449"),"rectangle"),border=color(c.get("border","#9aa9bf"),"border"),
                         border_width=n(c.get("border_width",1),0,32,"border width"))
         parts.append(part)
-    return dict(version=1,name=world.label(value.get("name","New UI theme"),"theme name"),width=w,height=h,
+    result = dict(version=1,name=world.label(value.get("name","New UI theme"),"theme name"),width=w,height=h,
                 style=style,pixel=world.boolean(value.get("pixel",style=="pixel"),"theme sampling"),
                 prompt=world.label(value.get("prompt",""),"theme direction",2000,True),palette=palette,assets=clean,components=parts)
+
+    if value.get("style_profile") is not None:
+        result["style_profile"] = world_style.validate(value["style_profile"])
+    return result

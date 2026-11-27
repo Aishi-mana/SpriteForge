@@ -854,3 +854,10 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — Phase 61R-A: System Asset Studio foundation
 
 - Approved 61R A–J roadmap. Added versioned theme, unique reusable artwork library, independently positioned image/text/rectangle instances, category labels, optional palette and art direction, alpha PNG import/export, editable labels/fonts/geometry/opacity/visibility/lock, stacking/drag/duplicate/undo, zoom, procedural starter layout, preview PNG and portable theme JSON. Integrated optional `system_theme` in project save/load and archive validation. Files `engine/system_assets.py`, `engine/projects.py`, `engine/main.py`, `ui/index.html`, `tests/test_system_assets.py`, `tests/js/system_assets_test.js`, `tests/test_ui.py`; backend commit `27f7e13c0d2f`. Max 32 assets, 64 components, 24 MB encoded art, 12M source pixels, 6M preview pixels. No AI kits, shared profile extraction, nine-slice, functional controls or native export yet. Generic local font families only; preview PNG is client-rendered. CPU/JS tests added, CI pending. Desktop/GPU acceptance not performed; Phase 62 held. Next 61R-B.
+
+
+## 2026-11-27 20:41 PHT — Phase 61R-B: Shared style profiles and AI UI kits
+
+- Reuse validated World/character style profiles in system themes, including project and portable JSON persistence.
+- Add starter, menu and HUD six-role kits, separate selected-model generation passes, transparent artwork normalization and atomic append preserving layouts.
+- Add CPU coverage for style guidance, kit validation, append and persistence. CI and desktop/GPU acceptance not yet verified. No manual workflow dispatch.

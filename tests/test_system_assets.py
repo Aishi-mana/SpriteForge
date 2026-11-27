@@ -30,4 +30,20 @@ try:projects.save(root,"Theme",{"system_theme":{**d,"assets":[]}});ok(False,"rej
 except ValueError:ok(projects.load(root,"Theme")["system_theme"]==d,"invalid save preserves prior theme")
 projects.save(root,"Legacy",{})
 ok(projects.load(root,"Legacy").get("system_theme") is None,"legacy compatible")
+from engine import system_kit as K
+profile={"name":"Shared", "notes":"silver filigree", "palette":["#aabbcc"], "accents":True}
+theme=S.validate({**d,"prompt":"Moonlit fantasy","style_profile":profile})
+ok(S.validate(theme)==theme,"shared profile roundtrip")
+ok("silver filigree" in K.prompt(theme,"starter","panel"),"shared style prompt")
+ok("no lettering" in K.prompt(theme,"starter","button"),"editable labels remain separate")
+_,roles=K.plan(theme,"starter")
+transparent=data_url(Image.new("RGBA",(24,16),(40,80,120,180)))
+result=K.assemble(theme,"starter",{role:transparent for role in roles})
+ok(len(result["assets"])==len(theme["assets"])+6 and result["components"]==theme["components"],"append kit atomically")
+ok(len(theme["assets"])==1,"original unchanged")
+for assets in ({}, {role:data_url(Image.new("RGBA",(24,16),(40,80,120,255))) for role in roles}):
+    try:K.assemble(theme,"starter",assets);ok(False,"reject invalid kit")
+    except ValueError:ok(True,"reject invalid kit")
+projects.save(root,"Shared",{"system_theme":result})
+ok(projects.load(root,"Shared")["system_theme"]==result,"profile and kit persist")
 done("test_system_assets")
