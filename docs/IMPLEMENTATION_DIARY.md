@@ -733,3 +733,7 @@ Use the following template for each future change (replace placeholders with act
 
 - Shared renderer seven advanced kinds, tapered ribbon/echo/glow/spark controls (`c4bc6b149e11`), preset schema (`815a311e249d`), Studio/Scenes preset UI (`1cb429a4358d`), short active-range correction (`625bb052e6e2`), CPU regressions (`681c8f55748a`).
 - Original slash preserved. Procedural trails are not sampled weapon-bone motion; glow baked, no additive shader. Tests added but not executed; no Actions dispatch, desktop acceptance pending. Stacked on PR #81. [Phase notes](phases/PHASE61PB.md). Next 61P-C; packaging on hold.
+
+### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
+
+- PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.
