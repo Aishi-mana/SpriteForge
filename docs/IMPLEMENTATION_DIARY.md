@@ -874,3 +874,8 @@ Use the following template for each future change (replace placeholders with act
 
 - PR #96 and #97 passed CPU validation and merged. Add button, toggle, tab and slider visual-state configuration, alternate image or rectangle-color variants, normal fallback, pointer preview and forced-state inspection. Preview changes are transient; PNG export uses normal artwork.
 - Validate state asset references and nine-slice compatibility; prevent referenced artwork deletion. CPU and JS tests added. Slider value mechanics, keyboard navigation, game actions and desktop acceptance remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 06:25 PHT — Phase 61R-E: Item, equipment and skill icons
+
+- PR #98 passed CPU validation and merged. Added eight icon categories, shared style and selected-model generation, transparent square output at six sizes, categorized artwork filtering and persistent icon metadata. Added CPU tests and project roundtrip. Generation is single-icon; batch atlases and engine metadata export deferred. No manual CI dispatch; GPU acceptance pending.
