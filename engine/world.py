@@ -81,6 +81,9 @@ def validate(value):
     if value.get("blockout") is not None:
         from . import world_blockout
         result["blockout"]=world_blockout.settings(value["blockout"])
+    if value.get("style_profile") is not None:
+        from . import world_style
+        result["style_profile"]=world_style.validate(value["style_profile"])
     return result,decoded
 
 def render(value,show_masks=False):
