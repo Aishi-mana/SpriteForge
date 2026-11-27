@@ -3,7 +3,7 @@ import math
 import random
 import re
 from PIL import Image, ImageDraw
-from . import modular, vfx_art
+from . import modular, vfx_art, vfx_keyframes
 
 SLASH_KINDS=("slash_horizontal","slash_vertical","slash_diagonal","slash_crescent","slash_spin","slash_double","weapon_trail")
 PROJECTILE_KINDS=("fireball","energy_bolt","ice_shard","magic_orb")
@@ -53,10 +53,11 @@ def validate(effects,count,actor_ids):
             travel_x=n(e,"travel_x",-512,512,96),travel_y=n(e,"travel_y",-512,512,0),
             arc_height=n(e,"arc_height",-256,256,48),impact_kind=impact_kind,
             impact_frames=impact_frames,impact_scale=impact_scale,impact_color=impact_color.lower(),
-            artwork=vfx_art.validate(e.get("artwork")),artwork_opacity=n(e,"artwork_opacity",0,100,100)))
+            artwork=vfx_art.validate(e.get("artwork")),artwork_opacity=n(e,"artwork_opacity",0,100,100),
+            keyframes=vfx_keyframes.validate(e.get("keyframes",[]),end-start+1)))
     return out
 
-def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"]
+def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"] and keyframe(e,frame)["opacity"]>0
 
 def phase(e,frame):
     return (frame-e["start"])/max(1,e["end"]-e["start"])
@@ -75,9 +76,27 @@ def stage(e,frame):
     return {**e,"kind":e["impact_kind"],"start":end+1,"radius":impact_radius(e),
             "color":e.get("impact_color",e["color"]),"impact_kind":"none","artwork":None}
 
+def keyframe(e,frame):
+    return vfx_keyframes.sample(e.get("keyframes",[]),frame-e["start"])
+
+def frame_style(e,frame):
+    k=keyframe(e,frame)
+    s=stage(e,frame)
+    return {**s,"radius":min(128,max(4,round(s["radius"]*k["scale"]/100))),
+            "rotation":s["rotation"]+k["rotation"],
+            "opacity":round(s["opacity"]*k["opacity"]/100),
+            "color":vfx_keyframes.tint(s["color"],k["color"]),"artwork_tint":k["color"]}
+
 def max_surface_side(e):
-    r=max(e["radius"],impact_radius(e)) if e.get("impact_kind","none")!="none" else e["radius"]
-    return 4*r+8
+    if not e.get("keyframes"):
+        r=max(e["radius"],impact_radius(e)) if e.get("impact_kind","none")!="none" else e["radius"]
+        return 4*r+8
+    return max(4*frame_style(e,i)["radius"]+8 for i in range(e["start"],e["end"]+1))
+
+def motion_offset(e,frame):
+    x,y=projectile_offset(e,frame)
+    k=keyframe(e,frame)
+    return x+k["dx"],y+k["dy"]
 
 def projectile_offset(e,frame):
     """Integer world-space translation; endpoints are exact and frame-order independent."""
@@ -91,13 +110,14 @@ def projectile_offset(e,frame):
 def effect_canvas(e):
     """Fixed canvas enclosing every local cell along the sampled path."""
     side=max_surface_side(e)
-    offsets=[projectile_offset(e,i) for i in range(e["start"],e["end"]+1)]
+    offsets=[motion_offset(e,i) for i in range(e["start"],e["end"]+1)]
     xs,ys=zip(*offsets)
     return (side+max(xs)-min(xs),side+max(ys)-min(ys),side//2-min(xs),side//2-min(ys))
 
 def surface(e,frame):
     """Return a transparent local cell and center pivot. Randomness is frame-order independent."""
-    e=stage(e,frame)
+    original=e
+    e=frame_style(e,frame)
     r=e["radius"];side=4*r+8;c=side/2
     ss=1 if e["pixel"] else 2
     im=Image.new("RGBA",(side*ss,side*ss));d=ImageDraw.Draw(im)
@@ -181,8 +201,8 @@ def surface(e,frame):
                 disk(x,y,max(.6,r*.025),(1-age/.6)*tail,.65)
     elif kind in PROJECTILE_KINDS:
         # Heading follows the sampled motion, plus optional artwork rotation.
-        before=projectile_offset(e,max(e["start"],frame-1))
-        after=projectile_offset(e,min(e["end"],frame+1))
+        before=motion_offset(original,max(original["start"],frame-1))
+        after=motion_offset(original,min(flight_end(original),frame+1))
         dx,dy=after[0]-before[0],after[1]-before[1]
         heading=(math.atan2(dy,dx) if dx or dy else math.atan2(e.get("travel_y",0),e.get("travel_x",96)))+rot
         def q(x,y):return (x*math.cos(heading)-y*math.sin(heading),x*math.sin(heading)+y*math.cos(heading))
@@ -282,7 +302,7 @@ def surface(e,frame):
         strength=1
         scale=1
         if kind in PROJECTILE_KINDS:
-            a=projectile_offset(e,max(e["start"],frame-1));b=projectile_offset(e,min(e["end"],frame+1))
+            a=motion_offset(original,max(original["start"],frame-1));b=motion_offset(original,min(flight_end(original),frame+1))
             dx,dy=b[0]-a[0],b[1]-a[1]
             if dx or dy:angle+=math.degrees(math.atan2(dy,dx))
         elif kind in SLASH_KINDS or kind=="slash":
@@ -292,5 +312,5 @@ def surface(e,frame):
             scale=.35+.65*t;strength=1-t
         else:
             scale=.85+.15*math.sin(t*math.tau*speed)
-        vfx_art.overlay(im,e["artwork"],r,angle,strength*opacity*e.get("artwork_opacity",100)/100,scale,e["pixel"])
+        vfx_art.overlay(im,e["artwork"],r,angle,strength*opacity*e.get("artwork_opacity",100)/100,scale,e["pixel"],e["artwork_tint"])
     return im,(side//2,side//2)

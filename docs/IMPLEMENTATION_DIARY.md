@@ -759,3 +759,8 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — 61P-E PR status
 
 - PR #85 opened at `aeb49b7b5574`. [CPU run 45942676416](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942676416) reported completed/skipped; no test pass claimed unless completed successfully. Repository metadata still private, automatic CPU jobs remain public-only. PRs #81–85 remain open; #81 mergeability needs rechecking after the main CI update. No real model inference or desktop acceptance claimed.
+
+### 2026-11-27 (Manila) — Phase 61P-F: VFX timeline and keyframes
+
+- Added bounded relative-frame keyframe tracks with linear/smooth/hold interpolation, additive position and rotation, multiplicative size/opacity/RGB tint, Studio and Scene editors, deterministic shared compositor and path-aware canvas sizing, recipe persistence, and CPU regressions. Files: `engine/vfx_keyframes.py`, `engine/vfx.py`, `engine/vfx_art.py`, `engine/vfx_studio.py`, `engine/scenes.py`, `ui/index.html`, `tests/test_vfx_studio.py`. No-key recipes preserve prior behavior. Keyframes apply across flight and impact; relative frame indexing preserves timing when inserted into a scene. Max radius stays 128; no per-property independent key lists or curve handles yet. CPU tests added, desktop not exercised.
+- Repository confirmed public, existing connector read/write access and branch creation succeeded with active repository rules. Automatic public CI enabled; prior phases still stacked/unmerged. [Phase notes](phases/PHASE61PF.md). Next combat integration; packaging on hold.

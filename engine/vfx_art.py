@@ -32,7 +32,7 @@ def validate(uri):
     decoded(uri)
     return uri
 
-def overlay(canvas,uri,radius,angle,alpha,scale,pixel):
+def overlay(canvas,uri,radius,angle,alpha,scale,pixel,tint="#ffffff"):
     if not uri or alpha<=0:return
     source=decoded(uri)
     size=max(1,round(2*radius*scale))
@@ -40,5 +40,9 @@ def overlay(canvas,uri,radius,angle,alpha,scale,pixel):
     resample=Image.Resampling.NEAREST if pixel else Image.Resampling.BICUBIC
     im=source.resize(tuple(max(1,round(v*factor)) for v in source.size),resample)
     if angle:im=im.rotate(-angle,resample=resample,expand=True)
+    if tint!="#ffffff":
+        channels=im.split()
+        rgb=[channels[j].point([round(v*int(tint[1+2*j:3+2*j],16)/255) for v in range(256)]) for j in range(3)]
+        im=Image.merge("RGBA",(*rgb,channels[3]))
     im.putalpha(im.getchannel("A").point([round(v*min(1,max(0,alpha))) for v in range(256)]))
     canvas.alpha_composite(im,((canvas.width-im.width)//2,(canvas.height-im.height)//2))
