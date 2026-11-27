@@ -1,6 +1,6 @@
 # Roadmap and known limits
 
-This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61N-D on main (CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
+This is a **candidate backlog**, not a release promise. The repository now includes implementations through Phase 61O on main (CPU validation passed; hardware validation pending); see [the handoff](../HANDOFF.md) and [phase notes](phases/) for implementation history. Functional correctness and hardware validation are separate.
 
 ## Current priorities (2026-11-26 UTC)
 
@@ -9,7 +9,7 @@ This is a **candidate backlog**, not a release promise. The repository now inclu
 - Phase 61L — Magic Background Eraser & Alpha Refinement: A conservative exterior segmentation (merged); B cast shadow removal (merged); C wand/erase/restore (merged); D edge refinement (merged); E protection and pixel preservation (merged); F workspace integration (merged); G testing and performance (merged).
 - Phase 61M — Exact-Fit Modular Asset Generation (after 61L): generate isolated hair, outfits, armor and accessories against a fixed unclothed character sprite base; identical source canvas, origin, pose and proportions; preserve base pixels, support front/back layer order, transparent export, alignment validation and manual correction. Generative exact fit is a target, not a verified guarantee. See [61M-A and planned B–G](phases/PHASE61MA.md); A–G merged and CPU validated; real-model acceptance pending.
 - Phase 61N — Generate prompt audit and body-base mode: [A](phases/PHASE61NA.md), [B](phases/PHASE61NB.md), and [C](phases/PHASE61NC.md) merged and CPU validated; [D integration](phases/PHASE61ND.md) merged and CPU validated. Real-model and desktop acceptance outstanding.
-- [Phase 61O — Lightweight WebP image export](phases/PHASE61O.md): standalone lossless WebP download selector implemented on feature branch, CPU validation pending; existing PNG/game-engine packs unchanged.
+- [Phase 61O — Lightweight WebP image export](phases/PHASE61O.md): standalone lossless WebP download selector merged and CPU validated; existing PNG/game-engine packs unchanged.
 - Phase 62 Windows packaging is on hold.
 - See the [living implementation diary](IMPLEMENTATION_DIARY.md) for the full dated history, including Phases 49–61K-G.
 
