@@ -58,3 +58,6 @@ Open VFX Studio without a model or actor. Select each built-in effect, change co
 ## Phase 61P-B — Slash and weapon trails
 
 Render all seven new presets in pixel and smooth mode; scrub and replay. Compare horizontal/vertical/diagonal, crescent and circular arcs, sequential double slashes, and weapon trails. Change sweep, thickness, trail, glow, radius, color, speed and rotation; verify visible changes, transparency and no unexpected cropping. Render short 2-frame clips and longer ranges; confirm repeatability, save/import recipe and add to scene. Export PNG sheet, GIF and frame downloads; verify original slash and older recipes still work. Weapon trails are procedural, not bone-driven. CPU and desktop testing pending; no Actions run.
+
+## Phase 61P-C — Projectile motion
+Select fireball, energy bolt, ice shard and magic orb. Test straight, arc, acceleration and deceleration with positive/negative X/Y, signed arc height, short clips, pixel/smooth sampling and transparent fixed cells. Scrub first/mid/last; save/load/import JSON, export atlas and insert into scene. Edit path in Scenes and export the selected effect. Confirm the projectile travels rather than the camera and no standalone frames clip. CPU CI and desktop acceptance pending.
