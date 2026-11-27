@@ -118,6 +118,14 @@ def validate(value):
             if direction not in ("right","left","up","down"):raise ValueError("Invalid fill direction")
             maximum=n(q.get("maximum",100),1,1000000,"resource maximum")
             part["resource"]=dict(role=role,direction=direction,maximum=maximum,value=n(q.get("value",maximum),0,maximum,"resource value"))
+        if c.get("motion") is not None:
+            q=c["motion"]
+            if not isinstance(q,dict):raise ValueError("Invalid UI motion")
+            effect=q.get("effect","fade");ease=q.get("ease","smooth")
+            if effect not in ("fade","slide","scale","pulse","glow","resource"):raise ValueError("Invalid UI motion effect")
+            if ease not in ("linear","smooth","ease_in","ease_out"):raise ValueError("Invalid UI motion easing")
+            if effect=="resource" and "resource" not in part:raise ValueError("Resource motion requires a resource binding")
+            part["motion"]=dict(effect=effect,ease=ease,duration=n(q.get("duration",800),100,10000,"motion duration"),delay=n(q.get("delay",0),0,10000,"motion delay"),amount=n(q.get("amount",30),0,100,"motion amount"),loop=world.boolean(q.get("loop",False),"motion loop"),reverse=world.boolean(q.get("reverse",False),"motion reverse"))
         parts.append(part)
     result = dict(version=1,name=world.label(value.get("name","New UI theme"),"theme name"),width=w,height=h,
                 style=style,pixel=world.boolean(value.get("pixel",style=="pixel"),"theme sampling"),
