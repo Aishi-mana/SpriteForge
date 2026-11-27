@@ -1397,44 +1397,32 @@ def vfx_render(body: dict=Body(...)):
 
 @app.post("/api/vfx/export")
 def vfx_export(body: dict=Body(...)):
-    from . import vfx_studio
+    from . import vfx_export as vx
     try:
-        recipe=vfx_studio.validate(body.get("recipe"))
-        frames,meta=vfx_studio.render(recipe,preview=False)
         opts=body.get("options") or {}
         if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
-        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not recipe["pixel"]),meta["name"],ROOT)
-    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+        return vx.effect_pack(body.get("recipe"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/scenes/export_effect")
 def scene_export_effect(body: dict=Body(...)):
+    from . import vfx_export as vx
     try:
-        scene,_=scenes.validate(body.get("scene"))
-        effect=next((e for e in scene["effects"] if e["id"]==body.get("effect")),None)
-        if effect is None:raise ValueError("Choose an effect to export")
-        count=effect["end"]-effect["start"]+1
-        if count<2:raise ValueError("Standalone export needs at least two active frames")
-        from . import vfx
-        w,h,x,y=vfx.effect_canvas(effect)
-        single={**effect,"actor":None,"face_actor":False,"start":0,"end":count-1,"x":x,"y":y,"visible":True}
-        recipe={"version":1,"name":effect["name"],"width":w,"height":h,"count":count,
-                "fps":scene["fps"],"loop":False,"actors":[],"effects":[single]}
-        frames,meta=scenes.render(recipe,preview=False)
         opts=body.get("options") or {}
         if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
-        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not effect["pixel"]),meta["name"],ROOT)
-    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+        return vx.scene_effect_pack(body.get("scene"),body.get("effect"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/scenes/export")
 def scene_export(body: dict=Body(...)):
+    from . import vfx_export as vx
     try:
-        frames,meta=scenes.render(body.get("scene"),preview=False)
         opts=body.get("options") or {}
         if not isinstance(opts,dict):raise ValueError("Invalid scene export options")
-        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True),meta["name"],ROOT)
-    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+        return vx.scene_pack(body.get("scene"),opts,ROOT)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
 @app.post("/api/custom_skeleton/retarget_suggest")
