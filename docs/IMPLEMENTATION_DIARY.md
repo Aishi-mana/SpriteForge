@@ -755,3 +755,7 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27 (Manila) — Phase 61P-E: AI effect artwork
 
 - Added VFX-specific prompt assembly, existing model/runtime generation endpoint and CPU image import/flat-background keying, portable bounded PNG artwork in recipes, optional opacity-controlled overlay with procedural rotation/scale/fade, Studio generation/import/clear/preview controls, regression tests. Files: `engine/generate.py`, `engine/main.py`, `engine/vfx_art.py`, `engine/vfx.py`, `engine/vfx_studio.py`, `ui/index.html`, `tests/test_vfx_studio.py`, `tests/test_vfx_art_prompt.py`. Saved artwork replays without a model; effects preserve their procedural motion and impact. No model inference or desktop validation performed; single-image artwork, not AI video or frame-by-frame generation. Impact stage remains procedural. Stacked on #84; earlier PRs remain open; repo metadata still private. [Phase notes](phases/PHASE61PE.md). Next timeline/keyframes, packaging on hold.
+
+### 2026-11-27 (Manila) — 61P-E PR status
+
+- PR #85 opened at `aeb49b7b5574`. [CPU run 45942676416](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942676416) reported completed/skipped; no test pass claimed unless completed successfully. Repository metadata still private, automatic CPU jobs remain public-only. PRs #81–85 remain open; #81 mergeability needs rechecking after the main CI update. No real model inference or desktop acceptance claimed.
