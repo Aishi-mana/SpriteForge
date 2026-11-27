@@ -885,3 +885,6 @@ Use the following template for each future change (replace placeholders with act
 
 - PR #99 passed CPU validation and merged. Add per-component HP, MP, stamina, XP, cooldown and custom resource bindings, four fill directions, numeric labels, transient value preview and damage/healing simulation. Persist default values and use defaults in clean PNG export. CPU and JS tests added. Live gameplay binding, timed cooldowns and floating damage effects deferred. No manual CI dispatch.
 - User requested a follow-up full-frame animation pipeline inspired by Sorceress Auto-Sprite: character image to motion video or redrawn frames, aligned transparent sprite sheets, no mandatory cutout rig. Plan after 61R; backend feasibility and GPU requirements to be evaluated.
+
+
+- 61R-F validation #239: Windows passed; Ubuntu HUD tests passed but queue FIFO/history checks failed. Fix job ID timestamp sampling and sort queue/history by creation timestamp with ID tie-breaker; add clock rollback regression. Awaiting fresh validation.
