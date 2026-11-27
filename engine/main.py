@@ -1320,6 +1320,43 @@ def scene_render(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/vfx/artwork/import")
+def vfx_artwork_import(body: dict=Body(...)):
+    from . import vfx_art, alpha_cleanup
+    try:
+        im=modular.decode(body.get("image"))
+        pixel=body.get("pixel",True)
+        if not isinstance(pixel,bool):raise ValueError("Invalid sampling mode")
+        if body.get("remove_bg",False):
+            tol=modular.integer(body.get("bg_tol",40),1,100,"background tolerance")
+            im,_=alpha_cleanup.clean(im,tol,mode="smart",soft=not pixel)
+        return {"artwork":vfx_art.normalize(im,pixel)}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+class VfxArtworkParams(GenParams):
+    kind: str = "vfx_art"
+
+
+@app.post("/api/vfx/artwork/generate")
+def vfx_artwork_generate(p: VfxArtworkParams):
+    from . import vfx_art, alpha_cleanup
+    if not p.prompt.strip() or len(p.prompt)>2000:raise HTTPException(400,"Enter effect artwork prompt (1–2000 characters)")
+    if p.art_style not in ("pixel","custom"):raise HTTPException(400,"Choose pixel or painted artwork")
+    if p.bg not in gen.BG_RGB:raise HTTPException(400,"Invalid artwork background")
+    ckpt,lora_dir=_paths(p.checkpoint)
+    gen.set_sampler(p.sampler)
+    pixel=p.art_style=="pixel"
+    def post(raw):
+        im=raw.convert("RGBA")
+        if p.remove_bg:
+            im,_=alpha_cleanup.clean(im,max(1,min(100,p.bg_tol)),mode="smart",background=gen.BG_RGB[p.bg],soft=not pixel)
+        uri=vfx_art.normalize(im,pixel)
+        return vfx_art.decoded(uri),{"pipeline":"vfx_art"}
+    return _run(ckpt,lora_dir,p.lora,p.lora_weight,p.prompt,p.negative,p.steps,p.cfg,p.seed,p.bg,1,None,0,post,
+                gen_size=max(512,min(p.gen_size,1024))//64*64,kind="vfx_art",art_style=p.art_style)
+
+
 @app.get("/api/vfx/presets")
 def vfx_presets():
     from . import vfx_studio

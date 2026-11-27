@@ -29,6 +29,8 @@ BODY_BASE_NEGATIVE = ("armor, cape, cloak, scarf, robe, shirt, trousers, skirt, 
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind == "vfx_art":
+        return "scenery, character, person, hands, weapon held by a person, text, watermark, border, cropped effect, sprite sheet, multiple separate effects, blurry"
     if kind == "body_base":
         return (NEGATIVE if art_style == "pixel" else styles.HD_NEGATIVE) + ", " + BODY_BASE_NEGATIVE
     if kind == "instruction_edit":
@@ -95,6 +97,9 @@ PORTRAIT_FRAMINGS = {
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind == "vfx_art":
+        style="pixel art" if art_style=="pixel" else "painted 2D game effect illustration"
+        return f"{style}, {user_prompt}, single isolated visual effect, centered with generous margins, plain flat solid {bg} background"
     if kind == "body_base":
         detail = (", " + user_prompt.strip()) if user_prompt.strip() else ""
         return (f"{styles.PRESETS[art_style]}, smooth featureless mannequin body template for modular game sprites"

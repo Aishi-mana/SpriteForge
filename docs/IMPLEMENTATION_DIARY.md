@@ -751,3 +751,7 @@ Use the following template for each future change (replace placeholders with act
 ### 2026-11-27T04:51:09Z — 61P-D validation status
 
 - PR #84 opened at `066e1d1cb3e5`. Automatic main push run [45942246404](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942246404) and 61P-D pull request run [45942323715](https://github.com/Aishi-mana/SpriteForge/actions/runs/45942323715) both completed as skipped, not passed. Connected repository metadata still private. Public-only condition prevented hosted CPU jobs. PRs #81–84 remain open; no merge or desktop acceptance claimed.
+
+### 2026-11-27 (Manila) — Phase 61P-E: AI effect artwork
+
+- Added VFX-specific prompt assembly, existing model/runtime generation endpoint and CPU image import/flat-background keying, portable bounded PNG artwork in recipes, optional opacity-controlled overlay with procedural rotation/scale/fade, Studio generation/import/clear/preview controls, regression tests. Files: `engine/generate.py`, `engine/main.py`, `engine/vfx_art.py`, `engine/vfx.py`, `engine/vfx_studio.py`, `ui/index.html`, `tests/test_vfx_studio.py`, `tests/test_vfx_art_prompt.py`. Saved artwork replays without a model; effects preserve their procedural motion and impact. No model inference or desktop validation performed; single-image artwork, not AI video or frame-by-frame generation. Impact stage remains procedural. Stacked on #84; earlier PRs remain open; repo metadata still private. [Phase notes](phases/PHASE61PE.md). Next timeline/keyframes, packaging on hold.
