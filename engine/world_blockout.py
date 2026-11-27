@@ -68,6 +68,8 @@ def normalize(raw,role,bg,tol=40,pixel=False):
     if box is None or alpha.getextrema()[0]==255:raise ValueError("Object background removal failed; choose another key color or regenerate")
     im=im.crop(box)
     if im.getchannel("A").getextrema()[1]<128:raise ValueError("Object is too transparent")
+    # Keep a transparent one-pixel rim even for rectangular props after tight crop.
+    im=ImageOps.expand(im,border=1,fill=(0,0,0,0))
     return modular.png_uri(im)
 
 def layout(value,config):
