@@ -29,6 +29,10 @@ BODY_BASE_NEGATIVE = ("armor, cape, cloak, scarf, robe, shirt, trousers, skirt, 
 
 
 def negative_for(kind, art_style="pixel"):
+    if kind=="world_plate":
+        return "people, characters, text, watermark, border, user interface, sprite sheet, collage, blurry"
+    if kind=="world_prop":
+        return "people, characters, text, watermark, border, multiple objects, scenery, ground plane, cropped object, blurry"
     if kind == "vfx_art":
         return "scenery, character, person, hands, weapon held by a person, text, watermark, border, cropped effect, sprite sheet, multiple separate effects, blurry"
     if kind == "body_base":
@@ -97,6 +101,8 @@ PORTRAIT_FRAMINGS = {
 
 
 def build_prompt(user_prompt, bg="white", kind="sprite", art_style="pixel"):
+    if kind=="world_plate":return user_prompt
+    if kind=="world_prop":return f"{user_prompt}, plain flat solid {bg} background"
     if kind == "vfx_art":
         style="pixel art" if art_style=="pixel" else "painted 2D game effect illustration"
         return f"{style}, {user_prompt}, single isolated visual effect, centered with generous margins, plain flat solid {bg} background"

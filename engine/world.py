@@ -75,9 +75,13 @@ def validate(value):
                         opacity=integer(l.get("opacity",100),0,100,"layer opacity"),
                         visible=boolean(l.get("visible",True),"layer visibility"),locked=boolean(l.get("locked",False),"layer lock")))
         decoded[key]=im
-    return dict(version=1,name=label(value.get("name","New world"),"world name"),width=w,height=h,
+    result=dict(version=1,name=label(value.get("name","New world"),"world name"),width=w,height=h,
                 view=view,style=style,prompt=label(value.get("prompt",""),"map prompt",2000,True),
-                pixel=boolean(value.get("pixel",style=="pixel"),"map sampling"),spawn=spawn,layers=out),decoded
+                pixel=boolean(value.get("pixel",style=="pixel"),"map sampling"),spawn=spawn,layers=out)
+    if value.get("blockout") is not None:
+        from . import world_blockout
+        result["blockout"]=world_blockout.settings(value["blockout"])
+    return result,decoded
 
 def render(value,show_masks=False):
     if not isinstance(show_masks,bool):raise ValueError("Invalid mask display option")
