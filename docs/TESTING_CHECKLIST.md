@@ -67,3 +67,6 @@ Render each standalone burst. In VFX Studio select a projectile, choose an impac
 
 ## Phase 61P-E — AI effect artwork
 Use global checkpoint/LoRA and generation controls, choose pixel or painted artwork, generate a single effect, inspect alpha, import a local PNG/WebP/JPEG, toggle background keying, clear artwork and change layer opacity. Render slash/projectile/burst, scrub, compare original and artwork overlay, save/load/export/import recipe, insert into scene, export PNG/GIF. Confirm impact remains procedural, no stale generation after recipe switch, and no GPU is required to replay saved art. CPU and real model/desktop acceptance pending.
+
+## Phase 61P-F — VFX keyframes
+In Studio and Scenes add, update, select and delete keys; test relative frame placement, linear/smooth/hold, position, scale, rotation, opacity and tint. Scrub and play, test nonzero start, chained impacts and artwork, save/load/import JSON, insert into a later scene frame, export standalone and scene. Confirm no-key recipes unchanged, bounds include moving/scaled effects, invalid durations are rejected, scene shortening prunes out-of-range keys only after confirmation. CPU and desktop acceptance pending.

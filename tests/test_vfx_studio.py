@@ -110,4 +110,25 @@ ok(vfx.stage(chain,chain["end"])["artwork"] is None,"impact does not inherit fli
 for bad in ({"artwork":"bad"},{"artwork":[]},{"artwork_opacity":101},{"artwork":modular.png_uri(Image.new("RGBA",(129,1),(1,2,3,255)))}):
     try:V.validate({**base,**bad});ok(False,"reject invalid artwork")
     except ValueError:ok(True,"reject invalid artwork")
+# Relative keyframe tracks preserve the old renderer when absent.
+from engine import vfx_keyframes as K
+keys=[dict(frame=0,dx=0,dy=0,scale=100,rotation=0,opacity=100,color="#ffffff",easing="linear"),
+      dict(frame=8,dx=80,dy=-40,scale=150,rotation=90,opacity=0,color="#ff0000")]
+track=V.validate({**base,"count":12,"start":2,"end":10,"keyframes":keys})
+mid=vfx.keyframe(track,6)
+ok((mid["dx"],mid["dy"],mid["scale"],mid["rotation"],mid["opacity"],mid["color"])==(40,-20,125,45,50,"#ff8080"),"linear keyframe interpolation")
+ok(vfx.motion_offset(track,6)==(88,-20),"offset adds to projectile path")
+ok(K.sample(K.validate([{**keys[0],"easing":"hold"},keys[1]],9),4)["dx"]==0,"hold keyframe")
+ok(K.sample(K.validate([{**keys[0],"easing":"smooth"},keys[1]],9),2)["dx"]==12,"smooth keyframe")
+frames,meta=V.render(track)
+ok(frames[2].getbbox() is not None and frames[10].getbbox() is None,"keyframe opacity and active timing")
+single,_=V.render(track,6)
+ok(single[0].tobytes()==frames[6].tobytes(),"keyframe deterministic scrub")
+shifted={**track,"count":9,"start":0,"end":8}
+shifted_frames,_=V.render(shifted)
+ok(shifted_frames[4].tobytes()==frames[6].tobytes(),"relative keys survive active range shift")
+ok(V.validate(json.loads(json.dumps(track)))==track,"portable keyframes")
+for bad in ([dict(frame=9)],[dict(frame=0),dict(frame=0)],[dict(frame=1,scale=201)],[dict(frame=1,easing="bad")],[dict(frame=1,color="bad")],None):
+    try:V.validate({**track,"keyframes":bad});ok(False,"reject invalid keyframes")
+    except ValueError:ok(True,"reject invalid keyframes")
 done("test_vfx_studio")

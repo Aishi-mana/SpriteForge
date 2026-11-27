@@ -108,7 +108,7 @@ def compose(scene,decoded,index,cache):
                 actor=by[a["actor"]]
                 if frame_index(actor,index,scene["fps"]) is None or not actor["opacity"]:continue
                 ax,ay=position(actor,index);x=ax+(-x if actor["flip"] else x);y=ay+y
-            dx,dy=vfx.projectile_offset(a,index)
+            dx,dy=vfx.motion_offset(a,index)
             x+=dx;y+=dy
             im,(px,py)=vfx.surface(a,index)
             composite(out,im,x-px,y-py)
