@@ -729,6 +729,11 @@ Use the following template for each future change (replace placeholders with act
 - Dedicated standalone procedural VFX recipes (`d8aa648b1eac`), API endpoints (`0358f5421681`), VFX workspace, browser-local library, transparent playback, recipe import/export and scene insertion (`3ffe0819a76d`), CPU regression file (`6830b07437c0`).
 - Reuses existing Phase 47 renderer and PNG/GIF atlas exporter; current-frame PNG/WebP, no projectile motion, explosion chaining or AI yet. Saved library is browser-local, portable via JSON. Tests added but not executed here; desktop and export acceptance pending. [Phase notes](phases/PHASE61PA.md). Packaging on hold.
 
+### 2026-11-27 (Manila) — Phase 61P-B: advanced slash and weapon trails
+
+- Shared renderer seven advanced kinds, tapered ribbon/echo/glow/spark controls (`c4bc6b149e11`), preset schema (`815a311e249d`), Studio/Scenes preset UI (`1cb429a4358d`), short active-range correction (`625bb052e6e2`), CPU regressions (`681c8f55748a`).
+- Original slash preserved. Procedural trails are not sampled weapon-bone motion; glow baked, no additive shader. Tests added but not executed; no Actions dispatch, desktop acceptance pending. Stacked on PR #81. [Phase notes](phases/PHASE61PB.md). Next 61P-C; packaging on hold.
+
 ### 2026-11-27 (Manila) — 61P stack CI policy reconciliation
 
 - PR #81 conflicted with the updated `AGENTS.md` on main (`09818c02f0c0`). Preserved main's public-only automatic CPU workflow and current repository instructions using ordinary merge commits rather than rewriting history. Previous cumulative CPU run [45947967990](https://github.com/Aishi-mana/SpriteForge/actions/runs/45947967990) passed on Ubuntu and Windows for PR #86 at `945d9135c1a5` (2026-11-27T05:51:17Z). Reconciliation checks and final integration remain pending; no desktop or GPU acceptance claimed.

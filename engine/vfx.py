@@ -5,7 +5,8 @@ import re
 from PIL import Image, ImageDraw
 from . import modular
 
-KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")
+SLASH_KINDS=("slash_horizontal","slash_vertical","slash_diagonal","slash_crescent","slash_spin","slash_double","weapon_trail")
+KINDS=("magic_circle","slash","impact","sparks","fire","smoke","lightning","aura")+SLASH_KINDS
 MAX_EFFECTS=12
 
 def validate(effects,count,actor_ids):
@@ -32,7 +33,9 @@ def validate(effects,count,actor_ids):
             radius=n(e,"radius",4,128,32),opacity=n(e,"opacity",0,100,100),rotation=n(e,"rotation",-180,180,0),
             particles=n(e,"particles",1,96,24),speed=n(e,"speed",10,200,100),
             gravity=n(e,"gravity",-100,100,0),seed=n(e,"seed",0,2147483647,0),
-            visible=visible,pixel=pixel,emission=emission))
+            visible=visible,pixel=pixel,emission=emission,
+            sweep=n(e,"sweep",30,360,180),thickness=n(e,"thickness",5,70,24),
+            trail=n(e,"trail",0,100,45),glow=n(e,"glow",0,100,60)))
     return out
 
 def active(e,frame):return e["visible"] and e["opacity"]>0 and e["start"]<=frame<=e["end"]
@@ -73,6 +76,56 @@ def surface(e,frame):
         a=max(.05,math.sin(math.pi*(.1+.8*t)));angle=rot+(t-.5)*1.6*speed
         points=[polar(r*(.75+.24*math.sin(math.pi*i/24)),angle-1.35+2.7*i/24) for i in range(25)]
         line(points,a*.5,max(2,r*.23));line(points,a,max(1,r*.11),.35);line(points,a,max(1,r*.035),.85)
+    elif kind in SLASH_KINDS:
+        # Sample inside the envelope for very short active ranges.
+        if e["end"]-e["start"]<=1:t=.35+.3*t
+        # Keep the original Phase 47 slash untouched. New crescents use tapered
+        # ribbons, a traveling leading edge, and deterministic fading echoes.
+        offset={"slash_horizontal":0,"slash_vertical":-math.pi/2,"slash_diagonal":-math.pi/4,
+                "slash_crescent":0,"slash_spin":0,"slash_double":0,"weapon_trail":0}[kind]
+        sweep=math.radians(e.get("sweep",180))
+        thick=r*e.get("thickness",24)/100
+        tail=e.get("trail",45)/100
+        glow=e.get("glow",60)/100
+        def ribbon(u, angle_offset=0, alpha=1):
+            if not 0<=u<=1:return
+            # Wind-up, strike and dissipate. Progress never wraps at the end.
+            strength=min(1,u/.18)*min(1,(1-u)/.30)
+            if strength<=0:return
+            extent=sweep*min(1,.15+u*2.8)
+            center=rot+offset+angle_offset+sweep*(u-.5)*speed
+            if kind=="slash_spin":center=rot+angle_offset+math.tau*u*speed
+            a0=center-extent*.85
+            outer=[];inner=[];core=[]
+            for j in range(49):
+                s=j/48;ang=a0+extent*s
+                taper=math.sin(math.pi*s)**.65
+                rad=r*(.87+.10*s)
+                if kind=="weapon_trail":rad=r*(.48+.50*s)
+                width=thick*taper*strength
+                outer.append(p(*polar(rad+width*.55,ang)))
+                inner.append(p(*polar(max(0,rad-width*.55),ang)))
+                core.append(p(*polar(rad+width*.25,ang)))
+            # Each echo is drawn first, followed by a luminous leading ribbon.
+            a=alpha*strength
+            if glow>0:
+                d.line(outer,fill=rgba(a*glow*.30),width=max(1,round(thick*.45*ss)),joint="curve")
+            d.polygon(outer+inner[::-1],fill=rgba(a,.12))
+            d.line(core,fill=rgba(a*.95,.35+.6*glow),width=max(1,round(thick*.13*ss)),joint="curve")
+        passes=[(t,0)]
+        if kind=="slash_double":passes=[(t*2.1,-.55),((t-.42)*2.0,math.pi+.55)]
+        for u,ang in passes:
+            if tail>0:
+                for j in (3,2,1):
+                    ribbon(u-j*.075,ang,tail*(4-j)/5)
+            ribbon(u,ang)
+        # Seeded sparks are part of the effect, not global particle simulation.
+        for i in range(min(e["particles"],24)):
+            ang=rot+offset+rng.uniform(-sweep/2,sweep/2)
+            v=rng.uniform(.65,1.35);age=t-rng.uniform(.12,.4)
+            if 0<age<.6:
+                rad=r*v*(.75+age*.5);x,y=polar(rad,ang)
+                disk(x,y,max(.6,r*.025),(1-age/.6)*tail,.65)
     elif kind=="impact":
         a=1-t*.95;rr=r*(.24+.9*t)
         ring(rr,a*.7,max(1,r*.07),.35)

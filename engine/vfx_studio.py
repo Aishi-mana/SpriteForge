@@ -3,6 +3,13 @@ from . import scenes, vfx, modular
 
 PRESETS = (
     ("slash","Sword slash","#9ceaff",8,False,"burst"),
+    ("slash_horizontal","Horizontal slash","#9ceaff",10,False,"burst"),
+    ("slash_vertical","Vertical slash","#9ceaff",10,False,"burst"),
+    ("slash_diagonal","Diagonal slash","#9ceaff",10,False,"burst"),
+    ("slash_crescent","Crescent slash","#b38cff",12,False,"burst"),
+    ("slash_spin","Circular slash","#79f5d0",16,False,"burst"),
+    ("slash_double","Double slash","#ffbe7d",16,False,"burst"),
+    ("weapon_trail","Weapon trail","#b8e8ff",12,False,"burst"),
     ("impact","Impact flash","#ffe29b",8,False,"burst"),
     ("sparks","Sparks","#ffc861",16,False,"burst"),
     ("fire","Fire","#ff793c",24,True,"continuous"),
@@ -13,7 +20,7 @@ PRESETS = (
 )
 
 def presets():
-    return [validate(dict(name=name,kind=kind,color=color,count=count,loop=loop,emission=emission)) for kind,name,color,count,loop,emission in PRESETS]
+    return [validate(dict(name=name,kind=kind,color=color,count=count,loop=loop,emission=emission,sweep=360 if kind=="slash_spin" else 210 if kind=="slash_crescent" else 150 if kind=="weapon_trail" else 180)) for kind,name,color,count,loop,emission in PRESETS]
 
 def validate(value):
     if not isinstance(value,dict) or value.get("version",1)!=1:raise ValueError("Invalid VFX recipe")
@@ -25,7 +32,7 @@ def validate(value):
     e=vfx.validate([raw],count,set())[0]
     side=4*e["radius"]+8
     if side*side*count>12_000_000:raise ValueError("Reduce radius or frame count for preview")
-    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end")},"version":1,"count":count,"fps":fps,"loop":loop}
+    return {**{k:e[k] for k in ("kind","name","color","radius","opacity","rotation","speed","particles","gravity","seed","pixel","emission","start","end","sweep","thickness","trail","glow")},"version":1,"count":count,"fps":fps,"loop":loop}
 
 def scene(value):
     r=validate(value);side=4*r["radius"]+8
