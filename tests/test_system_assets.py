@@ -46,4 +46,16 @@ for assets in ({}, {role:data_url(Image.new("RGBA",(24,16),(40,80,120,255))) for
     except ValueError:ok(True,"reject invalid kit")
 projects.save(root,"Shared",{"system_theme":result})
 ok(projects.load(root,"Shared")["system_theme"]==result,"profile and kit persist")
+sliced=copy.deepcopy(result)
+sliced["components"][0]["slice"]=dict(left=4,top=3,right=5,bottom=3)
+sliced=S.validate(sliced)
+ok(sliced["components"][0]["slice"]["right"]==5,"nine-slice margins preserved")
+ok(S.validate(json.loads(json.dumps(sliced)))==sliced,"nine-slice JSON roundtrip")
+for margins in ({"left":24},{"top":8,"bottom":8},{"left":-1},{"right":1.5},[]):
+    bad=copy.deepcopy(sliced);bad["components"][0]["slice"]=margins
+    try:S.validate(bad);ok(False,"invalid nine-slice")
+    except ValueError:ok(True,"invalid nine-slice rejected")
+projects.save(root,"Sliced",{"system_theme":sliced})
+projects.restore_bundle(root,"SlicedCopy",projects.bundle(root,"Sliced"))
+ok(projects.load(root,"SlicedCopy")["system_theme"]==sliced,"nine-slice archive persistence")
 done("test_system_assets")

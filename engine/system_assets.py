@@ -66,6 +66,14 @@ def validate(value):
             aid=c.get("asset")
             if not isinstance(aid,str) or aid not in ids:raise ValueError("Component references missing artwork")
             part["asset"]=aid
+            if c.get("slice") is not None:
+                a=next(a for a in clean if a["id"]==aid)
+                margins=c["slice"]
+                if not isinstance(margins,dict):raise ValueError("Invalid nine-slice margins")
+                margins={k:n(margins.get(k,0),0,a["width"] if k in ("left","right") else a["height"],"slice "+k) for k in ("left","top","right","bottom")}
+                if margins["left"]+margins["right"]>=a["width"] or margins["top"]+margins["bottom"]>=a["height"]:
+                    raise ValueError("Nine-slice requires a nonempty source center")
+                part["slice"]=margins
         elif kind=="text":
             font=c.get("font","sans");align=c.get("align","left")
             if font not in FONTS or align not in ("left","center","right"):raise ValueError("Invalid text style")

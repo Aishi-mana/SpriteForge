@@ -4,4 +4,16 @@ const d=c.sysStarter();assert.equal(d.assets.length,0);assert.equal(d.components
 assert.equal(c.sysId(d.components,'part_'),'part_10');console.log('ok unique IDs');
 assert.equal(c.sysHit(d.components,60,95).name,'Health fill');assert.equal(c.sysHit(d.components,60,46).name,'HUD title');console.log('ok topmost hit');
 d.components[3].visible=false;assert.equal(c.sysHit(d.components,60,95).name,'Health track');assert.equal(c.sysHit(d.components,900,200),null);console.log('ok hidden component and empty hit');
+const m={left:4,right:5,top:3,bottom:2};
+let patches=c.sysSlicePatches(24,16,100,50,m);
+assert.equal(patches.length,9);assert.deepEqual(Array.from(patches[0]),[0,0,4,3,0,0,4,3]);
+assert.deepEqual(Array.from(patches[8]),[19,14,5,2,95,48,5,2]);
+assert.equal(patches.reduce((n,p)=>n+p[6]*p[7],0),5000);
+patches=c.sysSlicePatches(24,16,3,2,m);
+assert.equal(patches.reduce((n,p)=>n+p[6]*p[7],0),6);
+assert(patches.every(p=>p[6]>0&&p[7]>0));
+assert(!c.sysSliceValid({width:24,height:16},{...m,left:19}));
+assert(c.sysSliceValid({width:24,height:16},m));
+assert.equal(c.sysSlicePatches(24,16,100,50,{left:0,right:0,top:0,bottom:0}).length,1);
+console.log('ok nine-slice corners, small destinations, coverage and validation');
 console.log('ALL PASSED');
