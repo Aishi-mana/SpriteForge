@@ -51,6 +51,20 @@ def b64(img):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+class WebPExport(BaseModel):
+    image: str
+    scale: int = 1
+
+
+@app.post("/api/export/webp")
+def export_webp(p: WebPExport):
+    from . import webp_export
+    try:
+        return {"image":webp_export.encode(p.image,p.scale)}
+    except ValueError as e:
+        raise HTTPException(400,str(e))
+
+
 def scan(sub):
     d = Path(cfg()["models_dir"]) / sub
     if not cfg()["models_dir"]: return []
