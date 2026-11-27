@@ -69,4 +69,21 @@ for control in ({"mode":"bad"},{"states":{"bad":"kit_1"}},{"states":{"pressed":"
     except ValueError:ok(True,"invalid control rejected")
 projects.save(root,"Controls",{"system_theme":controlled})
 ok(projects.load(root,"Controls")["system_theme"]==controlled,"control persistence")
+from engine import system_icons as I
+from engine import world
+opts=dict(category="weapon",name="Moonblade",subject="silver crescent sword",size=64)
+ok("silver filigree" in I.prompt(theme,opts) and "silver crescent sword" in I.prompt(theme,opts),"icon shared guidance")
+raw=Image.new("RGBA",(100,80),(0,0,0,0))
+raw.paste((120,90,40,255),(30,10,70,70))
+uri=I.normalize(raw,(0,0,0),30,False,64)
+im=world.image(uri)
+ok(im.size==(64,64) and im.getchannel("A").getbbox() is not None and im.getpixel((0,0))[3]==0,"square transparent icon")
+with_icon=I.append(controlled,opts,uri)
+ok(with_icon["assets"][-1]["icon"]["category"]=="weapon" and len(with_icon["assets"])==len(controlled["assets"])+1,"categorized append")
+ok(S.validate(with_icon)==with_icon,"icon metadata roundtrip")
+for bad in ({**opts,"size":33},{**opts,"category":"unknown"}):
+    try:I.settings(bad);ok(False,"invalid icon options")
+    except ValueError:ok(True,"invalid icon rejected")
+projects.save(root,"Icons",{"system_theme":with_icon})
+ok(projects.load(root,"Icons")["system_theme"]==with_icon,"icon persistence")
 done("test_system_assets")

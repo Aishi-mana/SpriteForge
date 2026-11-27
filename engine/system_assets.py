@@ -7,6 +7,8 @@ MAX_COMPONENTS=64
 MAX_ENCODED=24_000_000
 MAX_SOURCE_PIXELS=12_000_000
 ROLES=("panel","frame","button","tab","toggle","slider","icon","slot","bar_track","bar_fill","portrait","dialogue","marker","decoration","custom")
+ICON_CATEGORIES=("item","weapon","armor","accessory","consumable","skill","spell","status")
+ICON_SIZES=(32,48,64,96,128,256)
 STYLES=("anime","hd2d","painted","pixel","custom")
 FONTS=("sans","serif","mono")
 KINDS=("image","text","rect")
@@ -52,6 +54,14 @@ def validate(value):
         if pixels>MAX_SOURCE_PIXELS:raise ValueError("Theme exceeds 12 million source pixels")
         clean.append(dict(id=aid,name=world.label(a.get("name",role),"asset name"),role=role,
                           image=a["image"],width=im.width,height=im.height))
+        if a.get("icon") is not None:
+            meta=a["icon"]
+            if role!="icon" or not isinstance(meta,dict):raise ValueError("Invalid icon metadata")
+            category=meta.get("category")
+            if category not in ICON_CATEGORIES:raise ValueError("Invalid icon category")
+            size=meta.get("size")
+            if type(size) is not int or size not in ICON_SIZES or im.size!=(size,size):raise ValueError("Invalid icon dimensions")
+            clean[-1]["icon"]=dict(category=category,size=size,subject=world.label(meta.get("subject"),"icon subject",240))
     used=set();parts=[]
     for c in components:
         if not isinstance(c,dict):raise ValueError("Invalid layout component")
