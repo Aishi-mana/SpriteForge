@@ -1,0 +1,3 @@
+# Phase 61R-H — Animated UI effects
+
+Select a component and assign fade, slide, scale, pulse, glow highlight or resource sweep. Set duration, delay, intensity, easing, loop and reverse. Play all configured components together; stop/reset restores authored layout. Motion recipes persist in project/theme JSON; static PNG export ignores preview. Resource sweeps require an existing resource binding. Glow is an inset highlight, not a full bloom shader. Timed gameplay cooldowns, floating damage text, event-driven triggers and animated exports are deferred. CPU/JS tests added; desktop acceptance pending.

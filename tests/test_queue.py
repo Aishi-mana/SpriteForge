@@ -24,6 +24,16 @@ m = jobs.Manager(tmp, ex)
 P = lambda prompt, **k: {**dict(prompt=prompt, checkpoint="x", seed=10, n=2), **k}
 
 m.set_paused(True)
+# IDs must remain ordered even across a clock rollback or same-millisecond burst.
+clock=jobs.time.time_ns
+try:
+    jobs.time.time_ns=lambda: 1700000000999999999
+    first=m._new_id()
+    jobs.time.time_ns=lambda: 1700000000000000000
+    second=m._new_id()
+    ok(first<second,"monotonic job IDs across clock rollback")
+finally:
+    jobs.time.time_ns=clock
 a = m.add("generate", P("a"), {"steps": "25", "prompt": "a"}); b = m.add("generate", P("b")); c = m.add("generate", P("c"))
 ok([j["status"] for j in m.queue()["jobs"]] == ["queued"] * 3 and not order, "paused queue holds jobs without running them")
 ok(m.cancel(b["id"])["status"] == "cancelled" and len(m.queue()["jobs"]) == 2, "a waiting job can be cancelled")

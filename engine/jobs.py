@@ -61,6 +61,7 @@ class Manager:
         self.running = None          # job id
         self.progress = {}           # id -> [done, total]
         self._seq = 0
+        self._last_tick = 0
         self._stop = False
         self._cancel_running = set()
         self._cache = {}             # id -> job dict (in-memory index of history/*/job.json; the worker polls often)
@@ -114,7 +115,13 @@ class Manager:
     def _new_id(self):
         with self.cv:
             self._seq += 1
-            return time.strftime("%Y%m%d_%H%M%S") + f"_{int(time.time() * 1000) % 1000:03d}{self._seq % 100:02d}"
+            tick = max(time.time_ns() // 1_000_000, self._last_tick + 1)
+            while True:
+                jid = time.strftime("%Y%m%d_%H%M%S", time.localtime(tick // 1000)) + f"_{tick % 1000:03d}{self._seq % 100:02d}"
+                if jid not in self._cache and not self._jdir(jid).exists():break
+                tick += 1
+            self._last_tick = tick
+            return jid
 
     # ---------- public API ----------
     def add(self, kind, params, ui=None, images=None, source=None):
@@ -220,9 +227,9 @@ class Manager:
 
     def queue(self):
         """Waiting + running jobs (oldest first) and the last few finished ones."""
-        jobs = sorted(self._all(), key=lambda j: j["id"])
+        jobs = sorted(self._all(), key=lambda j: (j["created"], j["id"]))
         act = [self._summary(j) for j in jobs if j["status"] in ACTIVE]
-        act.sort(key=lambda s: (s["status"] != "running", s["id"]))
+        act.sort(key=lambda s: (s["status"] != "running", s["created"], s["id"]))
         return {"paused": self.paused, "running": self.running, "jobs": act}
 
     def history(self, limit=40, offset=0, fav_only=False, text="", kind=""):
@@ -234,7 +241,7 @@ class Manager:
         t = (text or "").strip().lower()
         if t:
             jobs = [j for j in jobs if t in json.dumps(j.get("params", {})).lower() or t in (j.get("note") or "").lower()]
-        jobs.sort(key=lambda j: j["id"], reverse=True)
+        jobs.sort(key=lambda j: (j["created"], j["id"]), reverse=True)
         total = len(jobs)
         limit = max(1, min(int(limit), 100))
         return {"total": total, "jobs": [self._summary(j, thumb=True) for j in jobs[max(0, int(offset)):max(0, int(offset)) + limit]]}
@@ -286,14 +293,14 @@ class Manager:
         return self.add(old["kind"], params, old.get("ui"), old.get("images"), source=old["id"])
 
     def prune(self):
-        jobs = sorted((j for j in self._all() if j["status"] not in ACTIVE and not j.get("fav")), key=lambda j: j["id"])
+        jobs = sorted((j for j in self._all() if j["status"] not in ACTIVE and not j.get("fav")), key=lambda j: (j["created"], j["id"]))
         excess = len(jobs) - MAX_KEPT
         for j in jobs[:max(0, excess)]:
             self._remove(j["id"])
 
     # ---------- worker ----------
     def _next(self):
-        queued = sorted((j for j in self._all() if j["status"] == "queued"), key=lambda j: j["id"])
+        queued = sorted((j for j in self._all() if j["status"] == "queued"), key=lambda j: (j["created"], j["id"]))
         return queued[0] if queued else None
 
     def _loop(self):

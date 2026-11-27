@@ -1513,6 +1513,43 @@ def system_kit_assemble(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+class SystemIconParams(GenParams):
+    theme: dict
+    icon: dict
+
+
+@app.post("/api/system/icon/generate")
+def system_icon_generate(p: SystemIconParams):
+    from . import system_icons, system_assets, world, local_runtime as lr
+    try:
+        d=system_assets.validate(p.theme);o=system_icons.settings(p.icon)
+        prompt=system_icons.prompt(d,o)
+        if p.bg not in gen.BG_RGB:raise ValueError("Choose a valid background color")
+        ckpt,lora_dir=_paths(p.checkpoint);gen.set_sampler(p.sampler)
+        ref=None;strength=0;profile=d.get("style_profile")
+        if profile and profile["enabled"] and profile["image_condition"]:
+            if not mf.describe(ckpt)["reference"]:raise ValueError("Selected model has no image-reference support")
+            im=world.image(profile["reference"]);ref=im if lr.route(ckpt) else gen.prep_reference(im,p.bg)
+            strength=profile["strength"]
+        side=max(512,min(1024,p.gen_size))//64*64
+        raw,seed=gen.generate(ckpt,p.lora,p.lora_weight,lora_dir,prompt,p.negative,p.steps,p.cfg,p.seed,side,p.bg,ref,strength,1,kind="world_prop",art_style="pixel" if d["pixel"] else "custom")[0]
+        image=system_icons.normalize(raw,gen.BG_RGB[p.bg],p.bg_tol,d["pixel"],o["size"])
+        return {"theme":system_icons.append(d,o,image),"seed":seed}
+    except HTTPException:raise
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+    except Exception as e:raise HTTPException(500,f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/system/export")
+def system_export(body: dict=Body(...)):
+    import io
+    from . import system_export as exporter
+    try:
+        data=exporter.bundle(body)
+        return StreamingResponse(io.BytesIO(data),media_type="application/zip",headers={"Content-Disposition":'attachment; filename="spriteforge-system.zip"'})
+    except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/system/validate")
 def system_validate(body: dict=Body(...)):
     from . import system_assets

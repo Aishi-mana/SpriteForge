@@ -58,4 +58,75 @@ for margins in ({"left":24},{"top":8,"bottom":8},{"left":-1},{"right":1.5},[]):
 projects.save(root,"Sliced",{"system_theme":sliced})
 projects.restore_bundle(root,"SlicedCopy",projects.bundle(root,"Sliced"))
 ok(projects.load(root,"SlicedCopy")["system_theme"]==sliced,"nine-slice archive persistence")
+controlled=copy.deepcopy(sliced)
+controlled["components"][0]["control"]=dict(mode="toggle",states={"hovered":"kit_1"})
+controlled=S.validate(controlled)
+ok(controlled["components"][0]["control"]["enabled"],"control defaults")
+ok(S.validate(json.loads(json.dumps(controlled)))==controlled,"control roundtrip")
+for control in ({"mode":"bad"},{"states":{"bad":"kit_1"}},{"states":{"pressed":"missing"}},{"enabled":"yes"}):
+    bad=copy.deepcopy(controlled);bad["components"][0]["control"]=control
+    try:S.validate(bad);ok(False,"invalid control")
+    except ValueError:ok(True,"invalid control rejected")
+projects.save(root,"Controls",{"system_theme":controlled})
+ok(projects.load(root,"Controls")["system_theme"]==controlled,"control persistence")
+from engine import system_icons as I
+from engine import world
+opts=dict(category="weapon",name="Moonblade",subject="silver crescent sword",size=64)
+ok("silver filigree" in I.prompt(theme,opts) and "silver crescent sword" in I.prompt(theme,opts),"icon shared guidance")
+raw=Image.new("RGBA",(100,80),(0,0,0,0))
+raw.paste((120,90,40,255),(30,10,70,70))
+uri=I.normalize(raw,(0,0,0),30,False,64)
+im=world.image(uri)
+ok(im.size==(64,64) and im.getchannel("A").getbbox() is not None and im.getpixel((0,0))[3]==0,"square transparent icon")
+with_icon=I.append(controlled,opts,uri)
+ok(with_icon["assets"][-1]["icon"]["category"]=="weapon" and len(with_icon["assets"])==len(controlled["assets"])+1,"categorized append")
+ok(S.validate(with_icon)==with_icon,"icon metadata roundtrip")
+for bad in ({**opts,"size":33},{**opts,"category":"unknown"}):
+    try:I.settings(bad);ok(False,"invalid icon options")
+    except ValueError:ok(True,"invalid icon rejected")
+projects.save(root,"Icons",{"system_theme":with_icon})
+ok(projects.load(root,"Icons")["system_theme"]==with_icon,"icon persistence")
+hud=copy.deepcopy(with_icon)
+hud["components"][0]["resource"]=dict(role="hp",maximum=150,value=75,direction="left")
+hud=S.validate(hud)
+ok(hud["components"][0]["resource"]["value"]==75,"HUD resource validation")
+ok(S.validate(json.loads(json.dumps(hud)))==hud,"HUD roundtrip")
+for bad in ({"maximum":0},{"maximum":10,"value":11},{"direction":"diagonal"},{"role":"unknown"},{"value":-1}):
+    broken=copy.deepcopy(hud);broken["components"][0]["resource"]=bad
+    try:S.validate(broken);ok(False,"invalid HUD resource")
+    except ValueError:ok(True,"invalid HUD rejected")
+projects.save(root,"HUD",{"system_theme":hud})
+ok(projects.load(root,"HUD")["system_theme"]==hud,"HUD persistence")
+animated=copy.deepcopy(hud)
+animated["components"][0]["motion"]=dict(effect="resource",duration=600,delay=120,ease="smooth",loop=True,amount=80)
+animated=S.validate(animated)
+ok(S.validate(json.loads(json.dumps(animated)))==animated,"UI motion roundtrip")
+for motion in ({"effect":"bad"},{"ease":"bad"},{"duration":0},{"delay":-1},{"amount":101},{"loop":"yes"}):
+    broken=copy.deepcopy(animated);broken["components"][0]["motion"]=motion
+    try:S.validate(broken);ok(False,"invalid UI motion")
+    except ValueError:ok(True,"invalid UI motion rejected")
+broken=copy.deepcopy(animated);del broken["components"][0]["resource"]
+try:S.validate(broken);ok(False,"resource motion without binding")
+except ValueError:ok(True,"resource motion requires binding")
+projects.save(root,"AnimatedHUD",{"system_theme":animated})
+ok(projects.load(root,"AnimatedHUD")["system_theme"]==animated,"UI motion persistence")
+import io, zipfile
+from engine import system_export as X
+with zipfile.ZipFile(io.BytesIO(X.bundle(animated))) as z:
+    manifest=json.loads(z.read("manifest.json"))
+    ok(z.testzip() is None,"UI archive integrity")
+    ok(json.loads(z.read("theme.json"))["theme"]==animated,"UI pack editable roundtrip")
+    ok(len(manifest["assets"])==len(animated["assets"]) and all("image" not in a for a in manifest["assets"]),"manifest external PNG paths")
+    ok(all(Image.open(io.BytesIO(z.read(a["path"]))).mode=="RGBA" for a in manifest["assets"]),"RGBA artwork")
+    ok(any(a["path"].startswith("icons/weapon/") for a in manifest["assets"]),"categorized icon export")
+    p=manifest["components"][0]
+    ok(p["motion"]==animated["components"][0]["motion"] and p["resource"]==animated["components"][0]["resource"] and p["state_paths"]["hovered"] in z.namelist(),"runtime metadata")
+    g=json.loads(z.read("godot/layout.json"))["components"][0]
+    q=json.loads(z.read("unity/layout.json"))["components"][0]
+    ok(g["node"]=="NinePatchRect" and q["sprite_border"]==[4,3,5,3],"engine border mapping")
+    ok(q["anchored_position"]==[p["x"],-p["y"]],"Unity coordinate mapping")
+try:X.bundle({**animated,"assets":[]});ok(False,"invalid export")
+except ValueError:ok(True,"broken export references rejected")
+with zipfile.ZipFile(io.BytesIO(X.bundle(S.default()))) as z:
+    ok(json.loads(z.read("manifest.json"))["assets"]==[],"empty theme pack")
 done("test_system_assets")

@@ -868,3 +868,43 @@ Use the following template for each future change (replace placeholders with act
 - Add per-instance source margins and nine-slice rendering for reusable image panels and frames, including transparent centers, integer destination cuts and proportional border compression for small layouts.
 - Add editor toggle, editable margins and quarter-margin suggestion; preview/export use the same renderer. Legacy image instances retain stretch rendering.
 - Add CPU validation, archive roundtrip and JS geometry coverage. Stacked on 61R-B while its validation is running; no manual CI dispatch. Desktop visual acceptance pending.
+
+
+## 2026-11-27 20:58 PHT — Phase 61R-D: Controls and interaction states
+
+- PR #96 and #97 passed CPU validation and merged. Add button, toggle, tab and slider visual-state configuration, alternate image or rectangle-color variants, normal fallback, pointer preview and forced-state inspection. Preview changes are transient; PNG export uses normal artwork.
+- Validate state asset references and nine-slice compatibility; prevent referenced artwork deletion. CPU and JS tests added. Slider value mechanics, keyboard navigation, game actions and desktop acceptance remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 06:25 PHT — Phase 61R-E: Item, equipment and skill icons
+
+- PR #98 passed CPU validation and merged. Added eight icon categories, shared style and selected-model generation, transparent square output at six sizes, categorized artwork filtering and persistent icon metadata. Added CPU tests and project roundtrip. Generation is single-icon; batch atlases and engine metadata export deferred. No manual CI dispatch; GPU acceptance pending.
+
+
+## 2026-11-28 07:30 PHT — Phase 61R-F: HUDs and resource bars
+
+- PR #99 passed CPU validation and merged. Add per-component HP, MP, stamina, XP, cooldown and custom resource bindings, four fill directions, numeric labels, transient value preview and damage/healing simulation. Persist default values and use defaults in clean PNG export. CPU and JS tests added. Live gameplay binding, timed cooldowns and floating damage effects deferred. No manual CI dispatch.
+- User requested a follow-up full-frame animation pipeline inspired by Sorceress Auto-Sprite: character image to motion video or redrawn frames, aligned transparent sprite sheets, no mandatory cutout rig. Plan after 61R; backend feasibility and GPU requirements to be evaluated.
+
+
+- 61R-F validation #239: Windows passed; Ubuntu HUD tests passed but queue FIFO/history checks failed. Fix job ID timestamp sampling and sort queue/history by creation timestamp with ID tie-breaker; add clock rollback regression. Awaiting fresh validation.
+
+
+## 2026-11-28 PHT — Phase 61R-G: Inventory, dialogue and menus
+
+- Added four editable layout recipes, proportional canvas sizing, optional role-based artwork reuse and nine-slice, interactive slots and buttons, independent labels, inventory icon placement, atomic append/replace with component budget and locked-layout protection. JS regression coverage added. Stacked on 61R-F queue fix pending validation. Runtime inventory data, dialogue branching, and actual menu actions are deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-H: Animated UI effects
+
+- PR #100 and #101 passed CPU validation and merged. Add per-component fade, slide, scale, pulse, highlight glow and resource sweep recipes with delay, easing, duration, intensity, looping and reverse; non-destructive requestAnimationFrame preview, static PNG export and persisted validated motion metadata. CPU and JS tests added. Timed gameplay cooldowns, floating damage text, event-driven transitions and animated export deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-I: Interactive testing and World integration
+
+- Reuse the System Studio renderer in the World playtest as a viewport-fixed aspect-fit overlay; preserve nine-slice, text, controls, HUD fills and motion recipes. Add pointer testing, role-wide resource simulation, reset and independent runtime image cache. Map/theme authoring and static export remain unchanged. JS regression tests added. Stacked on 61R-H pending validation. Runtime inventory/dialogue scripts, game-event bindings and keyboard UI navigation deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61R-J: Exports and stabilization
+
+- PR #102 and #103 passed CPU validation and merged. Added validated UI ZIP export with RGBA PNGs, categorized icons, external-path manifest, editable theme roundtrip, Godot and Unity layout hints and integration README. Added archive integrity, metadata, coordinate/border mapping, empty theme and invalid-reference tests. Native engine scenes/importers and desktop acceptance deferred. No manual CI dispatch.
