@@ -105,9 +105,13 @@ def replace(value,key,uri,rect=None,feather=8,generated=False):
         # Fit new silhouette inside original canvas; preserve map contact anchor and depth metadata.
         if generated and new.getchannel("A").getextrema()[0]==255:raise ValueError("Generated prop needs transparent background")
         if not new.getchannel("A").getbbox():raise ValueError("Replacement is transparent")
-        new=new.crop(new.getchannel("A").getbbox());new.thumbnail(im.size,sampling)
+        new=new.crop(new.getchannel("A").getbbox())
+        new=ImageOps.contain(new,im.size,sampling)
         target=Image.new("RGBA",im.size)
-        target.alpha_composite(new,((im.width-new.width)//2,im.height-new.height))
+        # Keep the saved local anchor and fit around it where possible.
+        nx,ny=world_masks.default_depth(l,new)["anchor"];ax,ay=l["depth"]["anchor"]
+        dx=max(0,min(im.width-new.width,ax-nx));dy=max(0,min(im.height-new.height,ay-ny))
+        target.alpha_composite(new,(dx,dy))
         l["image"]=modular.png_uri(target)
     else:
         x0,y0,x1,y1=box;w,h=x1-x0,y1-y0

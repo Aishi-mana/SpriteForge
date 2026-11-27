@@ -1,12 +1,12 @@
 # SpriteForge — maintainer handoff
 
-**Snapshot:** GitHub implementation baseline `9e00e5985dd0`, Phase 61Q-C, merged 2026-11-27T10:41:08Z.  
+**Snapshot:** GitHub implementation baseline `b51bb010d145`, Phase 61Q-D, merged 2026-11-27T10:46:47Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (public, verified 2026-11-27).  
 **Source of truth:** this repository, not the historical phase ZIP files.
 
 **VFX implementation:** 61P-A through H merged and CPU-validated on their PRs; final main validation passed (45976217804); desktop/GPU/native engine import acceptance pending. Main automatic CPU triggers restored with public-only job condition; public visibility confirmed; standard runners eligible for free execution. See the living diary for current status.
 
-**World Studio:** 61Q-A–C merged and CPU-validated. 61Q-D gameplay masks and depth hints implemented on feature branch, validation pending. Raster-first quarter-view maps, shared-layout AI plates and props, character style profiles and editable suggested gameplay masks; no map playtest yet.
+**World Studio:** 61Q-A–D merged and CPU-validated. 61Q-E manual polish and regional regeneration implemented on feature branch, validation pending. Raster-first quarter-view maps, shared-layout AI plates and props, character style profiles and editable suggested gameplay masks; no map playtest yet.
 
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 
