@@ -1,0 +1,3 @@
+# Phase 61R-I — World playtest UI overlay
+
+Enable the current System Studio layout in World playtest. UI stays fixed to the viewport with aspect-preserving fit, independent of camera and map depth. Shared rendering supports artwork, nine-slice, text, states, resource fills and optional UI motion. Pointer interactions test toggle/tab/button states; simulation buttons change HP/MP/stamina/XP across matching bindings. Reset discards transient values. No map/theme edits or game scripting. Runtime inventory/dialogue logic and keyboard navigation remain deferred. JS tests added; desktop acceptance pending.
