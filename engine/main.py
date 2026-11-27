@@ -1320,6 +1320,40 @@ def scene_render(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.get("/api/vfx/presets")
+def vfx_presets():
+    from . import vfx_studio
+    return {"presets":vfx_studio.presets()}
+
+
+@app.post("/api/vfx/validate")
+def vfx_validate(body: dict=Body(...)):
+    from . import vfx_studio
+    try:return vfx_studio.validate(body)
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/vfx/render")
+def vfx_render(body: dict=Body(...)):
+    from . import vfx_studio
+    try:
+        frames,meta=vfx_studio.render(body.get("recipe"),body.get("frame"))
+        return {**meta,"frames":[b64(im) for im in frames]}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/vfx/export")
+def vfx_export(body: dict=Body(...)):
+    from . import vfx_studio
+    try:
+        recipe=vfx_studio.validate(body.get("recipe"))
+        frames,meta=vfx_studio.render(recipe,preview=False)
+        opts=body.get("options") or {}
+        if not isinstance(opts,dict):raise ValueError("Invalid effect export options")
+        return exporter.export_pack([{**meta,"frames":frames}],dict(opts,crop=False,uniform=True,smooth=not recipe["pixel"]),meta["name"],ROOT)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/export_effect")
 def scene_export_effect(body: dict=Body(...)):
     try:
