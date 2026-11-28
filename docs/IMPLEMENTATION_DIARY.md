@@ -1002,3 +1002,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 11:04 PHT — Phase 62H: Shared Wan video runtime
 
 - Reused MVManaAtelier Wan image-to-video workflow and shared ComfyUI model/runtime discovery. Exact Q3_K_M high/low pair, acceleration LoRAs, UMT5 and VAE readiness; optional LTX retained. Owned temporary headless server, GGUF whitelist, node check, model-path mapping, GPU lock and cache release, bounded output, stage polling, 480x480/33/16/4 defaults. Other applications must be closed manually; no cross-app GPU lock or cancellation guarantee. CPU regression added; real ComfyUI/Wan execution pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62H Windows cleanup hotfix
+
+- User supplied real ComfyUI log: RTX 5070 Laptop GPU, 8151 MB VRAM, both Wan sampling stages completed, prompt executed in 80.40 seconds. UI reported WinError 32 on temporary engine.log. Replaced strict temporary directory cleanup with bounded retry and nonfatal cleanup, preserved last engine log outside job folder, explicitly waited for owned child exit. Added mocked locked-file regression. MP4 delivery and extraction still need live retest. No manual CI dispatch.
