@@ -35,4 +35,20 @@ try:S.validate({**scene,"actors":[a,a]});ok(False,"duplicate")
 except ValueError:ok(True,"duplicate actor rejected")
 try:S.render({**scene,"width":1024,"height":1024,"count":64});ok(False,"budget")
 except ValueError:ok(True,"scene preview budget enforced")
+# Exact-frame overrides affect position and compositing order, not adjacent frames.
+override_a=copy.deepcopy(a);override_a["frame_overrides"]=[dict(frame=0,x=12,y=12,z=2),dict(frame=2,x=24,y=20,z=2)]
+override_scene={**scene,"actors":[override_a,b]}
+clean,_=S.validate(override_scene)
+ok(S.position(clean["actors"][0],2)==(24,20) and S.depth(clean["actors"][0],0)==2,"frame-specific position and depth")
+ok(S.position(clean["actors"][0],1)==(14,12) and S.depth(clean["actors"][0],1)==0,"adjacent frame retains base transform")
+images,_=S.render(override_scene)
+ok(images[0].getpixel((12,12))==(255,0,0,255),"frame depth changes front actor")
+ok(images[2].getpixel((24,20))==(255,0,0,255),"frame position applied")
+single,_=S.render(override_scene,2)
+ok(single[0].tobytes()==images[2].tobytes(),"override scrub matches playback")
+for keys in ([dict(frame=5,x=0,y=0,z=0)],[dict(frame=0,x=0,y=0,z=101)],[dict(frame=0,x=0,y=0,z=0)]*2):
+    try:S.validate({**scene,"actors":[{**a,"frame_overrides":keys}]});ok(False,"invalid override")
+    except ValueError:ok(True,"invalid frame override rejected")
+projects.save(root,"Overrides",{"scene":override_scene})
+ok(projects.load(root,"Overrides")["scene"]==clean,"frame overrides survive project roundtrip")
 done("test_scenes")

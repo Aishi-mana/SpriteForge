@@ -68,6 +68,18 @@ def validate(value):
             visible=boolean(a.get("visible",True),"actor visibility"),start=start,end=end,
             offset=integer(a.get("offset",0),0,len(imgs)-1,"source frame offset"),
             speed=integer(a.get("speed",100),10,300,"actor speed"),behavior=behavior))
+        if "frame_overrides" in a:
+            keys=a["frame_overrides"]
+            if not isinstance(keys,list) or len(keys)>64:raise ValueError("Invalid actor frame overrides")
+            seen=set();clean=[]
+            for k in keys:
+                if not isinstance(k,dict):raise ValueError("Invalid actor frame override")
+                frame=integer(k.get("frame"),0,count-1,"override frame")
+                if frame in seen:raise ValueError("Duplicate actor frame override")
+                seen.add(frame)
+                clean.append(dict(frame=frame,x=integer(k.get("x"),-2048,2048,"override x"),
+                    y=integer(k.get("y"),-2048,2048,"override y"),z=integer(k.get("z"),-100,100,"override depth")))
+            out[-1]["frame_overrides"]=sorted(clean,key=lambda k:k["frame"])
     effects=vfx.validate(value.get("effects",[]),count,used)
     return dict(version=1,name=name(value.get("name","scene")),width=w,height=h,count=count,fps=fps,
                 loop=boolean(value.get("loop",True),"scene loop"),actors=out,effects=effects),decoded
@@ -87,7 +99,16 @@ def frame_index(actor,scene_frame,scene_fps):
     if actor["behavior"]=="hide" and index>=count:return None
     return min(index,count-1)
 
+def frame_override(actor,frame):
+    return next((k for k in actor.get("frame_overrides",[]) if k["frame"]==frame),None)
+
+def depth(actor,frame):
+    k=frame_override(actor,frame)
+    return k["z"] if k is not None else actor["z"]
+
 def position(actor,frame):
+    k=frame_override(actor,frame)
+    if k is not None:return (k["x"],k["y"])
     t=(frame-actor["start"])/max(1,actor["end"]-actor["start"])
     return (round(actor["x"]+(actor["end_x"]-actor["x"])*t),round(actor["y"]+(actor["end_y"]-actor["y"])*t))
 
@@ -99,7 +120,7 @@ def composite(out,im,left,top):
 def compose(scene,decoded,index,cache):
     out=Image.new("RGBA",(scene["width"],scene["height"]))
     by={a["id"]:a for a in scene["actors"]}
-    layers=[(a["z"],0,a) for a in scene["actors"]]+[(e["z"],1,e) for e in scene["effects"]]
+    layers=[(depth(a,index),0,a) for a in scene["actors"]]+[(e["z"],1,e) for e in scene["effects"]]
     for _,kind,a in sorted(layers,key=lambda layer:(layer[0],layer[1])):
         if kind==1:
             if not vfx.active(a,index):continue
