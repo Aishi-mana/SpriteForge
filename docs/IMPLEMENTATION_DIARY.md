@@ -1225,3 +1225,8 @@ PR #167 CPU validation passed and merged at 74fa103. Added overlay/pixel-differe
 ### Phase 64I — Direct editor integration (2026-11-29 00:53 PHT)
 
 PR #168 CPU run 46167123563 passed and merged at 0716b2f4. Reviewed direct editor session lifecycle in ui/index.html; added busy-action explanations, invalidation of asynchronous comparison draws on close and stale-error guard. Extended tests/test_direct_review.js with actual staging/history helper integration assertions; added docs/phases/PHASE64I.md desktop acceptance checklist. CPU execution and Windows/GPU verification pending; no manual CI dispatch. Phase 65 remains next.
+
+
+### Phase 65A — Unified asset library foundation (2026-11-29 PHT)
+
+PR #169 CPU run 46167658301 passed and merged at 3801caeb; desktop/GPU acceptance remains pending. Extended engine/asset_library.py and existing library UI with standalone PNG and validated full-frame animation snapshot kinds, filters, thumbnails and copy download; retained character-library storage, legacy apply behavior and quotas. Existing world PNG validator reused, so WebP import explicitly deferred. Added test_asset_library regression coverage and phase notes. No raw MP4 storage, viewer, shared shortcuts or revision management yet. CPU execution and desktop acceptance pending; no manual CI dispatch.
