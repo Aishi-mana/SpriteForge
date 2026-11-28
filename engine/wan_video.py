@@ -59,7 +59,8 @@ def settings(body):
     if end_reference is not None:
         # A distinct target is a transition, not a return-to-start loop.
         guidance={**guidance,"loop":False}
-    prompt=G.prompt(body.get("prompt",""),guidance)
+    paired=world.boolean(body.get("paired",False),"paired generation")
+    prompt=G.prompt(body.get("prompt",""),guidance,paired=paired)
     if conditioning=="flf":
         if end_reference is not None:
             prompt+=" Complete the requested movement by transitioning to the supplied ending pose."
