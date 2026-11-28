@@ -1160,3 +1160,7 @@ Added independent two-slot preview dialog in Scenes and Full-frame Animation Stu
 ### Phase 63B — Paired timeline (2026-11-28, Asia/Manila)
 
 Added per-actor active range, source offset, speed and completion mode; shared clickable source-frame tracks, stepping and elapsed-time playback with optional loop. Pair JSON retains timing. Desktop and CI validation pending.
+
+### Phase 63C — Contact anchors (2026-11-28, Asia/Manila)
+
+Added source-frame anchor picking, pivot-relative offsets, contact guide and separation readout, mirror/scale-aware translation alignment of B to A, and optional pair JSON contact metadata. Fixed clip anchors only; per-frame tracking and deformation are not implemented. Desktop and CI validation pending.
