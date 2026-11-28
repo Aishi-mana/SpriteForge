@@ -1130,3 +1130,9 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 ## 2026-11-28 PHT — 62K desktop runtime and transparency hotfix
 
 - PR #147 CPU validation #360 passed and merged at fcb609c. User downloaded Safetensors UNet/VAE; screenshot shows model detection succeeded. Actual first generation fails with AttributeError: AnimateDiffVideoToVideoPipeline has no attribute enable_vae_slicing. Updated memory configuration to use AutoencoderKL.enable_slicing with older pipeline fallback and optional UNet chunking capability check; retained CPU offload and explicit decode_chunk_size. Checked Diffusers API documentation/source. Added mocked current/legacy/absent helper regression cases. User requested BiRefNet as default transparency; selected it in Full-frame Animation Studio while preserving alternative choices and preview/re-extraction. No silent fallback or new model requirement for the VAE fix. CPU validation and actual desktop GPU run pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62L deferred animation roadmap
+
+- PR #148 CPU validation #362 passed and merged at 0bb359b. User reports AnimateDiff motion quality is disappointing in desktop use; no visual acceptance claimed.
+- At user request, parked the proposed anime-style animation roadmap in docs/PHASE62L_ANIMATION_ROADMAP.md: neural interpolation (62L-D) first, AI keyframe generation (62L-C) second, anime model compatibility and general-purpose text-to-video deferred. Documentation only, no runtime changes or manual CI dispatch. Retain existing AnimateDiff and Wan backends.
