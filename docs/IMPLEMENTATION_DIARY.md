@@ -1257,3 +1257,8 @@ PR #173 CPU run 46169676634 passed and merged at ca35ee2e. Added atomic original
 ### Phase 65F — Shared asset picker and studio reuse (2026-11-29 PHT)
 
 65E dependency fix pushed to PR #174; stacked 65F branch on corrected head pending validation. Added reusable modal with kind filter, thumbnail/search/favorites and explicit copy selection. Connected reference pose, full-frame image/document/video, direct editor image/video, map layer, UI artwork, VFX artwork, modular layer, scene actor and paired A/B animation/reference workflows using existing validation/imports and stale state guards. Existing image/actor budgets apply; multi-direction actor picks one direction. Added JS filter/clip/placement regression and phase notes. CPU execution and desktop validation pending; no manual CI dispatch.
+
+
+### Phase 65G — Asset revisions and relationships (2026-11-29 PHT)
+
+PR #174 CPU run 46171252948 passed and merged at 31f5d95a; PR #175 CPU run 46171391625 passed and retargeted to main, merged at ffa5f9ca. Added parent/relation metadata on new saves, validated link/unlink and ancestry/children APIs, history dialog with source and descendant navigation. Same-kind revisions and video-to-animation extraction type checks; cycle rejection. Independent payloads survive source deletion, with missing-parent indicator. Known in-session video/extraction and exact animation object provenance links added conservatively; manual links for other workflows. Python and JS regression coverage added, CPU and desktop verification pending. No manual CI dispatch.
