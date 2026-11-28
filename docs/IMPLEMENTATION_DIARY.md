@@ -1212,3 +1212,7 @@ PR #163 CPU validation passed and merged at 2b72b14. Added original-motion-gated
 ### Phase 64F — Selective paired replacement (2026-11-29, Asia/Manila)
 
 PR #164 CPU validation passed and merged at 5c8a9f6. Added paired actor replacement from new artwork via original source motion guide or exact-count PNG import, validated candidate scene, synchronized before/after comparison, explicit acceptance and one-step undo. Partner artwork and scene timing/transforms preserved. Contact quality requires review. Regression cases and phase notes added; GPU/desktop/CPU acceptance pending. No manual CI dispatch.
+
+### Phase 64G — Direct video editing and sprite extraction (2026-11-29, Asia/Manila)
+
+PR #165 CPU validation passed and merged at c821bbf. Added original/candidate MP4 workspace, CPU trim/resampling/reverse, optional Fun Control motion-guided regeneration, separate downloads, candidate alpha extraction and validated staging into existing animation range. Source MP4 bytes retained in session. Audio not retained in edited clips; no exact AI video edit guarantee. Added sampling regression cases and docs; CPU, desktop and GPU acceptance pending. No manual CI dispatch.

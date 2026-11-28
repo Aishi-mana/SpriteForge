@@ -1681,6 +1681,13 @@ def full_frame_alpha_models():
     return semantic_alpha.readiness(cfg()["models_dir"])[0]
 
 
+@app.post("/api/direct-animation/video/edit")
+def direct_animation_video_edit(file: UploadFile=File(...), options: str=Form(...)):
+    from . import direct_video as V
+    try:return StreamingResponse(io.BytesIO(V.edit(file.file.read(64_000_001),json.loads(options))),media_type="video/mp4")
+    except (ValueError,TypeError,AttributeError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/video/extract")
 def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), document: Optional[str]=Form(None), document_file: Optional[UploadFile]=File(None)):
     from . import full_frame_extract as E
