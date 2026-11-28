@@ -2345,14 +2345,14 @@ async function hOpen(id){try{const j=await api('/api/jobs/'+id),d=$('hdetail'),s
  ${Object.keys(j.images||{}).length?`<div class="mut">Inputs:</div><div class="row" style="justify-content:flex-start;gap:12px">${Object.entries(j.images).map(([k,u])=>`<div style="flex:none"><div class="mut">${k=='ref'?'reference':'skeleton'}</div><img class="px dimg" style="max-height:120px;${k=='pose'?'image-rendering:auto':''}" src="${u}"></div>`).join('')}</div>`:''}
  <div class="grid" id="hres" style="margin-top:8px"></div></div>`;
  if(j.results.length)render(j.results,$('hres'));
- d.querySelectorAll('button[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;try{
+ d.querySelectorAll('button[data-a]').forEach(b=>{if(b.closest('#hres'))return;b.onclick=async()=>{const a=b.dataset.a;try{
   if(a=='x')d.innerHTML='';
   else if(a=='use')hUse(j);
   else if(a=='show'){render(j.results);tab(hTab(j));$('status').className='';$('status').textContent='Shown from history'}
   else if(a=='rerun'||a=='fork'){await api(`/api/jobs/${id}/rerun`,{...J,body:JSON.stringify({new_seed:a=='fork'})});$('status').textContent=a=='fork'?'Forked: queued with a new seed':'Queued again with the same seed';qPoll();await qRefresh()}
   else if(a=='fav'){await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({fav:!j.fav})});hLoad(true);hOpen(id)}
   else if(a=='del')armed(b,'delete',async()=>{await api('/api/jobs/'+id,{method:'DELETE'});QS.sel.delete(id);d.innerHTML='';hLoad(true)})
- }catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}});
+ }catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}});
  $('hnote').onchange=async e=>{try{await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({note:e.target.value})})}catch(x){}};
  d.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 function hUse(j){const saved={...(j.ui||{})},p=j.params||{};if(j.kind==='generate'&&(!p.kind||p.kind==='sprite')){if(typeof p.body_base==='boolean')saved.genBodyBase=p.body_base;if(typeof p.art_style==='string')saved.artstyle=p.art_style;if(typeof p.prompt==='string')saved.prompt=p.prompt;if(typeof p.negative==='string')saved.neg=p.negative}applySettings(saved);const im=j.images||{};
