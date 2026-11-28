@@ -1,5 +1,7 @@
 # SpriteForge — maintainer handoff
 
+> **Required for all contributors and AI agents:** read [AGENTS.md — mandatory user-first UX policy](AGENTS.md#mandatory-user-first-ux-policy--read-before-every-change) before making changes. Essential actions must be visible, discoverable, and easy to repeat.
+
 **Snapshot:** GitHub implementation baseline `0f3df14f4224`, Phase 61Q-F, merged 2026-11-27T11:40:01Z.  
 **Repository:** [Aishi-mana/SpriteForge](https://github.com/Aishi-mana/SpriteForge) (public, verified 2026-11-27).  
 **Source of truth:** this repository, not the historical phase ZIP files.
