@@ -1583,6 +1583,18 @@ def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), docum
     except Exception as e:raise HTTPException(400,"Video extraction failed: "+str(e))
 
 
+@app.post("/api/full-frame/consistency")
+def full_frame_consistency(body: dict=Body(...)):
+    from . import full_frame_consistency as C
+    try:
+        doc=body.get("document")
+        if body.get("apply") is True:
+            result=C.correct(doc,body.get("options",{}))
+            return {"document":result,"metrics":C.inspect(result)}
+        return {"metrics":C.inspect(doc)}
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame
