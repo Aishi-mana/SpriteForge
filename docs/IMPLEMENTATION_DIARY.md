@@ -940,3 +940,5 @@ Use the following template for each future change (replace placeholders with act
 - Added CPU nearest-frame, premultiplied-alpha blend and bounded translation-assisted interpolation, 2–4x frame multipliers, optional duration preservation, loop seam and non-loop terminal holds, exact original frames, bounded output and separate preview playback/scrub/accept/undo. Tests cover motion, alpha, timing and budgets. Stacked on 61S-E pending validation. Optical flow, neural interpolation and desktop acceptance deferred. No manual CI dispatch.
 
 - Included 61S-E boundary correction: preserve first and last frames during temporal color and position correction.
+
+- 61S-E validation #259 failed on Windows and Ubuntu: two-sample endpoint median changed stable boundary frames. Restrict temporal color and position corrections to interior frames; endpoint alpha/despill behavior unchanged. Revalidate automatically.
