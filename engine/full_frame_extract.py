@@ -45,6 +45,7 @@ def assemble(images,q,doc):
         buf=io.BytesIO();im.save(buf,"PNG");out.append("data:image/png;base64,"+base64.b64encode(buf.getvalue()).decode())
         if sum(map(len,out))>F.MAX_ENCODED:raise ValueError("Extracted frames exceed encoded budget; reduce range or FPS")
     if d["locked_frames"]:raise ValueError("Unlock frames before replacing the sequence")
+    if any(v["frames"] for v in d["directions"].values()) and (w,h,q["fps"])!=(d["width"],d["height"],d["fps"]):raise ValueError("Extraction must match shared directional canvas and FPS; disable trim or choose matching settings")
     return F.validate({**d,"combat":[],"keyframes":[],"locked_frames":[],"width":w,"height":h,"pivot":[w//2,h-1],"fps":q["fps"],"frames":out})
 
 def extract(raw,q,doc):

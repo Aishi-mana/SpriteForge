@@ -34,7 +34,9 @@ def _decode_png(data_url, max_bytes=8_000_000):
     raw = base64.b64decode(data_url.split(",", 1)[1])
     if len(raw) > max_bytes:
         raise ProjectError("image too large")
-    img = Image.open(io.BytesIO(raw)).convert("RGBA")
+    with Image.open(io.BytesIO(raw)) as source:
+        if source.width * source.height > 16_000_000:raise ProjectError("image exceeds pixel budget")
+        img = source.convert("RGBA")
     buf = io.BytesIO()
     img.save(buf, "PNG")
     return buf.getvalue()
@@ -197,6 +199,12 @@ def _save(root, name, data):
     keys=("ref", "anim", "tpl", "tplref", "tile", "terra", "terrb", "terrc", "terrd", "animstart", "animend", "characterref", "charvariant", "customrig", "characterart", "charactersprite", "bodybase")
     # Reject malformed input before replacing any image from an existing project.
     staged={key:_decode_png(images[key]) for key in keys if images.get(key)}
+    # Validate and stage all secondary assets before touching an existing project.
+    with tempfile.TemporaryDirectory(prefix="sf-save-") as stage:
+        temp=Path(stage)
+        _save_results(temp,data.get("results"))
+        _save_portrait(temp,data.get("portrait"))
+        _save_tileset(temp,data.get("tileset"))
     d.mkdir(parents=True, exist_ok=True)
     for key in keys:
         f = d / f"{key}.png"
@@ -218,6 +226,10 @@ def _save(root, name, data):
 
 
 def load(root, name):
+    with _PROJECT_LOCK:return _load(root,name)
+
+
+def _load(root,name):
     d = _dir(root, name, True)
     f = d / "project.json"
     if not f.exists():
@@ -242,11 +254,24 @@ def delete(root, name):
 
 
 def add_sprite(root, name, data_url):
-    d = _dir(root, name)
-    (d / "sprites").mkdir(parents=True, exist_ok=True)
-    sid = time.strftime("%Y%m%d_%H%M%S") + f"_{int(time.time() * 1000) % 1000:03d}"
-    (d / "sprites" / f"{sid}.png").write_bytes(_decode_png(data_url))
-    return sid
+    raw=_decode_png(data_url)
+    with _PROJECT_LOCK:
+        d=_dir(root,name)
+        folder=d/"sprites";folder.mkdir(parents=True,exist_ok=True)
+        sid=time.strftime("%Y%m%d_%H%M%S")+f"_{time.time_ns()}"
+        while (folder/f"{sid}.png").exists():sid+="_1"
+        f=folder/f"{sid}.png";tmp=f.with_suffix(".png.tmp");tmp.write_bytes(raw);tmp.replace(f)
+        return sid
+
+
+def replace_sprite(root,name,sid,data_url):
+    raw=_decode_png(data_url)
+    if not isinstance(sid,str) or not re.fullmatch(r"[0-9_]+",sid):raise ProjectError("Invalid sprite ID")
+    with _PROJECT_LOCK:
+        f=_dir(root,name,True)/"sprites"/f"{sid}.png"
+        if not f.is_file():raise ProjectError("Sprite not found")
+        tmp=f.with_suffix(".png.tmp");tmp.write_bytes(raw);tmp.replace(f)
+        return sid
 
 
 def list_sprites(root, name, limit=200):
@@ -258,9 +283,10 @@ def list_sprites(root, name, limit=200):
 
 
 def delete_sprite(root, name, sid):
-    f = _dir(root, name, True) / "sprites" / (re.sub(r"[^0-9_]", "", sid) + ".png")
-    if f.exists():
-        f.unlink()
+    if not isinstance(sid,str) or not re.fullmatch(r"[0-9_]+",sid):raise ProjectError("Invalid sprite ID")
+    with _PROJECT_LOCK:
+        f = _dir(root,name,True)/"sprites"/(sid+".png")
+        if f.exists():f.unlink()
 
 
 # Phase 57: portable, bounded project archives. Never extract arbitrary ZIP paths.

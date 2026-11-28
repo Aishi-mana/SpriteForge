@@ -15,7 +15,7 @@ def world_clip(doc,budget):
     from .full_frame_directions import DIRECTIONS
     if not directions or any(k not in DIRECTIONS for k in directions):raise ValueError("Invalid playtest directions")
     from . import full_frame_combat as C
-    out={}
+    out={};shared=None
     for key,v in directions.items():
         if not isinstance(v,dict):raise ValueError("Invalid direction clip")
         frames=v.get("frames")
@@ -27,6 +27,9 @@ def world_clip(doc,budget):
             if clean is None:clean=part
             images.extend(ims)
         if any(im.size!=images[0].size for im in images):raise ValueError("Inconsistent clip canvas")
+        signature=(images[0].size,tuple(clean["pivot"]),clean["fps"],clean["pixel"],clean["loop"])
+        if shared is None:shared=signature
+        elif signature!=shared:raise ValueError("Directional clips must share canvas, pivot, FPS, sampling and loop settings")
         clean["frames"]=frames
         clean["combat"]=C.validate(v.get("combat"),len(frames),*images[0].size)
         out[key]=clean
@@ -62,7 +65,7 @@ def export(doc,kind="atlas"):
                 path=f"{key}/animation.webp";durations=[round((j+1)*1000/d["fps"])-round(j*1000/d["fps"]) for j in range(len(ims))]
                 save(z,path,ims[0],"WEBP",save_all=True,append_images=ims[1:],duration=durations,loop=0 if d["loop"] else 1,lossless=True)
                 records=[dict(file=path,index=j,duration_ms=ms) for j,ms in enumerate(durations)]
-            manifest["directions"][key]={"frames":records,"combat":c["combat"]}
+            manifest["directions"][key]={"frames":records,"combat":c["combat"],"keyframes":({**d["directions"],d["direction"]:d}[key]).get("keyframes",[]),"locked_frames":({**d["directions"],d["direction"]:d}[key]).get("locked_frames",[])}
         z.writestr("animation.json",json.dumps(manifest,indent=2))
         z.writestr("IMPORT.txt","Godot: use atlas regions or PNG frames in SpriteFrames; pivot offset is negative pivot. Unity: slice atlas by rect, convert pivot to normalized bottom-left (x/width, 1-y/height). JSON is portable metadata, not native engine import files. Combat coordinates are top-left pixels. Animated WebP may coalesce identical frames; use PNG/atlas for exact per-frame indexing.")
     return buf.getvalue()
