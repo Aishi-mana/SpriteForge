@@ -79,3 +79,16 @@ Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose previe
 - Phase 62 — Full system audit, UX consolidation and stabilization: [62A queue and animation handoff](phases/PHASE62A.md) merged, CPU validated; [B browser workflow smoke tests](phases/PHASE62B.md) merged, CPU validated, browser execution pending; [C navigation/layout consolidation](phases/PHASE62C.md) merged, CPU validated; [D project/model/export integration](phases/PHASE62D.md) merged, CPU validated; [E desktop/GPU acceptance](phases/PHASE62E.md) tooling implemented, live execution pending.
 
 - Phase 62H: shared Wan 2.2 GGUF/ComfyUI video runtime and readiness implemented; live inference pending. LTX remains optional.
+
+## Planned shared model integrations (after Wan delivery acceptance)
+
+- 62I: read-only shared model inventory and capability detection, including optional additional model folder.
+- 62J: BiRefNet background removal and alpha refinement.
+- 62K: SAM 2.1 interactive segmentation and video tracking.
+- 62L: FLUX.2 Klein and Qwen GGUF generation/editing, with dependency checks.
+- 62M: AI upscaling and artwork enhancement.
+- 62N: AnimateLCM alternative animation backend.
+- 62O: Qwen3-VL visual assistant.
+- 62P: IC-Light relighting.
+
+Each requires backend compatibility and desktop acceptance; detected files do not establish readiness. Keep primary actions visible and avoid duplicate model downloads.
