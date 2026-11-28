@@ -53,3 +53,9 @@ vm.runInContext(html.split('/* LIB65-REL-BEGIN */')[1].split('/* LIB65-REL-END *
 assert.equal(relCtx.libRelationLabel('revision'),'Revision of');
 assert.equal(relCtx.libRelationLabel('extracted_from'),'Extracted from video');
 assert.ok(html.includes("libButton(row,'History / links'"));
+
+const backupCtx=vm.createContext({});
+vm.runInContext(html.split('/* LIB65-BACKUP-BEGIN */')[1].split('/* LIB65-BACKUP-END */')[0],backupCtx);
+assert.equal(backupCtx.libBackupUrl(),'/api/library/backup');
+assert.equal(backupCtx.libBackupUrl({id:'abc'}),'/api/library/backup?entry_id=abc');
+for(const s of ['Download library backup ZIP','Import / restore backup ZIP','Export asset ZIP'])assert.ok(html.includes(s),s);
