@@ -6,7 +6,7 @@ This backend uses SpriteForge's existing Diffusers environment, not a separate C
 
 Select **AnimateDiff — short AI animation** in Full-frame Animation Studio. Click **Create model folders** to create the two directories inside the configured models directory. The screen displays their exact paths, links to example model repositories, and missing components for each detected folder. Copy or download the complete local Diffusers-format folders into those paths, then click **Refresh models**. Generation remains unavailable until a pair passes the file checklist.
 
-Example baseline repositories: [SD1.5 image model](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/tree/main) and [AnimateDiff v1.5-2 motion adapter](https://huggingface.co/guoyww/animatediff-motion-adapter-v1-5-2/tree/main). These are compatibility starting points, not a recommendation for a particular artistic style. Preserve the subdirectories and filenames. The initial loader expects standard (unsharded, non-variant) safetensors files, not just the standalone checkpoint at the repository root.
+Example baseline repositories: [SD1.5 image model](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/tree/main) and [AnimateDiff v1.5-2 motion adapter](https://huggingface.co/guoyww/animatediff-motion-adapter-v1-5-2/tree/main). These are compatibility starting points, not a recommendation for a particular artistic style. Preserve the subdirectories and filenames. The loader prefers standard (unsharded, non-variant) Safetensors files. The exact published SD1.5 legacy UNet/VAE .bin component files can also be converted on the first generation; standalone checkpoints are not supported.
 
 Expected layout:
 
@@ -24,7 +24,7 @@ Expected layout:
           config.json
           diffusion_pytorch_model.safetensors
 
-Use a compatible SD1.5 base (not SDXL, Qwen or Wan) and an SD1.5 Diffusers MotionAdapter. The base needs the complete pipeline components and safetensors weights; the adapter needs its matching config and weights. Raw ComfyUI checkpoint files and original AnimateDiff .ckpt files are not accepted in this initial implementation. No automatic downloads or conversion are performed. See the [Diffusers AnimateDiff documentation](https://huggingface.co/docs/diffusers/en/api/pipelines/animatediff). Check model licenses for your project's intended use.
+Use a compatible SD1.5 base (not SDXL, Qwen or Wan) and an SD1.5 Diffusers MotionAdapter. The base needs the complete pipeline components and safetensors weights; the adapter needs its matching config and weights. Raw ComfyUI checkpoint files and original AnimateDiff .ckpt files are not accepted in this initial implementation. No automatic downloads are performed. The narrow legacy conversion exception is described below. See the [Diffusers AnimateDiff documentation](https://huggingface.co/docs/diffusers/en/api/pipelines/animatediff). Check model licenses for your project's intended use.
 
 ## Desktop test
 
@@ -35,7 +35,7 @@ Use a compatible SD1.5 base (not SDXL, Qwen or Wan) and an SD1.5 Diffusers Motio
 5. Generate and compare the raw MP4. Use the existing extraction, timeline and sprite export controls.
 6. Generate a second time in the same session. Record speed, visual motion, identity drift and memory errors.
 
-Detection checks metadata and nonempty required component files, not their tensor contents, licenses, or GPU runtime compatibility. The setup screen does not automatically download, convert, or relocate weights. CPU offload and chunking reduce memory pressure but do not guarantee operation on an 8 GB GPU. Desktop/GPU acceptance is pending. The initial reference conditioning is not a hard first/last-frame or facial lock.
+Detection checks metadata and nonempty required component files, not their tensor contents, licenses, or GPU runtime compatibility. The setup screen does not download or relocate weights; first generation can perform the verified legacy conversion below. CPU offload and chunking reduce memory pressure but do not guarantee operation on an 8 GB GPU. Desktop/GPU acceptance is pending. The initial reference conditioning is not a hard first/last-frame or facial lock.
 
 ## Character preservation and motion (62K-C)
 
@@ -59,3 +59,13 @@ After the integrated CPU check passes and the PR is merged, pull main and restar
 - Benchmark: capture Quick, Standard and Quality candidates with the same settings and seed; compare actual request/extraction durations and visual quality. Export the comparison JSON if useful.
 
 Acceptance requires real desktop generation and repeat use, not just model detection or CPU CI. Record success/failure, elapsed seconds, visual defects and any exact error. No fixed performance target or successful GPU result is assumed.
+
+
+## 62K hotfix — existing SD1.5 .bin component weights
+
+If the UNet and VAE contain diffusion_pytorch_model.bin instead of diffusion_pytorch_model.safetensors, do not rename or redownload them. Refresh models after updating SpriteForge. The pair can be selected; a visible note explains the one-time conversion. On generation, SpriteForge verifies each legacy file against the SHA-256 published by the example SD1.5 repository ([UNet](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/blob/main/unet/diffusion_pytorch_model.bin), [VAE](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/blob/main/vae/diffusion_pytorch_model.bin)). Only these exact known files are accepted, using PyTorch 2.6+ restricted weights-only CPU loading, never unrestricted pickle. The new standard-name Safetensors file is published beside the original without overwriting existing files. Allow approximately 4 GB free disk space for both conversions and sufficient system RAM. Conversion uses the local filesystem's hard-link support (NTFS supported). Subsequent runs reuse the converted file. Other .bin checkpoints, variants or corrupted files are not supported by this hotfix. Safetensors remain preferred; model detection does not guarantee successful conversion or inference. Actual full-weight conversion on Windows remains unverified.
+
+
+## Desktop runtime and transparency hotfix
+
+If both models are detected but generation reports that AnimateDiffVideoToVideoPipeline has no attribute enable_vae_slicing, update SpriteForge. The memory configuration now uses VAE component-level enable_slicing when present, with the older pipeline method as a fallback. CPU offload and explicit video decode chunking remain enabled. BiRefNet AI is now the initial transparency selection in Full-frame Animation Studio; conservative color key and keep background remain selectable. BiRefNet requires its existing local model and runtime; if extraction fails, the video preview is retained and another transparency method can be selected for retry. No model downloads are required by this code fix. Desktop inference remains pending.

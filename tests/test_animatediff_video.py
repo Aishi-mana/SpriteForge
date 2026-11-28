@@ -39,6 +39,44 @@ ok(ready["raw_files"] == ["raw.safetensors"] and ready["base"][0]["ready"], "sta
 (base / "vae/config.json").unlink()
 ok(not A.readiness(root)["ready"] and "Missing vae/config.json" in A.readiness(root)["base"][0]["issues"], "specific component failure")
 (base / "vae/config.json").write_text("fixture")
+# The user's layout: both Diffusers components are .bin, text encoder and adapter are safe.
+for component in ("unet", "vae"):
+    folder = base / component
+    (folder / "diffusion_pytorch_model.safetensors").unlink()
+    (folder / "diffusion_pytorch_model.bin").write_bytes(b"legacy fixture")
+legacy = A.readiness(root)
+ok(legacy["ready"] and legacy["models"][0]["legacy"] == ["unet", "vae"], "legacy component pair detected without reading pickle")
+import hashlib
+from unittest.mock import patch
+from types import SimpleNamespace
+source = base / "unet/diffusion_pytorch_model.bin"
+calls = []
+class FakeTensor:
+    layout = "strided"
+    def detach(self): return self
+    def contiguous(self): return self
+def fake_load(f, **kw):
+    calls.append((f.read(), kw))
+    return {"weight": FakeTensor()}
+fake_torch = SimpleNamespace(__version__="2.8.0", Tensor=FakeTensor, strided="strided", load=fake_load)
+try:
+    A._verified_weights(source, A.LEGACY_SHA256["unet"], fake_torch)
+    ok(False, "unknown legacy source must be rejected")
+except ValueError:
+    ok(not calls, "unknown source rejected before deserialization")
+def fake_save(weights, path, metadata):
+    assert set(weights) == {"weight"} and metadata == {"format":"pt"}
+    Path(path).write_bytes(b"converted fixture")
+fake_safe = types.ModuleType("safetensors.torch")
+fake_safe.save_file = fake_save
+fixture_hash = hashlib.sha256(b"legacy fixture").hexdigest()
+with patch.dict(sys.modules, {"torch":fake_torch, "safetensors.torch":fake_safe}), patch.dict(A.LEGACY_SHA256, {"unet":fixture_hash,"vae":fixture_hash}):
+    A.convert_legacy(base)
+    ok(len(calls)==2 and all(kw=={"map_location":"cpu","weights_only":True} for _,kw in calls), "verified conversion uses restricted CPU tensor loading")
+    ok(all((base / c / "diffusion_pytorch_model.bin").read_bytes()==b"legacy fixture" for c in ("unet","vae")), "original weights preserved")
+    ok(all((base / c / "diffusion_pytorch_model.safetensors").read_bytes()==b"converted fixture" for c in ("unet","vae")), "converted files published")
+    A.convert_legacy(base)
+    ok(len(calls)==2 and not A.readiness(root)["models"][0]["legacy"], "converted files reused without repeat conversion")
 body = dict(model=model, reference=data_url(Image.new("RGBA",(32,48),(50,80,120,255))), guidance={"preset":"idle_minimal"}, seed=42)
 def fake(b,m,im,q):
     ok(b.samefile(base) and m.samefile(motion) and im.size == (512,512), "selected model and prepared reference")
@@ -68,4 +106,25 @@ ui = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text(encoding=
 ok('id="ffADControls"' in ui and 'value="animatediff"' in ui and "count<8||count>16" in ui,"visible workflow and frame count")
 ok('id="ffADPrepare"' in ui and "function ffADGate()" in ui and "function ffADReport" in ui, "visible setup and readiness gate")
 ok('id="ffADProfile"' in ui and 'id="ffADReuseSeed"' in ui and "FF.adLastSeed=seed" in ui, "visible preservation controls and seed reuse")
+# Exercise both current and older Diffusers memory API layouts without model weights.
+memory_calls = []
+def called(name):
+    return lambda: memory_calls.append(name)
+current = SimpleNamespace(vae=SimpleNamespace(enable_slicing=called("vae")),
+                          unet=SimpleNamespace(enable_forward_chunking=called("chunk")),
+                          enable_model_cpu_offload=called("offload"))
+A.configure_memory(current)
+ok(memory_calls == ["offload","vae","chunk"], "current component-level VAE API")
+memory_calls.clear()
+older = SimpleNamespace(vae=SimpleNamespace(), unet=SimpleNamespace(),
+                        enable_model_cpu_offload=called("offload"),
+                        enable_vae_slicing=called("legacy"))
+A.configure_memory(older)
+ok(memory_calls == ["offload","legacy"], "legacy pipeline VAE API fallback")
+memory_calls.clear()
+minimal = SimpleNamespace(vae=SimpleNamespace(), unet=SimpleNamespace(),
+                          enable_model_cpu_offload=called("offload"))
+A.configure_memory(minimal)
+ok(memory_calls == ["offload"], "optional memory helpers absent without crashing")
+ok('<option value="birefnet" selected>BiRefNet AI (local)</option>' in ui, "BiRefNet default transparency")
 done("test_animatediff_video")

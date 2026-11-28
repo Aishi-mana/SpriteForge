@@ -14,7 +14,7 @@ Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [REA
 
 ## Current animation milestone (2026-11-28)
 
-62K-A AnimateDiff backend merged via PR #142 (CPU #348 passed, merge daa53d1). 62K-B guided local setup merged via #143 (CPU #354 passed, merge 78cf0a9). C and D consolidated onto a clean main-based acceptance branch after retarget conflict; integrated CPU validation pending. See [AnimateDiff setup](docs/ANIMATEDIFF.md). Desktop GPU and visual acceptance remain open. Next: desktop AnimateDiff acceptance; general text-to-video and Wan motion guidance improvements deferred.
+62K-A AnimateDiff backend merged via PR #142 (CPU #348 passed, merge daa53d1). 62K-B guided local setup merged via #143 (CPU #354 passed, merge 78cf0a9). C and D merged via #146 (CPU #357 passed, merge ca429a9). Desktop detection revealed legacy UNet/VAE .bin weights; verified conversion hotfix #147 passed CPU #360 and merged at fcb609c. User now has Safetensors files and both models are detected; runtime VAE slicing API hotfix and BiRefNet default implemented on feature branch, validation pending. See [AnimateDiff setup](docs/ANIMATEDIFF.md). Desktop GPU and visual acceptance remain open. Next: desktop AnimateDiff acceptance; general text-to-video and Wan motion guidance improvements deferred.
 
 ## What this project does
 
