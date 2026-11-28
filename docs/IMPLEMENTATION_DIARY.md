@@ -1245,3 +1245,8 @@ PR #171 CPU run 46168688995 passed and merged at 212180f3. Added collection and 
 ### Phase 65D — Animated sprite storage and viewer (2026-11-29 PHT)
 
 PR #172 CPU run 46169352433 passed and merged at 8f8c04802a8223370074a97a0e980b97f3e0cf21. Added read-only directional viewer with timed playback, scrub, step, speed, loop and existing PNG/JSON/WebP/atlas exports. Preserved inactive-direction frames and counts, added VFX rendered sequence save. Added JS timing and Python directional snapshot regression. Existing quotas and exact frame validation remain; no MP4 storage or editable VFX recipe in snapshots. CPU and desktop validation pending; no manual CI dispatch.
+
+
+### Phase 65E — Generated video storage and viewer (2026-11-29 PHT)
+
+PR #173 CPU run 46169676634 passed and merged at ca35ee2e. Added atomic original MP4 binary storage with FFmpeg metadata/first-frame poster and shared quota accounting, multipart upload and file download/playback API. Added library MP4 import/filter, native viewer with speed/loop and direct shortcuts for full-frame video and original/edited video. 64 MB per video; existing 1 GB/300 entries retained. No transcoding, automatic relationships or full clip decoding. Added CPU byte roundtrip/quota and JS upload/placement regression. CPU execution, desktop codec and GPU acceptance pending; no manual CI dispatch.
