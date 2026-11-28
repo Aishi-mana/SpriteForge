@@ -1592,6 +1592,13 @@ def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), docum
     except Exception as e:raise HTTPException(400,"Video extraction failed: "+str(e))
 
 
+@app.post("/api/full-frame/alpha/brush")
+def full_frame_alpha_brush(body: dict=Body(...)):
+    from . import manual_alpha
+    try:return manual_alpha.apply(body.get("document"),body.get("options"))
+    except (ValueError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/consistency")
 def full_frame_consistency(body: dict=Body(...)):
     from . import full_frame_consistency as C
