@@ -13,3 +13,4 @@ omegaconf
 
 imageio
 imageio-ffmpeg
+psutil

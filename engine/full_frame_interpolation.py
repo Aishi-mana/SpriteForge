@@ -39,7 +39,9 @@ def interpolate(doc,options):
     if fps!=d["fps"] and any(v["frames"] for v in d["directions"].values()):raise ValueError("Cannot change shared FPS for only one direction; disable preserve duration")
     if fps>60:raise ValueError("Preserving duration would exceed 60 FPS")
     if count>F.MAX_FRAMES or count*d["width"]*d["height"]>F.MAX_PIXELS:raise ValueError("Interpolated sequence exceeds frame or pixel budget")
-    arrays=[np.array(world.image(s)) for s in frames];out=[];encoded=0
+    out=[];encoded=0
+    # Keep only the current and next decoded frame; hold mode needs no arrays.
+    current=None; next_array=None
     def append(s):
         nonlocal encoded
         encoded+=len(s)
@@ -52,9 +54,12 @@ def interpolate(doc,options):
                 for _ in range(factor-1):append(s)
             continue
         j=(i+1)%n
+        if q["mode"]!="hold":
+            current=next_array if next_array is not None else np.array(world.image(s))
+            next_array=np.array(world.image(frames[j]))
         for k in range(1,factor):
             if q["mode"]=="hold":append(s if k/factor<.5 else frames[j]);continue
-            result=between(arrays[i],arrays[j],k/factor,q)
+            result=between(current,next_array,k/factor,q)
             buf=io.BytesIO();Image.fromarray(result,"RGBA").save(buf,"PNG")
             append("data:image/png;base64,"+base64.b64encode(buf.getvalue()).decode())
     return F.validate({**d,"combat":[{**v,"frame":v["frame"]*factor} for v in d["combat"]],"fps":fps,"frames":out,"keyframes":[k*factor for k in d["keyframes"]],"locked_frames":[k*factor for k in d["locked_frames"]]})

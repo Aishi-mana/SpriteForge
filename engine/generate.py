@@ -9,7 +9,15 @@ from . import styles, model_families as mf
 _lock = threading.Lock()
 _job_context = threading.local()
 PROGRESS = None  # optional callback(done, total) set by the job queue; called after each finished image
-_cache = {"key": None, "pipe": None}
+_cache = {"key": None, "pipe": None, "cn_name": None}
+
+
+def _pipeline_key(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None, inpaint=False):
+    """Include active adapter locations; ignore unused directories."""
+    return (ckpt, lora, lora_w, "inpaint" if inpaint else "generate", bool(use_ip), bool(use_cn),
+            str(Path(lora_dir).resolve()) if lora and lora_dir else None,
+            str(Path(cn_dir).resolve()) if use_cn and cn_dir else None)
+
 
 NEGATIVE = "3d, realistic, photo, blurry, gradient, soft shading, shadow, text, watermark, multiple characters, cropped, frame"
 BG_RGB = {"white": (255, 255, 255), "light gray": (204, 204, 204), "green": (0, 255, 0), "magenta": (255, 0, 255)}
@@ -182,10 +190,10 @@ def _load(ckpt, lora, lora_w, lora_dir, use_ip, use_cn=False, cn_dir=None):
     mf.check_lora(ckpt,lora_dir,lora)
     if family not in ("sdxl","unknown") and (use_ip or use_cn):
         raise ValueError("Reference IP-Adapter and ControlNet currently require SDXL")
-    key = (ckpt, lora, lora_w, use_ip, use_cn)
-    if _cache["key"] == key:
+    key = _pipeline_key(ckpt, lora, lora_w, lora_dir, use_ip, use_cn, cn_dir)
+    if _cache["key"] == key and _cache["pipe"] is not None:
         return _cache["pipe"]
-    _cache.update(key=None, pipe=None)
+    _cache.update(key=None, pipe=None, cn_name=None)
     gc.collect()
     torch.cuda.empty_cache()
     if family=="sd15":
@@ -237,7 +245,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
         positive,neg=prompt_pair(prompt,negative,bg,kind,art_style)
         if lr.route(ckpt):
             if control_image is not None:raise ValueError("Local model does not support SDXL ControlNet")
-            _cache.update(key=None,pipe=None);gc.collect();torch.cuda.empty_cache()
+            _cache.update(key=None,pipe=None,cn_name=None);gc.collect();torch.cuda.empty_cache()
             base=seed if seed is not None and seed>=0 else int(torch.randint(0,2**31-1,(1,)).item())
             out=[]
             for i in range(n):
@@ -275,7 +283,7 @@ def generate(ckpt, lora, lora_w, lora_dir, prompt, negative="", steps=25, cfg=7.
         except Exception:
             # a failed run (e.g. OOM) can leave offload hooks half-applied: drop the pipeline so the next try starts clean
             pipe = None
-            _cache.update(key=None, pipe=None)
+            _cache.update(key=None, pipe=None, cn_name=None)
             gc.collect()
             torch.cuda.empty_cache()
             raise
@@ -288,10 +296,10 @@ def _load_inpaint(ckpt, lora, lora_w, lora_dir, use_ip=False):
     if mf.identify(ckpt) not in ("sdxl","unknown"):
         raise ValueError("Inpainting currently requires SDXL")
     mf.check_lora(ckpt,lora_dir,lora)
-    key = (ckpt, lora, lora_w, "inpaint", use_ip)
-    if _cache["key"] == key:
+    key = _pipeline_key(ckpt, lora, lora_w, lora_dir, use_ip, inpaint=True)
+    if _cache["key"] == key and _cache["pipe"] is not None:
         return _cache["pipe"]
-    _cache.update(key=None, pipe=None)
+    _cache.update(key=None, pipe=None, cn_name=None)
     gc.collect()
     torch.cuda.empty_cache()
     pipe = StableDiffusionXLInpaintPipeline.from_pretrained(ckpt,torch_dtype=torch.float16,local_files_only=True) if Path(ckpt).is_dir() else StableDiffusionXLInpaintPipeline.from_single_file(ckpt, torch_dtype=torch.float16, use_safetensors=True)
@@ -328,7 +336,7 @@ def smoke_test(ckpt, lora, lora_dir):
                     "total_vram_gb": round(torch.cuda.get_device_properties(0).total_memory / 2**30, 1)}
         except Exception:
             pipe = None
-            _cache.update(key=None, pipe=None)
+            _cache.update(key=None, pipe=None, cn_name=None)
             gc.collect()
             torch.cuda.empty_cache()
             raise
@@ -356,10 +364,33 @@ def inpaint(ckpt, lora, lora_w, lora_dir, prompt, negative, image, mask, strengt
             return out
         except Exception:
             pipe = None
-            _cache.update(key=None, pipe=None)
+            _cache.update(key=None, pipe=None, cn_name=None)
             gc.collect()
             torch.cuda.empty_cache()
             raise
+
+
+def ram_status(psutil_module=None):
+    """Current RSS and system availability; child RSS is not unique physical RAM."""
+    try:
+        if psutil_module is None:
+            import psutil as psutil_module
+        proc = psutil_module.Process()
+        vm = psutil_module.virtual_memory()
+        children = proc.children(recursive=True)
+        child_rss = 0
+        measured = 0
+        for child in children:
+            try:
+                child_rss += int(child.memory_info().rss)
+                measured += 1
+            except (psutil_module.NoSuchProcess, psutil_module.AccessDenied):
+                continue
+        return {"process_rss": int(proc.memory_info().rss), "child_rss": child_rss,
+                "children": len(children), "children_measured": measured,
+                "available": int(vm.available), "total": int(vm.total)}
+    except Exception:
+        return None
 
 
 def resource_status(torch_module=None):
@@ -374,7 +405,7 @@ def resource_status(torch_module=None):
     key = _cache.get("key")
     result = {"busy": _lock.locked(), "cached": _cache.get("pipe") is not None,
               "checkpoint": Path(key[0]).name if key else None,
-              "dependencies": versions, "cuda": False, "memory": None}
+              "dependencies": versions, "cuda": False, "memory": None, "ram": ram_status()}
     try:
         if torch_module is None:
             import torch as torch_module
@@ -387,6 +418,9 @@ def resource_status(torch_module=None):
                                   "reserved": int(cuda.memory_reserved(0))})
     except Exception as exc:
         result["warning"] = type(exc).__name__ + ": " + str(exc)
+    if result["memory"]:
+        m = result["memory"]
+        m["reserved_unused"] = max(0, m["reserved"] - m["allocated"])
     result["recommended_size"] = 640 if not result["memory"] or result["memory"]["total"] <= 8 * 2**30 else 768
     return result
 
