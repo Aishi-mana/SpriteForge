@@ -44,7 +44,10 @@ def settings(body):
     count=n(body.get("frames",33),9,97,"video frames")
     if w%16 or h%16 or (count-1)%4:raise ValueError("Wan needs dimensions divisible by 16 and 4n+1 frames")
     if w*h*count>40_000_000:raise ValueError("Video exceeds pixel budget")
-    steps=n(body.get("steps",4),2,60,"steps")
+    quality=body.get("wan_quality","fast")
+    if quality not in ("fast","native"):raise ValueError("Invalid Wan quality mode")
+    steps=n(body.get("steps",20 if quality=="native" else 4),2,60,"steps")
+    if quality=="native" and steps<10:raise ValueError("Native Wan quality needs at least 10 steps")
     if steps%2:raise ValueError("Wan requires an even step count")
     fps=n(body.get("fps",16),8,30,"FPS")
     seed=n(body.get("seed",-1),-1,2147483647,"seed")
@@ -57,7 +60,7 @@ def settings(body):
     if conditioning=="flf" and end_reference is None:
         prompt+=" A complete small motion cycle returning to the identical starting pose and expression."
     return dict(width=w,height=h,frames=count,steps=steps,fps=fps,seed=seed if seed>=0 else secrets.randbelow(2147483648),
-                guidance=guidance,prompt=prompt,reference=body.get("reference"),conditioning=conditioning,end_reference=end_reference)
+                wan_quality=quality,guidance=guidance,prompt=prompt,reference=body.get("reference"),conditioning=conditioning,end_reference=end_reference)
 
 def graph(q):
     flf=q.get("conditioning")=="flf"
@@ -74,6 +77,14 @@ def graph(q):
         return v
     out=fill(template);out["vid"]["inputs"]["fps"]=q["fps"]
     out["save"]["inputs"]["format"]="mp4"
+    if q.get("wan_quality")=="native":
+        # The distilled four-step LoRAs use CFG 1, which does not apply negative guidance.
+        # Native sampling bypasses both adapters and restores classifier-free guidance.
+        for suffix in ("h","l"):
+            out["sh_"+suffix]["inputs"]["model"]=["unet_"+suffix,0]
+            out.pop("lora_"+suffix)
+        for key in ("ks1","ks2"):
+            out[key]["inputs"]["cfg"]=3.5
     return out
 
 def http(port,path,body=None,timeout=10):
@@ -130,7 +141,7 @@ def run(root,body):
     if not ready["ready"]:raise ValueError("Wan setup missing: "+", ".join(ready["missing"]))
     if control:
         spatial=C.settings(body)
-        q=settings({**body,"conditioning":"i2v","end_reference":None,"steps":4})
+        q=settings({**body,"conditioning":"i2v","end_reference":None,"steps":4,"wan_quality":"fast"})
         q.update(spatial,control_weight=ready["weight"],control_vae=ready["vae"])
     else:q=settings(body)
     if not gen._lock.acquire(blocking=False):raise RuntimeError("GPU busy; finish the current job first")
