@@ -1,0 +1,22 @@
+"""CPU character replacement planning and restoration."""
+from _common import *
+from engine import direct_replace as R, world
+im=Image.new("RGBA",(16,8),(255,0,0,255))
+ref=data_url(im)
+doc=dict(version=1,name="source",width=16,height=8,pivot=[8,7],fps=12,frames=[ref]*3)
+body=dict(document=doc,first=0,last=2,reference=ref)
+q=R.plan(body)
+ok(q["frames"]==9 and q["fps"]==12,"valid guide count covers original timestamps")
+gen=Image.new("RGBA",(32,32))
+gen.paste((0,0,255,255),(0,8,32,24))
+generated=dict(version=1,name="candidate",width=32,height=32,pivot=[16,31],fps=12,frames=[data_url(gen)]*3)
+result=R.restore({**body,"generated":generated})
+ok(len(result["frames"])==3 and result["pivot"]==[8,7],"original count and pivot")
+out=world.image(result["frames"][0])
+ok(out.size==(16,8) and out.getpixel((0,0))==(0,0,255,255),"reverse guide padding")
+ok(doc["frames"]==[ref]*3,"source unchanged")
+try:R.restore({**body,"generated":{**generated,"frames":generated["frames"][:2]}});ok(False,"reject short candidate")
+except ValueError:ok(True,"reject short candidate")
+try:R.plan({**body,"document":{**doc,"keyframes":[1],"locked_frames":[1]}});ok(False,"protect locks")
+except ValueError:ok(True,"protect locks")
+done("test_direct_replace")

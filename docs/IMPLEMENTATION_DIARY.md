@@ -1196,3 +1196,7 @@ PR #160 CPU validation passed and merged at ed275f8, completing Phase 63 impleme
 ### Phase 64B — Original animation motion references (2026-11-29, Asia/Manila)
 
 PR #161 CPU validation passed and merged at e7567d6. Added direct editor motion inspection of original frame ranges (timestamps, alpha geometry, centroid displacement, ground edge), JSON export, CPU MP4 guides from artwork/silhouette/edges and explicit advanced Fun Control handoff. Preserved source timing in sampling; supported guide duration may require truncation or final-pose hold. Added regression assertions and phase documentation. No anatomical pose detection or GPU quality verification; desktop and CPU validation pending. No manual CI dispatch.
+
+### Phase 64C — Reference-guided character replacement (2026-11-29, Asia/Manila)
+
+Added direct editor replacement reference import / approved sprite, automatic original-range motion guide, experimental Wan Fun Control generation, raw candidate video, alpha extraction, source-canvas restoration and timestamp sampling, lock and budget checks, staged review and discard. Source metadata and unrelated frames retained. CPU regression cases and phase notes added. GPU and desktop acceptance pending; no exact pose or identity guarantee. No manual CI dispatch.
