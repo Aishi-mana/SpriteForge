@@ -3,7 +3,8 @@ from . import world
 
 PRESETS={
     "custom":"",
-    "idle":"Subtle breathing and natural weight shifts, relaxed stance, small hair and cloth motion.",
+    "idle":"Very slow, barely visible breathing; tiny chest movement only, feet planted, head, hands, weapon and torso position steady, mouth closed, no gestures or weight shifts.",
+    "idle_minimal":"Near-still idle, tiny periodic breathing only; keep silhouette, expression, limbs, hair, clothing and weapon almost stationary. No bouncing, swaying, gestures or camera motion.",
     "walk":"Natural alternating steps, coordinated arm swing and planted feet.",
     "run":"Energetic running stride, coordinated arms, believable weight transfer.",
     "jump":"Anticipation crouch, takeoff, airborne arc, soft landing and recovery.",
@@ -19,13 +20,14 @@ PRESETS={
     "parry":"Brief defensive deflection and return to ready stance.",
     "defeat":"Loss of balance, controlled fall and final resting pose.",
 }
+INTENSITIES={"auto":"","minimal":"Use the smallest visible motion appropriate to the requested action; avoid unnecessary secondary motion, exaggerated gestures and displacement.","subtle":"Restrained, controlled movement with modest amplitude and minimal secondary motion.","normal":"Natural motion appropriate to the action.","dynamic":"Expressive motion appropriate to the action, while preserving the character."}
 VIEWS={"reference":"Preserve the reference viewing angle.","front":"Front view.","side":"Side view.","quarter":"Three-quarter view.","back":"Rear view."}
 BACKGROUNDS={"neutral":((240,240,240),"light neutral gray"),"green":((0,255,0),"solid chroma green"),"magenta":((255,0,255),"solid chroma magenta"),"blue":((0,0,255),"solid chroma blue")}
 def settings(value=None):
     if value is None:value={}
     if not isinstance(value,dict):raise ValueError("Invalid motion guidance")
     out={}
-    for key,choices,default in (("preset",PRESETS,"custom"),("view",VIEWS,"reference"),("background",BACKGROUNDS,"neutral")):
+    for key,choices,default in (("preset",PRESETS,"custom"),("view",VIEWS,"reference"),("background",BACKGROUNDS,"neutral"),("intensity",INTENSITIES,"auto")):
         q=value.get(key,default)
         if not isinstance(q,str) or q not in choices:raise ValueError("Invalid motion "+key)
         out[key]=q
@@ -38,7 +40,7 @@ def prompt(text,guidance=None):
     q=settings(guidance)
     text=world.label(text,"motion description",2000,True)
     if not text and q["preset"]=="custom":raise ValueError("Describe the motion or choose a preset")
-    parts=[text,PRESETS[q["preset"]]]
+    parts=[text,PRESETS[q["preset"]],INTENSITIES[q["intensity"]]]
     if q["identity"]:parts.append("Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
     parts.append(VIEWS[q["view"]])
     if q["camera"]:parts.append("Fixed camera, fixed framing and scale, no zoom, pan, cuts or camera rotation.")
