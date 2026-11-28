@@ -1,5 +1,5 @@
 """Reference-conditioned sprite motion guidance; prompts are not hard identity locks."""
-from . import world
+from . import world, motion_templates
 
 PRESETS={
     "custom":"",
@@ -34,13 +34,14 @@ def settings(value=None):
     for key in ("identity","camera","in_place","loop"):
         out[key]=world.boolean(value.get(key,True),"motion "+key)
     out["margin"]=world.integer(value.get("margin",10),0,30,"reference margin")
+    out["poses"]=motion_templates.validate(value.get("poses"))
     return out
 
 def prompt(text,guidance=None):
     q=settings(guidance)
     text=world.label(text,"motion description",2000,True)
-    if not text and q["preset"]=="custom":raise ValueError("Describe the motion or choose a preset")
-    parts=[text,PRESETS[q["preset"]],INTENSITIES[q["intensity"]]]
+    if not text and q["preset"]=="custom" and not q["poses"]:raise ValueError("Describe the motion or choose a preset")
+    parts=[text,PRESETS[q["preset"]],INTENSITIES[q["intensity"]],motion_templates.describe(q["poses"])]
     if q["identity"]:parts.append("Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
     parts.append(VIEWS[q["view"]])
     if q["camera"]:parts.append("Fixed camera, fixed framing and scale, no zoom, pan, cuts or camera rotation.")

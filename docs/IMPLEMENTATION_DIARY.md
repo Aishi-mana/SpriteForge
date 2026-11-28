@@ -1042,3 +1042,28 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C2 playback flicker hotfix
 
 - User confirms 33 controlled frames at 480x480/16 FPS but reports flicker and no visible idle motion. Found preview resets canvas dimensions and clears it before each asynchronous PNG decode, potentially displaying blank frames. Predecode frame images before playback, cache by current frame array, paint synchronously once ready, preserve last displayed frame during loading, guard stale playback. Increase recommended breathing amplitude to 3 px (max 8), still approximate torso-only warp. Added static UI and synthetic motion regression; actual flicker source and visual quality require desktop retest. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C3 guided AI animation
+
+- User confirmed playback flicker fixed by #132; controlled deformation remains visually unsatisfactory. Reused MVManaAtelier Wan first/last graph with existing GGUF pair and runtime. Added explicit first/last conditioning selector and optional aligned end PNG; default same reference at both endpoints for loop guidance. Standard I2V, controlled idle, MP4 preview and alpha extraction retained. Graph regression added. Endpoint conditioning does not lock intermediate poses or expressions; motion templates and stronger control backend remain future work. Actual GPU acceptance pending. No manual CI dispatch.
+
+
+## 2026-11-28 13:28 PHT — 62J-C4 reusable motion plans
+
+- #133 passed CPU validation and merged. Added eight built-in timed pose-description templates, project persistence, editable percent/description sequence, JSON import/export and prompt compilation, regression coverage. These are textual timed pose descriptions, not spatial pose maps or hard constraints. Actual GPU quality pending; C5 motion-conditioned backend, C6 reference motion transfer, C7 benchmark and SAM tracking remain planned. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C5 experimental spatial motion control
+
+- #134 CPU validation passed and merged. Added native Wan22FunControlToVideo single-sampler graph based on Comfy-Org's 5B workflow (shift 8, CFG 5, uni_pc/simple, 20 steps), with GGUF loader option and distinct Wan2.2 VAE. Supports local Q4_K_M, Q3_K_M or BF16 file discovery; no downloads. Prepared pose/depth/edge MP4 or Canny preprocessing, bounded video resampling and model-specific UI. Existing 14B and LTX retained. Source: https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_wan2_2_5B_fun_control.json and https://huggingface.co/QuantStack/Wan2.2-Fun-5B-Control-GGUF. File detection is not runtime validation; actual GPU, visual identity, control adherence and 8 GB memory acceptance pending. C6 automatic motion extraction and template-to-visual controls deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C6 reference motion preparation
+
+- User reports Fun Control Q4_K_M and Wan2.2 VAE installed. #135 failed only Windows VAE case alias assertion; fixed actual filename lookup on C5 branch. C6 stacked on corrected C5 branch to avoid conflicts. CPU guide builder accepts aligned timed PNG poses (hold or crossfade, no skeletal interpolation), or trims/resamples reference MP4 from selected start time. Preview, export and direct reuse for Fun Control generation. Automatic pose/depth detection and dedicated motion-transfer model not implemented; Canny is available through C5. Tests added; desktop inference and guide encoding pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C7 animation benchmark
+
+- #135 and #136 CPU validation passed and merged; #136 retargeted from C5 branch to main before merge. Added read-only CPU metrics for frame uniqueness, adjacent premultiplied pixel differences, seam difference, mask overlap, foreground area changes, centroid and bottom-edge drift, empty/opaque frames, dimensions, FPS and encoded size. Added four in-session candidate slots, synchronized-clock side-by-side playback at each candidate FPS, manually entered model labels, generation time, visual rating and notes, JSON metrics export, reference/settings mismatch warning. No automatic perceptual ranking, GPU timing, pose accuracy or identity scoring; no benchmark result claimed until real desktop samples are captured. Regression tests added. Next: desktop acceptance of guided models, then SAM2 tracking if needed. No manual CI dispatch.
