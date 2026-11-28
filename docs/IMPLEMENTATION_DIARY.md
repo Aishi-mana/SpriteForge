@@ -1090,3 +1090,9 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 
 
 - PR #140 CPU run #342 passed and merged at b80702e; PR #141 CPU run #343 passed before integration; resolving shared diary/UI changes requires combined validation.
+
+
+## 2026-11-28 PHT — 62K-A AnimateDiff experimental backend
+
+- PR #141 combined CPU validation #346 passed and merged at 95aaa95. User observed improved but inconsistent native Wan idle, lighting shifts, missed blink, and long inference. Defer Wan user-intent guidance, lighting consistency, balanced sampling and reproducible seeds; general-purpose text-to-video effects/environment assets also deferred.
+- Added local Diffusers AnimateDiff video-to-video backend for short reference-conditioned character animations. Repeated stills are conditioning input only; temporal denoiser draws output frames. Discover SD1.5 base/motion adapter folder pairs, validate dimensions and frame count, share GPU lock, CPU offload, chunking, progress and MP4 output. Existing extraction/export reused; visible workflow selector and setup instructions. Chose native Diffusers instead of ComfyUI custom nodes to reuse installed dependencies; raw checkpoint/adapter conversion not supported. Defaults 512 square, 16 frames, 8 FPS, 12 nominal steps, strength 0.5. Added mocked CPU routing tests; actual GPU quality, speed and runtime not verified. No manual CI dispatch.
