@@ -1062,3 +1062,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C6 reference motion preparation
 
 - User reports Fun Control Q4_K_M and Wan2.2 VAE installed. #135 failed only Windows VAE case alias assertion; fixed actual filename lookup on C5 branch. C6 stacked on corrected C5 branch to avoid conflicts. CPU guide builder accepts aligned timed PNG poses (hold or crossfade, no skeletal interpolation), or trims/resamples reference MP4 from selected start time. Preview, export and direct reuse for Fun Control generation. Automatic pose/depth detection and dedicated motion-transfer model not implemented; Canny is available through C5. Tests added; desktop inference and guide encoding pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C7 animation benchmark
+
+- #135 and #136 CPU validation passed and merged; #136 retargeted from C5 branch to main before merge. Added read-only CPU metrics for frame uniqueness, adjacent premultiplied pixel differences, seam difference, mask overlap, foreground area changes, centroid and bottom-edge drift, empty/opaque frames, dimensions, FPS and encoded size. Added four in-session candidate slots, synchronized-clock side-by-side playback at each candidate FPS, manually entered model labels, generation time, visual rating and notes, JSON metrics export, reference/settings mismatch warning. No automatic perceptual ranking, GPU timing, pose accuracy or identity scoring; no benchmark result claimed until real desktop samples are captured. Regression tests added. Next: desktop acceptance of guided models, then SAM2 tracking if needed. No manual CI dispatch.
