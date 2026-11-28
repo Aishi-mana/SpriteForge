@@ -39,3 +39,11 @@ const videoCtx=vm.createContext({FormData:class {constructor(){this.parts=[]}app
 vm.runInContext(html.split('/* LIB65-VIDEO-BEGIN */')[1].split('/* LIB65-VIDEO-END */')[0],videoCtx);
 assert.equal(videoCtx.libVideoUrl({id:'abc'}),'/api/library/abc/video');
 (async()=>{const blob={size:123};const d=await videoCtx.libUploadVideo(blob,{name:'Clip'});assert.equal(d.url,'/api/library/video');assert.equal(d.opts.method,'POST');assert.equal(d.opts.body.parts[0][1],blob);assert.equal(d.opts.body.parts[1][1],'{"name":"Clip"}');await assert.rejects(()=>videoCtx.libUploadVideo({size:64000001},{}));for(const s of ['Save video to Library','Save source to Library','Save candidate video to Library','Play video','Download original MP4'])assert.ok(html.includes(s),s)})().catch(e=>{console.error(e);process.exitCode=1});
+
+const picker=vm.createContext({libAnimClips:ctx.libAnimClips,prompt:()=>'N'});
+vm.runInContext(html.split('/* LIB65-PICKER-BEGIN */')[1].split('/* LIB65-PICKER-END */')[0],picker);
+assert.equal(picker.libPickMatches(rows,'forest hero',true).map(x=>x.id).join(),'a');
+assert.equal(picker.libPickMatches(rows,'mage',true).length,0);
+const clip=picker.libPickClip({direction:'S',frames:['south'],directions:{N:{frames:['north']}},fps:8,pivot:[2,3],pixel:true,loop:false},'Hero');
+assert.equal(clip.frames[0],'north');assert.equal(clip.fps,8);assert.equal(clip.loop,false);
+for(const target of ['reference','ffReference','ffAnimation','ffVideo','directVideo','directReference','world','system','vfx','modular','scene','pairA','pairB','pairRefA','pairRefB'])assert.ok(html.includes("libPickFor('"+target+"')"),target);
