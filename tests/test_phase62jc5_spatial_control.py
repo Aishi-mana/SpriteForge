@@ -20,7 +20,9 @@ def run():
         root=Path(d)
         (root/"unet").mkdir();(root/"vae").mkdir()
         (root/"unet"/C.WEIGHTS[1]).touch();(root/"vae"/C.VAES[1]).touch()
-        assert C.files(root)==(C.WEIGHTS[1],C.VAES[1])
+        weight,vae=C.files(root)
+        assert weight==C.WEIGHTS[1] and vae in C.VAES
+        assert (root/"vae"/vae).is_file()
     for invalid in ({},{**body,"frames":34},{**body,"control_kind":"bad"}):
         try:C.settings(invalid)
         except ValueError:pass
