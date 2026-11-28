@@ -2377,7 +2377,7 @@ function qStatusText(j,ahead){
  return j.status}
 function qDiff(list){const keys=new Set();list.forEach(j=>Object.keys(j.params||{}).forEach(k=>keys.add(k)));
  return[...keys].filter(k=>new Set(list.map(j=>JSON.stringify((j.params||{})[k]))).size>1)}
-const qBlobURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+const qBlobURL=b=>new Promise((resolve,reject)=>{const f=new FileReader();f.onload=()=>resolve(f.result);f.onerror=()=>reject(Error('Could not read queued image'));f.onabort=()=>reject(Error('Queued image read cancelled'));f.readAsDataURL(b)});
 function genParams(){return{body_base:$('genBodyBase').checked,art_style:$('artstyle').value||'pixel',hd_size:+$('hdsize').value||768,gen_size:+$('hdgen').value||1024,prompt:$('prompt').value,negative:$('neg').value,checkpoint:$('ckpt').value,lora:$('lora').value,lora_weight:+$('lw').value,steps:+$('steps').value,cfg:+$('cfg').value,seed:+$('seed').value,bg:$('bg').value,n:+$('n1').value,
  mode:$('mode').value,size:+$('size').value,colors:+$('colors').value,palette:$('pal').value||'none',remove_bg:$('rmbg').checked,bg_tol:+$('tol').value,remove_shadow:$('shadow').checked,crisp:$('pxcrisp').checked,clean:$('pxclean').checked,outline:$('pxoutline').value,sampler:$('sampler').value}}
 let genPromptSnapshot=null,genPromptSequence=0;
@@ -2397,30 +2397,30 @@ async function qEnqueue(){const ui=collect();
  ui.__skel={pts,scale:+$('scl').value,preset:$('preset').value};
  const images={ref:refURL};if($('useskel').checked)images.pose=await qBlobURL(await poseBlob());
  return api('/api/queue/add',{...J,body:JSON.stringify({kind:'reference',params:refParams(),ui,images})})}
-async function qRefresh(){const q=await api('/api/queue');QS.jobs=q.jobs;QS.paused=q.paused;
+async function qRefresh(){const ticket=QS.request=(QS.request||0)+1;const q=await api('/api/queue');if(ticket<(QS.appliedRequest||0))return q;QS.appliedRequest=ticket;QS.jobs=q.jobs;QS.paused=q.paused;
  const now=new Set(q.jobs.map(j=>j.id)),finished=[...QS.seen].some(id=>!now.has(id));QS.seen=now;qStrip();
  if(mode==9){qRenderList();if(finished)hLoad(true).catch(()=>{})}return q}
 function qStrip(){const n=QS.jobs.length,run=QS.jobs.some(j=>j.status=='running'),w=n-(run?1:0);
  $('qstrip').textContent=n?`Queue: ${run?'1 running':'nothing running'}${w?` · ${w} waiting`:''}${QS.paused?' · paused':''}  (click to open)`:(QS.paused?'Queue paused (click to open)':'');
  $('t9').textContent=n?`Queue (${n})`:'Queue';$('qpause').textContent=QS.paused?'Resume':'Pause'}
-function qPoll(){clearTimeout(QS.timer);QS.timer=setTimeout(async()=>{try{await qRefresh()}catch(e){}qPoll()},QS.jobs.length||mode==9?1500:6000)}
+function qPoll(){clearTimeout(QS.timer);QS.timer=setTimeout(async()=>{try{await qRefresh()}catch(e){if(mode===9)$('qinfo').textContent='Queue refresh failed: '+e.message+' · retrying automatically.'}qPoll()},QS.jobs.length||mode==9?1500:6000)}
 function qRenderList(){const l=$('qlist');$('qinfo').textContent=QS.jobs.length?'':'Nothing waiting. Use "＋ Add to queue" on the Generate / Reference pose tab.';
  l.innerHTML=QS.jobs.map((j,i)=>`<div class="dr"><span class="b ${j.status=='running'?'warn':'info'}">${j.status=='running'?'RUN':'WAIT'}</span><div class="t">${qEsc(qTitle(j))}<br><small class="mut">${qEsc(qStatusText(j,i-(QS.jobs[0]&&QS.jobs[0].status=='running'?1:0)))} · ${qTime(j.created)}</small></div><button class="sec" style="width:80px;margin:0" data-c="${j.id}">${j.status=='running'?'Discard':'Cancel'}</button></div>`).join('');
  l.querySelectorAll('button').forEach(b=>b.onclick=async()=>{try{await api('/api/jobs/'+b.dataset.c+'/cancel',J);await qRefresh()}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}})}
 async function qPause(){try{await api('/api/queue/pause',{...J,body:JSON.stringify({paused:!QS.paused})});await qRefresh()}catch(e){$('status').textContent='Error: '+e.message}}
 async function qCancelAll(){try{const d=await api('/api/queue/cancel_all',J);$('status').className='';$('status').textContent=`Cancelled ${d.cancelled} waiting job(s)`;await qRefresh();hLoad(true)}catch(e){$('status').textContent='Error: '+e.message}}
-async function qFollow(id,hint){  // wait for one job and show its result exactly like a direct run
+async function qFollow(id,hint,origin=mode){  // wait for one job and show its result exactly like a direct run
  for(;;){const q=await qRefresh(),i=q.jobs.findIndex(x=>x.id==id);
   if(i<0)break;const j=q.jobs[i];$('status').className='';$('status').textContent=j.status=='running'&&!j.progress&&hint?hint:qStatusText(j,i-(q.jobs[0].status=='running'?1:0));
   await new Promise(r=>setTimeout(r,1000))}
  const j=await api('/api/jobs/'+id);
- if(j.status=='done'){render(j.results);const cn=j.results[0]?.info?.controlnet;$('status').className='';$('status').textContent='Done'+(cn?' · ControlNet: '+cn:'')+' · saved in the Queue tab history'}
+ if(j.status=='done'){if(mode===origin)render(j.results);const cn=j.results[0]?.info?.controlnet;$('status').className='';$('status').textContent='Done'+(cn?' · ControlNet: '+cn:'')+' · saved in the Queue tab history'}
  else if(j.status=='error')throw new Error(j.error);
  else{$('status').className='';$('status').textContent=`Job ${j.status}${j.error?': '+j.error:''}`}}
 async function runQueued(){const b=$('go');b.disabled=true;$('status').className='';
- const skel=mode==2&&$('useskel').checked;
- try{const j=await qEnqueue();qPoll();await qFollow(j.id,skel?'Generating with skeleton… first run downloads the IP-Adapter (~3 GB) and OpenPose ControlNet (~2.5 GB) unless already cached; with the skeleton each image takes 1-3 minutes on 8 GB (weights stream from RAM).':'Generating… first run loads the model (a minute or more)')}
- catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}b.disabled=false}
+ const origin=mode,skel=mode==2&&$('useskel').checked;
+ try{const j=await qEnqueue();qPoll();await qFollow(j.id,skel?'Generating with skeleton… first run downloads the IP-Adapter (~3 GB) and OpenPose ControlNet (~2.5 GB) unless already cached; with the skeleton each image takes 1-3 minutes on 8 GB (weights stream from RAM).':'Generating… first run loads the model (a minute or more)',origin)}
+ catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}finally{b.disabled=false}}
 async function queueAdd(){if((mode>2&&mode!=10)||!checkModel())return;
  try{const j=await qEnqueue();$('status').className='';$('status').textContent=`Added to the queue (${QS.jobs.length+1} in line). Keep working: finished jobs appear in the Queue tab.`;qPoll();await qRefresh()}
  catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
@@ -2431,7 +2431,7 @@ function armed(btn,label,fn){if(btn.dataset.armed!='1'){btn.dataset.armed='1';bt
 function hDebounce(){clearTimeout(QS.ht);QS.ht=setTimeout(()=>hLoad(true),300)}
 async function hLoad(reset){if(reset){QS.historyTicket=(QS.historyTicket||0)+1;QS.page=0;$('hgrid').innerHTML=''}const ticket=QS.historyTicket||0,page=QS.page;
  const qs=new URLSearchParams({limit:24,offset:QS.page*24,q:$('hq').value,kind:$('hkind').value,fav:$('hfav').checked});
- const d=await api('/api/history?'+qs);if(ticket!==(QS.historyTicket||0)||page!==QS.page)return;d.jobs.forEach(hCard);QS.page++;$('hmore').classList.toggle('hide',QS.page*24>=d.total);$('hcount').textContent=`· ${d.total} job${d.total==1?'':'s'}`}
+ let d;try{d=await api('/api/history?'+qs)}catch(e){if(ticket===(QS.historyTicket||0)&&page===QS.page)$('hcount').textContent='History unavailable: '+e.message+' · retry or change filter.';return}if(ticket!==(QS.historyTicket||0)||page!==QS.page)return;d.jobs.forEach(hCard);QS.page++;$('hmore').classList.toggle('hide',QS.page*24>=d.total);$('hcount').textContent=`· ${d.total} job${d.total==1?'':'s'}`}
 const H_ICON={done:'✔',error:'✖',cancelled:'⊘',interrupted:'⚠'};
 function hCard(j){const c=document.createElement('div');c.className='hc'+(j.fav?' fav':'');
  const seeds=(j.seeds||[]).filter(s=>s!=null);
@@ -2440,7 +2440,7 @@ function hCard(j){const c=document.createElement('div');c.className='hc'+(j.fav?
  c.querySelector('img,.hph').onclick=()=>hOpen(j.id);
  c.querySelector('input').onchange=e=>{e.target.checked?QS.sel.add(j.id):QS.sel.delete(j.id)};$('hgrid').appendChild(c)}
 function hParamRows(p){return Object.entries(p||{}).map(([k,v])=>`<tr><td class="mut">${qEsc(k)}</td><td>${qEsc(typeof v=='object'?JSON.stringify(v):v)}</td></tr>`).join('')}
-async function hOpen(id){try{const j=await api('/api/jobs/'+id),d=$('hdetail'),seeds=j.results.map(r=>r.info&&r.info.seed).filter(s=>s!=null);
+async function hOpen(id){const ticket=QS.detailTicket=(QS.detailTicket||0)+1;try{const j=await api('/api/jobs/'+id);if(ticket!==QS.detailTicket||mode!==9)return;const d=$('hdetail'),seeds=(j.results||[]).map(r=>r.info&&r.info.seed).filter(s=>s!=null);
  d.innerHTML=`<div class="card" style="max-width:none"><div class="row" style="align-items:center"><b style="flex:none;max-width:none">${qEsc(qTitle({kind:j.kind,sub:j.params.kind,prompt:(j.params.prompt||j.params.character||j.params.pose||'').slice(0,80)}))}</b><span class="mut" style="flex:2">${qTime(j.created)} · ${j.status}${seeds.length?' · seeds '+seeds.join(', '):''}${j.started&&j.finished?` · ${Math.round(j.finished-j.started)} s`:''}${j.source?' · from '+qEsc(j.source.slice(9,15)):''}</span><button class="sec" data-a="x" style="margin:0;max-width:40px">✕</button></div>
  ${j.error?`<div class="err" style="margin-top:6px">${qEsc(j.error)}</div>`:''}
  <div class="row" style="margin-top:8px"><button class="sec" data-a="use">Use these settings</button><button class="sec" data-a="show">Show in ${H_TABNAME[hTab(j)]}</button><button class="sec" data-a="rerun">Re-run (same seed)</button><button class="sec" data-a="fork">Fork (new seed)</button><button class="sec" data-a="fav">${j.fav?'★ Unfavourite':'☆ Favourite'}</button><button class="sec" data-a="del">Delete</button></div>
@@ -2450,14 +2450,14 @@ async function hOpen(id){try{const j=await api('/api/jobs/'+id),d=$('hdetail'),s
  <div class="grid" id="hres" style="margin-top:8px"></div></div>`;
  if(j.results.length)render(j.results,$('hres'));
  d.querySelectorAll('button[data-a]').forEach(b=>{if(b.closest('#hres'))return;b.onclick=async()=>{const a=b.dataset.a;try{
-  if(a=='x')d.innerHTML='';
+  if(a=='x'){QS.detailTicket++;d.innerHTML=''}
   else if(a=='use')hUse(j);
   else if(a=='show'){render(j.results);tab(hTab(j));$('status').className='';$('status').textContent='Shown from history'}
   else if(a=='rerun'||a=='fork'){await api(`/api/jobs/${id}/rerun`,{...J,body:JSON.stringify({new_seed:a=='fork'})});$('status').textContent=a=='fork'?'Forked: queued with a new seed':'Queued again with the same seed';qPoll();await qRefresh()}
   else if(a=='fav'){await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({fav:!j.fav})});hLoad(true);hOpen(id)}
-  else if(a=='del')armed(b,'delete',async()=>{await api('/api/jobs/'+id,{method:'DELETE'});QS.sel.delete(id);d.innerHTML='';hLoad(true)})
+  else if(a=='del')armed(b,'delete',async()=>{try{await api('/api/jobs/'+id,{method:'DELETE'});QS.sel.delete(id);if(ticket===QS.detailTicket){QS.detailTicket++;d.innerHTML=''}await hLoad(true)}catch(e){$('status').className='err';$('status').textContent='Delete failed: '+e.message}})
  }catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}});
- $('hnote').onchange=async e=>{try{await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({note:e.target.value})})}catch(x){}};
+ $('hnote').onchange=async e=>{try{await api(`/api/jobs/${id}/meta`,{...J,body:JSON.stringify({note:e.target.value})})}catch(x){$('status').className='err';$('status').textContent='Note not saved: '+x.message}};
  d.scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){$('status').className='err';$('status').textContent='Error: '+e.message}}
 function hUse(j){const saved={...(j.ui||{})},p=j.params||{};if(j.kind==='generate'&&(!p.kind||p.kind==='sprite')){if(typeof p.body_base==='boolean')saved.genBodyBase=p.body_base;if(typeof p.art_style==='string')saved.artstyle=p.art_style;if(typeof p.prompt==='string')saved.prompt=p.prompt;if(typeof p.negative==='string')saved.neg=p.negative}applySettings(saved);const im=j.images||{};
  if(j.kind=='reference'){if(im.ref)setRef(im.ref);$('useskel').checked=!!im.pose;const sk=(j.ui||{}).__skel;

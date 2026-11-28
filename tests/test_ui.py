@@ -7,6 +7,13 @@ ids = set(re.findall(r'id="([^"]+)"', html)); used = set(re.findall(r"\$\('([^']
 missing = sorted(u for u in used if u not in ids and u != "t" and not u.startswith(("xc_", "xp_", "dc_")))
 ok(not missing, "every $('id') used by the script exists in the page" + (f" MISSING {missing}" if missing else ""))
 ok(len(re.findall(r'id="([^"]+)"', html)) == len(ids), "no duplicate element ids")
+# Audit literal inline event handlers and all declared workspace navigation IDs.
+markup=html.split("<script>",1)[0]
+handlers=re.findall(r'\bon(?:click|change|input|submit|keydown|keyup|pointerdown|pointerup|pointermove|mousedown|mouseup|mousemove|wheel|dblclick|load|error|blur|focus)="([^"]*)"',markup)
+declared=set(re.findall(r'\bfunction\s+([\w$]+)\s*\(',html))|{"$","show"}
+calls={n for handler in handlers for n in re.findall(r'(?<![\w.])([A-Za-z_$][\w$]*)\s*\(',handler)}
+ok(not calls-declared,"literal event handler targets declared: "+str(sorted(calls-declared)))
+ok(set(re.findall(r'id="t(\d+)"',markup))=={str(n) for n in range(1,21)},"all 20 workspace tabs present")
 node = shutil.which("node")
 if not node:
     ok(True, "node not installed: JavaScript tests skipped")

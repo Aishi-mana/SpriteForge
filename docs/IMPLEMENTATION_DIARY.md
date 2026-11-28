@@ -1272,3 +1272,8 @@ PR #176 CPU run 46173496404 passed and merged at 3f801a26. Added engine/library_
 ### Phase 65I — Integration and desktop validation (2026-11-29 PHT)
 
 PR #177 CPU run 46176698217 passed and merged at fe6e5a40. Reviewed library save/picker/viewer/revision/restore integration. Fixed final-frame hold, picker failure recovery and active import close protection, replacement confirmations, workspace/session checks, MP4 extraction range and WeakMap lineage for supported edit/undo paths. Added mocked playback and lineage regression and desktop acceptance checklist; README/HANDOFF milestone updated. CPU execution pending; actual Windows WebView, GPU and native engine acceptance not executed. No manual CI dispatch or packaging change.
+
+
+### Phase 66A — Full-system functional audit (2026-11-29 PHT)
+
+Verified PR #178 CPU run 46177515167 passed Windows (2258 checks) and Ubuntu (2267 checks), merged at e76907c6. Audited literal handlers (1066) and all 20 workspace tabs; no unresolved literal function names after helper allowlist. Reviewed queue/history/result routing and library/project integration source. Fixed queue FileReader rejection, stale refresh ordering, background result routing, history error visibility and stale details; moved queued input decoding into job exception boundary so missing/corrupt input fails the job rather than kills the worker. Added UI/queue regressions. Source-level audit only; full desktop click coverage, VRAM/RAM and generation timing not measured. CPU execution for new changes pending. No manual CI dispatch.

@@ -324,10 +324,11 @@ class Manager:
 
     def _run_one(self, job):
         jid, d = job["id"], self._jdir(job["id"])
-        inputs = {k: data_url_to_pil(_enc(d / f"in_{k}.png")).convert("RGB" if k == "pose" else "RGBA") for k in job.get("inputs", [])
-                  if (d / f"in_{k}.png").exists()}
-        self.progress[jid] = [0, int(job["params"].get("n") or 1)]
         try:
+            inputs = {k: data_url_to_pil(_enc(d / f"in_{k}.png")).convert("RGB" if k == "pose" else "RGBA") for k in job.get("inputs", [])}
+            if job["kind"]=="reference" and "ref" not in inputs:
+                raise JobError("Reference input missing; create a new reference job")
+            self.progress[jid] = [0, int(job["params"].get("n") or 1)]
             def progress(done,total):self.progress[jid]=[done,total]
             progress.cancelled=lambda:self._stop or jid in self._cancel_running
             results = self.executor(job["kind"], job["params"], inputs, progress)

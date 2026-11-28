@@ -49,6 +49,18 @@ ok(ja["results"][1]["info"]["seed"] == 11 and h["jobs"][2]["thumb"].startswith("
 d = m.add("generate", P("boom")); e = m.add("generate", P("after")); m.wait_idle(10)
 ok(m.get(d["id"])["status"] == "error" and "out of memory" in m.get(d["id"])["error"] and m.get(e["id"])["status"] == "done", "a failed job records its error and does not stop the queue")
 
+# Corrupt or missing input must fail one job, not terminate the worker.
+m.set_paused(True)
+broken=m.add("reference",P("corrupt"),images={"ref":fake_result(1)["sprite"]})
+missing=m.add("reference",P("missing"),images={"ref":fake_result(1)["sprite"]})
+(m.dir/broken["id"]/"in_ref.png").write_bytes(b"broken image")
+(m.dir/missing["id"]/"in_ref.png").unlink()
+next_job=m.add("generate",P("after bad input"))
+m.set_paused(False)
+ok(m.wait_idle(10),"queue drains after corrupt or missing reference")
+ok(m.get(broken["id"])["status"]=="error" and m.get(missing["id"])["status"]=="error","bad inputs recorded as errors")
+ok(m.get(next_job["id"])["status"]=="done" and m.thread.is_alive(),"worker survives input decode failures")
+
 # progress is visible while running
 gate.clear(); f = m.add("generate", P("slow", n=3)); time.sleep(0.4)
 q = m.queue(); ok(q["running"] == f["id"] and q["jobs"][0]["status"] == "running", "queue shows the running job")
