@@ -1577,26 +1577,33 @@ def full_frame_video_prompt(body: dict=Body(...)):
 
 @app.get("/api/full-frame/video/models")
 def full_frame_video_models():
-    from . import full_frame_video, wan_video
+    from . import full_frame_video, wan_video, animatediff_video
     root=cfg()["models_dir"]
     wan=wan_video.readiness(root)[0]
     from . import wan_control
     control=wan_video.readiness(root,wan_control.MODEL)[0]
-    return {"models":([wan] if wan["ready"] else [])+([control] if control["ready"] else [])+full_frame_video.discover(root),"wan":wan,"control":control}
+    animatediff=animatediff_video.readiness(root)
+    return {"models":([wan] if wan["ready"] else [])+([control] if control["ready"] else [])+full_frame_video.discover(root)+animatediff["models"],"wan":wan,"control":control,"animatediff":animatediff}
 
 
 @app.get("/api/full-frame/video/status")
 def full_frame_video_status():
-    from . import wan_video
-    return dict(wan_video.STATUS)
+    from . import wan_video, animatediff_video
+    return dict(animatediff_video.STATUS if animatediff_video.STATUS["stage"]!="Idle" else wan_video.STATUS)
 
 
 @app.post("/api/full-frame/video/generate")
 def full_frame_video_generate(body: dict=Body(...)):
     from . import full_frame_video
     try:
-        from . import wan_video
-        raw=wan_video.run(cfg()["models_dir"],body) if body.get("model") in (wan_video.MODEL,"wan22-fun5b") else full_frame_video.generate(cfg()["models_dir"],body)
+        from . import wan_video, animatediff_video
+        model=body.get("model")
+        if isinstance(model,str) and model.startswith(animatediff_video.PREFIX):
+            raw=animatediff_video.generate(cfg()["models_dir"],body)
+        elif model in (wan_video.MODEL,"wan22-fun5b"):
+            raw=wan_video.run(cfg()["models_dir"],body)
+        else:
+            raw=full_frame_video.generate(cfg()["models_dir"],body)
         return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(503,str(e))
