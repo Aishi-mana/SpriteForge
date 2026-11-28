@@ -1176,3 +1176,7 @@ Added six named interaction presets plus custom, configurable enter/loop/exit ra
 ### Phase 63F — Independent interaction export (2026-11-28, Asia/Manila)
 
 Added PNG/lossless WebP independent actor atlases, paged texture sheets, engine-neutral interaction manifest with sampled timing, transforms, contacts and stage ranges, ZIP download UI/API and CPU regression cases. Tests and desktop validation pending; no engine-specific controller or combined GIF yet.
+
+### Phase 63G — Independent paired AI generation (2026-11-28, Asia/Manila)
+
+PR #157 CPU validation passed and merged into main at a1b381d. Added paired Wan UI with individual start/end references, complementary prompts, shared sampling settings, sequential A/B generation, extraction, candidate thumbnails and explicit acceptance. Existing generation APIs reused; GPU and desktop validation pending. No joint contact guarantee.
