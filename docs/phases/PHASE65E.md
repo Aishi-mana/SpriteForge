@@ -1,0 +1,5 @@
+# Phase 65E — Generated video storage and viewer
+
+Save original MP4 bytes from the full-frame generated/imported video or direct video editor source/candidate, or import MP4 from the library. Binary file stored atomically with metadata and first-frame poster. MP4 limit 64 MB, dimensions up to 2048 per side, finite positive duration/FPS up to 120; existing 300-entry and 1 GB shared payload limits include video bytes. No base64 video or re-encoding. Native HTML video controls, speed, loop and original download; FileResponse uses installed Starlette range support. Metadata changes leave bytes intact. Playback depends on WebView codec support; download remains available. Only first-frame decoding is verified at import, not every frame. No automatic video/sprite relationship yet.
+
+Acceptance: generate/import MP4, save before extracting, restart, filter Videos, play/seek/pause/loop, download and compare original bytes, save edited candidate separately, delete video without affecting extracted sprites. CPU regression added; desktop codec and actual GPU generation acceptance pending.

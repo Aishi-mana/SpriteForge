@@ -34,3 +34,8 @@ assert.equal(ctx.libAnimIndex(0,1000,12,1,10,false),9);
 assert.equal(ctx.libAnimIndex(2,500,12,0.5,10,false),5);
 assert.equal(ctx.libAnimClips({direction:'S',frames:[],directions:{N:{frames:['a']},E:{frames:[]}}}).map(v=>v.key).join(),'N');
 assert.ok(html.includes("libButton(row,'Play / view'"));
+
+const videoCtx=vm.createContext({FormData:class {constructor(){this.parts=[]}append(...a){this.parts.push(a)}},api:async(url,opts)=>({url,opts})});
+vm.runInContext(html.split('/* LIB65-VIDEO-BEGIN */')[1].split('/* LIB65-VIDEO-END */')[0],videoCtx);
+assert.equal(videoCtx.libVideoUrl({id:'abc'}),'/api/library/abc/video');
+(async()=>{const blob={size:123};const d=await videoCtx.libUploadVideo(blob,{name:'Clip'});assert.equal(d.url,'/api/library/video');assert.equal(d.opts.method,'POST');assert.equal(d.opts.body.parts[0][1],blob);assert.equal(d.opts.body.parts[1][1],'{"name":"Clip"}');await assert.rejects(()=>videoCtx.libUploadVideo({size:64000001},{}));for(const s of ['Save video to Library','Save source to Library','Save candidate video to Library','Play video','Download original MP4'])assert.ok(html.includes(s),s)})().catch(e=>{console.error(e);process.exitCode=1});
