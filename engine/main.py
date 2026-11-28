@@ -1556,6 +1556,15 @@ def full_frame_motion_templates():
     return motion_templates.catalog()
 
 
+@app.post("/api/full-frame/motion/visual")
+def full_frame_visual_motion(body: dict=Body(...)):
+    from . import visual_motion as M
+    try:
+        raw=M.prepare_video(body) if body.get("source")=="video" else M.generate(body)
+        return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
+    except (ValueError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/video/prompt")
 def full_frame_video_prompt(body: dict=Body(...)):
     from . import full_frame_guidance as G
