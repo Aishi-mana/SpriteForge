@@ -1204,3 +1204,7 @@ Added direct editor replacement reference import / approved sprite, automatic or
 ### Phase 64D — Animation appearance and equipment edits (2026-11-29, Asia/Manila)
 
 Added sequential range/current-frame instruction edits with existing Qwen/NetaYume/SDXL backends, shared seed and presets, original/staged inputs, optional source alpha preservation, locked-frame validation and atomic staging. Added regression assertions and phase documentation. Per-frame AI may flicker; temporal consistency follows in 64E. Desktop/GPU and CPU validation pending. No manual CI dispatch.
+
+### Phase 64E — Source-aware temporal consistency (2026-11-29, Asia/Manila)
+
+PR #163 CPU validation passed and merged at 2b72b14. Added original-motion-gated staged color and partial-alpha outlier diagnostics and conservative correction, with configurable thresholds, locked/unchanged frame protection and undo. Regression tests and phase notes added. No anatomical tracking or guaranteed flicker removal; CPU/desktop/GPU validation pending. No manual CI dispatch.
