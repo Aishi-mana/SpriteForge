@@ -1556,6 +1556,20 @@ def full_frame_motion_templates():
     return motion_templates.catalog()
 
 
+@app.post("/api/paired/replace/prepare")
+def paired_replace_prepare(body: dict=Body(...)):
+    from . import paired_replace as R
+    try:return R.prepare(body)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/paired/replace/validate")
+def paired_replace_validate(body: dict=Body(...)):
+    from . import paired_replace as R
+    try:return R.replace(body)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/direct-animation/temporal")
 def direct_animation_temporal(body: dict=Body(...)):
     from . import direct_temporal as T
