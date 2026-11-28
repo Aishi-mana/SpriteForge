@@ -1,5 +1,6 @@
 """Local cross-project asset snapshots. No model files are copied or changed."""
 import json
+import math
 import re
 import shutil
 import tempfile
@@ -10,7 +11,8 @@ from pathlib import Path
 from PIL import Image
 from . import modular, modular_rig
 
-KINDS=("character","asset","rig","image","animation")
+KINDS=("character","asset","rig","image","animation","video")
+MAX_VIDEO_BYTES=64_000_000
 MAX_ENTRIES=300
 MAX_BYTES=1_000_000_000
 _LOCK=threading.RLock()
@@ -47,6 +49,7 @@ def _metadata(data):
                 tags=list(dict.fromkeys(_text(t,40,"tag",True) for t in tags)))
 
 def _normalized(data,kind):
+    if kind=="video":raise ValueError("Use MP4 upload to save a video")
     if kind=="image":
         from . import world
         image=data.get("image")
@@ -94,6 +97,49 @@ def list_entries(root,kind="",query=""):
             except (OSError,ValueError,KeyError,TypeError):continue
     return sorted(rows,key=lambda m:m["created"],reverse=True)
 
+def _capacity(base,size):
+    existing=[p for p in base.iterdir() if p.is_dir() and not p.is_symlink() and re.fullmatch(r"[a-f0-9]{32}",p.name)]
+    used=sum((p/name).stat().st_size for p in existing for name in ("payload.json","video.mp4") if (p/name).is_file())
+    if len(existing)>=MAX_ENTRIES or used+size>MAX_BYTES:raise ValueError("Local library limit reached; remove unused snapshots")
+
+def save_video(root,raw,data):
+    if not isinstance(raw,bytes) or not raw or len(raw)>MAX_VIDEO_BYTES or raw[4:8]!=b"ftyp":
+        raise ValueError("Choose an MP4 under 64 MB")
+    meta=_metadata({**data,"kind":"video"})
+    import imageio.v2 as imageio
+    with tempfile.TemporaryDirectory() as work:
+        source=Path(work)/"source.mp4";source.write_bytes(raw)
+        try:
+            reader=imageio.get_reader(str(source),format="FFMPEG")
+            try:
+                info=reader.get_meta_data();w,h=info["size"];fps=float(info["fps"]);duration=float(info.get("duration",0))
+                if min(w,h)<1 or max(w,h)>2048 or not math.isfinite(fps) or not 0<fps<=120 or not math.isfinite(duration) or duration<=0:
+                    raise ValueError("Invalid video dimensions, FPS or duration")
+                preview=Image.fromarray(reader.get_data(0)).convert("RGB")
+            finally:reader.close()
+        except (OSError,RuntimeError,IndexError,KeyError,TypeError) as exc:
+            raise ValueError("Unable to decode MP4") from exc
+        payload=json.dumps({"format":"mp4"},separators=(",",":")).encode()
+        with _LOCK:
+            base=folder(root);base.mkdir(parents=True,exist_ok=True);_capacity(base,len(raw)+len(payload))
+            entry_id=uuid.uuid4().hex
+            meta.update(id=entry_id,created=datetime.now(timezone.utc).isoformat(),category="video",width=w,height=h,fps=fps,duration=duration,bytes=len(raw))
+            tmp=Path(tempfile.mkdtemp(prefix=".pending-",dir=base))
+            try:
+                shutil.copyfile(source,tmp/"video.mp4")
+                (tmp/"payload.json").write_bytes(payload)
+                (tmp/"meta.json").write_text(json.dumps(meta,ensure_ascii=False),encoding="utf-8")
+                preview.thumbnail((128,128),Image.Resampling.LANCZOS);preview.save(tmp/"preview.png")
+                tmp.rename(base/entry_id)
+            finally:
+                if tmp.exists():shutil.rmtree(tmp,ignore_errors=True)
+    return meta
+
+def video_path(root,entry_id):
+    p=_entry(root,entry_id)/"video.mp4"
+    if not p.is_file() or p.is_symlink():raise FileNotFoundError("Video asset not found")
+    return p
+
 def save(root,data):
     meta=_metadata(data)
     payload,preview,details=_normalized(data,meta["kind"])
@@ -101,9 +147,7 @@ def save(root,data):
     if len(encoded)>26_000_000:raise ValueError("Library entry exceeds 26 MB")
     with _LOCK:
         base=folder(root);base.mkdir(parents=True,exist_ok=True)
-        existing=[p for p in base.iterdir() if p.is_dir() and not p.is_symlink() and re.fullmatch(r"[a-f0-9]{32}",p.name)]
-        used=sum((p/"payload.json").stat().st_size for p in existing if (p/"payload.json").is_file())
-        if len(existing)>=MAX_ENTRIES or used+len(encoded)>MAX_BYTES:raise ValueError("Local library limit reached; remove unused snapshots")
+        _capacity(base,len(encoded))
         entry_id=uuid.uuid4().hex
         meta.update(details,id=entry_id,created=datetime.now(timezone.utc).isoformat())
         tmp=Path(tempfile.mkdtemp(prefix=".pending-",dir=base))
