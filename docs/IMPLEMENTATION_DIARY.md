@@ -1208,3 +1208,7 @@ Added sequential range/current-frame instruction edits with existing Qwen/NetaYu
 ### Phase 64E — Source-aware temporal consistency (2026-11-29, Asia/Manila)
 
 PR #163 CPU validation passed and merged at 2b72b14. Added original-motion-gated staged color and partial-alpha outlier diagnostics and conservative correction, with configurable thresholds, locked/unchanged frame protection and undo. Regression tests and phase notes added. No anatomical tracking or guaranteed flicker removal; CPU/desktop/GPU validation pending. No manual CI dispatch.
+
+### Phase 64F — Selective paired replacement (2026-11-29, Asia/Manila)
+
+PR #164 CPU validation passed and merged at 5c8a9f6. Added paired actor replacement from new artwork via original source motion guide or exact-count PNG import, validated candidate scene, synchronized before/after comparison, explicit acceptance and one-step undo. Partner artwork and scene timing/transforms preserved. Contact quality requires review. Regression cases and phase notes added; GPU/desktop/CPU acceptance pending. No manual CI dispatch.
