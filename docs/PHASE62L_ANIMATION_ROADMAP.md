@@ -19,3 +19,6 @@ Phase 62K delivered the AnimateDiff backend, local model setup, motion profiles,
 Reuse the Full-frame Animation Studio, BiRefNet transparency default, timeline, preview, PNG/WebP export and benchmarking rather than creating disconnected tools. Make essential actions visible. Evaluate intentional motion, identity, lighting, silhouette, loop seams, alpha quality, speed and repeat generation on actual hardware. Model selection, licenses, local runtime dependencies and VRAM behavior require investigation when work resumes. No implementation, download, or CI dispatch for this planning record.
 
 Deferred Wan improvements remain separately recorded in the living diary: typed motion precedence, lighting stability, balanced sampling, reusable seeds and spatial conditioning.
+
+
+The visible Wan ending-pose hotfix is tracked separately from the parked 62L roadmap; it does not resume neural interpolation or AI keyframe implementation.
