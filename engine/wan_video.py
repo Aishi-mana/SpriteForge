@@ -2,7 +2,7 @@
 import json, os, secrets, socket, subprocess, tempfile, time, urllib.request, urllib.error, shutil, logging
 from contextlib import contextmanager
 from pathlib import Path
-from . import local_runtime, full_frame_guidance as G, world
+from . import local_runtime, full_frame_guidance as G, world, wan_control as C
 
 HIGH="Wan2.2-I2V-A14B-HighNoise-Q3_K_M.gguf"
 LOW="Wan2.2-I2V-A14B-LowNoise-Q3_K_M.gguf"
@@ -19,19 +19,24 @@ def model_root(root):
     if local:return Path(local)/"Comfy-Desktop/ComfyUI-Shared/models"
     return None
 
-def readiness(root):
+def readiness(root,model=MODEL):
     p=model_root(root)
     comfy,python=local_runtime.runtime()
     nodes=sorted(x.name for x in (comfy/"custom_nodes").glob("*") if x.is_dir() and "gguf" in x.name.lower())
     missing=[]
     if not p or not p.is_dir():missing.append("Shared models folder")
-    for name,folders in [(HIGH,("unet","diffusion_models")),(LOW,("unet","diffusion_models")),
-                         (LH,("loras",)),(LL,("loras",)),(CLIP,("text_encoders","clip")),(VAE,("vae",))]:
+    control=model==C.MODEL
+    weight,vae=C.files(p) if control else (None,None)
+    if control:
+        if not weight:missing.append("Wan Fun 5B control GGUF Q4_K_M / Q3_K_M or BF16")
+        if not vae:missing.append("wan2.2_vae.safetensors")
+    requirements=[(CLIP,("text_encoders","clip"))] if control else [(HIGH,("unet","diffusion_models")),(LOW,("unet","diffusion_models")),(LH,("loras",)),(LL,("loras",)),(CLIP,("text_encoders","clip")),(VAE,("vae",))]
+    for name,folders in requirements:
         if not p or not any((p/f/name).is_file() for f in folders):missing.append(name)
     if not (comfy/"main.py").is_file():missing.append("ComfyUI main.py")
     if not python.is_file():missing.append("ComfyUI Python")
-    if not nodes:missing.append("ComfyUI-GGUF custom node")
-    return {"name":MODEL,"backend":"wan","label":"Wan 2.2 (shared ComfyUI GGUF)","missing":missing,"ready":not missing},p,comfy,python,nodes
+    if not nodes and (not control or not weight or weight.endswith(".gguf")):missing.append("ComfyUI-GGUF custom node")
+    return {"name":model,"backend":"wan","label":"Wan Fun Control 5B (experimental)" if control else "Wan 2.2 (shared ComfyUI GGUF)","missing":missing,"ready":not missing,"weight":weight,"vae":vae},p,comfy,python,nodes
 
 def settings(body):
     n=world.integer
@@ -120,9 +125,14 @@ def stop_owned(child):
 
 def run(root,body):
     from . import generate as gen, full_frame_video as V
-    ready,p,comfy,python,nodes=readiness(root)
+    control=body.get("model")==C.MODEL
+    ready,p,comfy,python,nodes=readiness(root,C.MODEL) if control else readiness(root)
     if not ready["ready"]:raise ValueError("Wan setup missing: "+", ".join(ready["missing"]))
-    q=settings(body)
+    if control:
+        spatial=C.settings(body)
+        q=settings({**body,"conditioning":"i2v","end_reference":None,"steps":4})
+        q.update(spatial,control_weight=ready["weight"],control_vae=ready["vae"])
+    else:q=settings(body)
     if not gen._lock.acquire(blocking=False):raise RuntimeError("GPU busy; finish the current job first")
     try:
         import torch,gc
@@ -131,6 +141,7 @@ def run(root,body):
         with workspace() as d:
             for name in ("input","output","temp","user"):(d/name).mkdir()
             V.prepare_reference(q["reference"],q["width"],q["height"],q["guidance"]).save(d/"input/reference.png")
+            if control:C.prepare(q,d/"input")
             if q["conditioning"]=="flf":
                 if q["end_reference"] is None:
                     shutil.copyfile(d/"input/reference.png",d/"input/end.png")
@@ -142,7 +153,8 @@ def run(root,body):
             with socket.socket() as sock:
                 sock.bind(("127.0.0.1",0));port=sock.getsockname()[1]
             args=[str(python.resolve()),"main.py","--listen","127.0.0.1","--port",str(port),"--disable-auto-launch",
-                  "--disable-all-custom-nodes","--whitelist-custom-nodes",*nodes,"--extra-model-paths-config",str(d/"paths.yaml")]
+                  "--disable-all-custom-nodes","--extra-model-paths-config",str(d/"paths.yaml")]
+            if nodes:args.extend(["--whitelist-custom-nodes",*nodes])
             for name in ("input","output","temp","user"):args.extend(["--"+name+"-directory",str(d/name)])
             env=dict(os.environ,HF_HUB_OFFLINE="1",TRANSFORMERS_OFFLINE="1",PYTHONUNBUFFERED="1",PYTHONIOENCODING="utf-8")
             with (d/"engine.log").open("w",encoding="utf-8") as log:
@@ -156,12 +168,12 @@ def run(root,body):
                         except (OSError,ValueError,RuntimeError):pass
                         if time.monotonic()>deadline:raise RuntimeError("ComfyUI startup timed out")
                         time.sleep(1)
-                    g=graph(q)
+                    g=C.graph(q,CLIP) if control else graph(q)
                     info=http(port,"/object_info",timeout=60)
                     absent=sorted({v["class_type"] for v in g.values()}-set(info))
                     if absent:raise RuntimeError("ComfyUI missing workflow nodes: "+", ".join(absent))
                     pid=http(port,"/prompt",{"prompt":g,"client_id":"spriteforge"},60)["prompt_id"]
-                    STATUS["stage"]="Generating Wan first/last motion" if q["conditioning"]=="flf" else "Generating Wan motion"
+                    STATUS["stage"]="Generating spatially guided Wan motion" if control else ("Generating Wan first/last motion" if q["conditioning"]=="flf" else "Generating Wan motion")
                     deadline=time.monotonic()+3600
                     while time.monotonic()<deadline:
                         if child.poll() is not None:raise RuntimeError("ComfyUI stopped during generation")
