@@ -1,31 +1,27 @@
-INFO:     Started server process [45780]
+INFO:     Started server process [48084]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8765 (Press CTRL+C to quit)
 
 SpriteForge running at http://127.0.0.1:8765
 
-INFO:     127.0.0.1:61527 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55146 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:61527 - "GET /api/state HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61527 - "GET /api/projects HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53299 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53299 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63294 - "GET /api/history?limit=24&offset=0&q=&kind=&fav=false HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63294 - "GET /api/jobs/20261127_020748_10204 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63294 - "GET /api/full-frame/video/models HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63294 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63294 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55530 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50460 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50460 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50460 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50460 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50460 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51869 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60019 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60019 - "POST /api/full-frame/idle HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60019 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52305 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53437 - "GET /api/queue HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51597 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56625 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50498 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56625 - "GET /api/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56625 - "GET /api/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54259 - "GET /api/history?limit=24&offset=0&q=&kind=&fav=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54259 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54259 - "GET /api/jobs/20261127_020748_10204 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54259 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54259 - "GET /api/full-frame/video/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "POST /api/full-frame/validate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49947 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "POST /api/full-frame/idle HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62965 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62974 - "GET /api/queue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55487 - "GET /api/queue HTTP/1.1" 200 OK
