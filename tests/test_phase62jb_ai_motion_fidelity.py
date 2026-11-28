@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import unittest
 from engine import wan_video
 
@@ -29,3 +32,6 @@ class WanMotionFidelityTests(unittest.TestCase):
     def test_native_rejects_distilled_step_count(self):
         with self.assertRaises(ValueError):
             wan_video.settings({"wan_quality": "native", "steps": 4, "prompt": "idle"})
+
+if __name__ == '__main__':
+    unittest.main()
