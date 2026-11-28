@@ -14,7 +14,7 @@ Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [REA
 
 ## Current animation milestone (2026-11-28)
 
-62K-A AnimateDiff backend merged via PR #142 (CPU #348 passed, merge daa53d1). 62K-B guided local setup and component diagnostics implemented on feature branch, validation pending. See [AnimateDiff setup](docs/ANIMATEDIFF.md). Desktop GPU and visual acceptance remain open. Next: 62K-C motion/reference consistency, 62K-D benchmarking; general text-to-video and Wan motion guidance improvements deferred.
+62K-A AnimateDiff backend merged via PR #142 (CPU #348 passed, merge daa53d1). 62K-B guided local setup (#143), 62K-C motion fidelity (#144), and 62K-D benchmark automation implemented on feature branches; validation/merge pending. B's Windows fixture failure was corrected. See [AnimateDiff setup](docs/ANIMATEDIFF.md). Desktop GPU and visual acceptance remain open. Next: desktop AnimateDiff acceptance; general text-to-video and Wan motion guidance improvements deferred.
 
 ## What this project does
 
