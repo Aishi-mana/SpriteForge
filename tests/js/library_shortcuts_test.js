@@ -47,3 +47,9 @@ assert.equal(picker.libPickMatches(rows,'mage',true).length,0);
 const clip=picker.libPickClip({direction:'S',frames:['south'],directions:{N:{frames:['north']}},fps:8,pivot:[2,3],pixel:true,loop:false},'Hero');
 assert.equal(clip.frames[0],'north');assert.equal(clip.fps,8);assert.equal(clip.loop,false);
 for(const target of ['reference','ffReference','ffAnimation','ffVideo','directVideo','directReference','world','system','vfx','modular','scene','pairA','pairB','pairRefA','pairRefB'])assert.ok(html.includes("libPickFor('"+target+"')"),target);
+
+const relCtx=vm.createContext({});
+vm.runInContext(html.split('/* LIB65-REL-BEGIN */')[1].split('/* LIB65-REL-END */')[0],relCtx);
+assert.equal(relCtx.libRelationLabel('revision'),'Revision of');
+assert.equal(relCtx.libRelationLabel('extracted_from'),'Extracted from video');
+assert.ok(html.includes("libButton(row,'History / links'"));
