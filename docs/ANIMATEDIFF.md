@@ -36,3 +36,26 @@ Use a compatible SD1.5 base (not SDXL, Qwen or Wan) and an SD1.5 Diffusers Motio
 6. Generate a second time in the same session. Record speed, visual motion, identity drift and memory errors.
 
 Detection checks metadata and nonempty required component files, not their tensor contents, licenses, or GPU runtime compatibility. The setup screen does not automatically download, convert, or relocate weights. CPU offload and chunking reduce memory pressure but do not guarantee operation on an 8 GB GPU. Desktop/GPU acceptance is pending. The initial reference conditioning is not a hard first/last-frame or facial lock.
+
+## Character preservation and motion (62K-C)
+
+The visible movement profile changes video-to-video denoising strength and prompt guidance: Preserve artwork (0.35 / CFG 4), Balanced (0.50 / CFG 5), More movement (0.65 / CFG 6). These are experimental starting points; lower strength can reduce motion, higher strength can change character details. No frame blending, deformation or hard facial lock is performed. With identity preservation enabled, lighting, palette, costume and shading consistency are included in the prompt. A nonempty typed motion description replaces the preset-specific motion text and restrictions (including the default idle blink restriction); general framing, identity, intensity and loop guidance remain active. Clear the text to use the preset alone. For example, type “Blink once, keep the mouth still” or “Gentle hair sway, steady head and feet.” Use the visible Reuse last successful seed option to compare settings on the same noise seed. The last successful seed is session-only; reproducibility is not guaranteed across different runtime versions and model configurations. CPU regression tests cover prompt construction and parameter selection, not animation quality.
+
+
+## Speed and quality comparison (62K-D)
+
+Use the visible sampling speed selector (8 quick, 12 standard, 20 quality-comparison nominal steps). Keep the same model, reference, profile, resolution, frame count, FPS, prompt, extraction options and reused seed. Generate and extract the first candidate, click Compare speed and quality beside the video, enter visual rating/notes if desired and capture. Allow timeline replacement for the next generation, select the next speed preset, and repeat. Play both captured sequences together. Four candidates fit in the existing session comparison; export JSON v2 with measurements, settings and notes (no artwork).
+
+Generation timing is client request wall time through MP4 receipt, including model load, inference, encoding and transfer; extraction timing is separate. Neither is GPU-only profiling. Automatic provenance is bound to the exact extracted document and source reference; edited/imported frames require manual metadata. Unknown random seeds are not represented as fixed seeds. Matching output and pixel metrics do not prove identity or artistic quality; visually review motion, facial detail, lighting, silhouette, seam and alpha quality. No actual desktop speed results are claimed until measured on hardware.
+
+
+## 62K desktop acceptance checklist (RTX 5070 Laptop, 8 GB VRAM)
+
+After the integrated CPU check passes and the PR is merged, pull main and restart SpriteForge. Close other GPU-heavy applications. In Full-frame Animation Studio, select AnimateDiff, create model folders if needed, install the complete SD1.5 image and MotionAdapter directories and refresh. Confirm both are detected before attempting generation.
+
+- Smoke test: one transparent reference, minimal idle preset, empty typed prompt, Balanced profile, 512 x 512, 16 frames, 8 FPS, Quick preview (8 steps). If VRAM runs out, retry at 384 x 384 and 8 frames using advanced generation settings, recording the error and changed settings.
+- Repeat test: retain reference and seed, allow replacing the timeline, generate again without restarting. Confirm playable MP4, extracted frames, timeline playback and PNG/WebP export.
+- Motion intent: type “Blink once, keep the mouth still.” Check whether the movement actually appears and whether lighting, face, costume and framing stay stable.
+- Benchmark: capture Quick, Standard and Quality candidates with the same settings and seed; compare actual request/extraction durations and visual quality. Export the comparison JSON if useful.
+
+Acceptance requires real desktop generation and repeat use, not just model detection or CPU CI. Record success/failure, elapsed seconds, visual defects and any exact error. No fixed performance target or successful GPU result is assumed.
