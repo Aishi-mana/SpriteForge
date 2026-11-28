@@ -1560,7 +1560,10 @@ def full_frame_motion_templates():
 def full_frame_visual_motion(body: dict=Body(...)):
     from . import visual_motion as M
     try:
-        raw=M.prepare_video(body) if body.get("source")=="video" else M.generate(body)
+        if body.get("source")=="builtin":
+            from . import builtin_motion
+            raw=builtin_motion.generate(body)
+        else:raw=M.prepare_video(body) if body.get("source")=="video" else M.generate(body)
         return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
     except (ValueError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
 
