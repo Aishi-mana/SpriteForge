@@ -1,0 +1,5 @@
+# Phase 65C — Asset browser and organization
+
+Existing library now offers named collections, favorite markers, collection and favorite filters, sorting by creation date, name, type or metadata update, compact list and clear-filter action. Edit name, collection, tags, notes and favorite in a dialog. Metadata-only PATCH validates allowed fields and atomically replaces meta.json, leaving asset ID, creation date, payload and preview unchanged. Legacy entries default to no collection and not favorite. Collections are single optional text labels, not nested folders; collection choices derive from matching entries. Filters and view mode are session-only. No migration or quota changes.
+
+Desktop acceptance: rename and organize a saved image and animation, favorite/unfavorite, filter and sort, clear filters, restart and verify metadata persists; confirm original payload and project remain unchanged. Regression coverage added for metadata validation/isolation and browser sorting/filtering. CPU execution and desktop testing pending.
