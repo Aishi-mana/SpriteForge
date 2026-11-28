@@ -992,3 +992,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62F: Queue result action hotfix
 
 - User desktop screenshot confirms all primary Queue history result buttons remain inert despite CPU validation. Root cause: hOpen renders result cards, then assigns toolbar onclick handlers to every descendant button[data-a], overwriting render's callbacks. Exclude #hres descendants from toolbar binding; add static contract regression and expand opt-in browser smoke to check individual action dispatch. Browser and desktop execution still pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62G: Animation workflow usability
+
+- Desktop screenshot confirmed Queue-to-full-frame handoff now works. User found generation hidden behind collapsed sections. Promoted character, motion preset/prompt, local LTX model selector/readiness, frame count/FPS and Generate animation to visible two-column workflow; 25-frame conservative default, optional automatic extraction and playback, explicit timeline replacement, locked-frame and revision guards, advanced controls retained, timeline thumbnails compact. Added layout regression and browser smoke coverage for visible controls and missing model. Live browser/GPU execution pending; no manual CI dispatch.
