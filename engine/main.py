@@ -2040,6 +2040,32 @@ def library_save_video(file: UploadFile=File(...), metadata: str=Form(...)):
     except (ValueError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
 
 
+@app.get("/api/library/backup")
+def library_backup_download(entry_id: Optional[str]=None):
+    import tempfile
+    from starlette.background import BackgroundTask
+    from . import library_backup
+    work=tempfile.TemporaryDirectory(prefix="spriteforge-backup-")
+    path=Path(work.name)/"library.zip"
+    try:
+        library_backup.export(ROOT,path,entry_id)
+        return FileResponse(path,media_type="application/zip",filename="spriteforge-asset.zip" if entry_id else "spriteforge-library.zip",background=BackgroundTask(work.cleanup))
+    except (ValueError,OSError) as e:
+        work.cleanup()
+        raise HTTPException(400,str(e))
+
+
+@app.post("/api/library/restore")
+def library_backup_restore(file: UploadFile=File(...)):
+    from . import library_backup
+    try:
+        file.file.seek(0,2)
+        if file.file.tell()>library_backup.MAX_ARCHIVE:raise ValueError("Backup exceeds 1.1 GB")
+        file.file.seek(0)
+        return library_backup.restore(ROOT,file.file)
+    except (ValueError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.get("/api/library/{entry_id}/video")
 def library_video(entry_id: str,download: bool=False):
     try:
