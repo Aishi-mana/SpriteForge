@@ -1136,3 +1136,10 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 
 - PR #148 CPU validation #362 passed and merged at 0bb359b. User reports AnimateDiff motion quality is disappointing in desktop use; no visual acceptance claimed.
 - At user request, parked the proposed anime-style animation roadmap in docs/PHASE62L_ANIMATION_ROADMAP.md: neural interpolation (62L-D) first, AI keyframe generation (62L-C) second, anime model compatibility and general-purpose text-to-video deferred. Documentation only, no runtime changes or manual CI dispatch. Retain existing AnimateDiff and Wan backends.
+
+
+## 2026-11-28 18:44 PHT (desktop feedback) — Wan visible ending pose / loop anchor
+
+- Documentation PR #149 CPU #365 passed and merged at 30a6ad8; 62L remains parked. User reports excessive Wan motion ending in a different pose; requests an accessible same-start ending reference for subtle idle and different final artwork for combat combinations.
+- Moved endpoint selection out of advanced settings into the main Wan 2.2 A14B workflow. Automatic mode uses same-reference FLF for idle, minimal idle, alert, floating and weapon-ready presets; other presets use start-only I2V. Explicit same-reference, custom ending PNG and start-only choices override automatic mode. Preview chosen target, require a valid selected file before custom generation, retain choice/file across model refresh and quality changes, clear on project load. End choice is session-only. Renamed Wan quick workflows to describe sampling quality, not force a loop.
+- Reused existing FLF graph and reference preparation. Custom endpoint disables conflicting return-to-start guidance in the request and engine; same-reference nonidle action retains a full return-to-pose instruction without requiring tiny idle motion. No new model, download, interpolation, hard pixel lock, auto combo concatenation or changes to Wan Fun Control/AnimateDiff. Added CPU graph/parameter and Node UI helper regression coverage, updated obsolete workflow test. CPU and desktop validation pending; endpoint conditioning guides but cannot guarantee exact final or intermediate poses. No manual CI dispatch.
