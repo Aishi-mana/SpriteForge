@@ -1559,15 +1559,24 @@ def full_frame_video_prompt(body: dict=Body(...)):
 
 @app.get("/api/full-frame/video/models")
 def full_frame_video_models():
-    from . import full_frame_video
-    return {"models":full_frame_video.discover(cfg()["models_dir"])}
+    from . import full_frame_video, wan_video
+    root=cfg()["models_dir"]
+    wan=wan_video.readiness(root)[0]
+    return {"models":([wan] if wan["ready"] else [])+full_frame_video.discover(root),"wan":wan}
+
+
+@app.get("/api/full-frame/video/status")
+def full_frame_video_status():
+    from . import wan_video
+    return dict(wan_video.STATUS)
 
 
 @app.post("/api/full-frame/video/generate")
 def full_frame_video_generate(body: dict=Body(...)):
     from . import full_frame_video
     try:
-        raw=full_frame_video.generate(cfg()["models_dir"],body)
+        from . import wan_video
+        raw=wan_video.run(cfg()["models_dir"],body) if body.get("model")==wan_video.MODEL else full_frame_video.generate(cfg()["models_dir"],body)
         return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(503,str(e))
