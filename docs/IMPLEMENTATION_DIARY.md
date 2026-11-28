@@ -1192,3 +1192,7 @@ PR #159 CPU validation passed and merged at b6dd909. Added paired world preview,
 ### Phase 64A — Direct animation editor foundation (2026-11-29, Asia/Manila)
 
 PR #160 CPU validation passed and merged at ed275f8, completing Phase 63 implementation. User approved Phase 64 direct animation editing and Phase 65 unified asset library, explicitly choosing 64 first. Recorded both roadmaps. Added isolated staged multi-frame editor, synchronized original/candidate comparison, individual and range PNG replacement, existing manual/AI frame editor handoff, lock protection, staged undo/discard and validated apply with timeline Undo. Added regression assertions. Desktop and automated validation pending; automatic motion extraction and character replacement remain future phases.
+
+### Phase 64B — Original animation motion references (2026-11-29, Asia/Manila)
+
+PR #161 CPU validation passed and merged at e7567d6. Added direct editor motion inspection of original frame ranges (timestamps, alpha geometry, centroid displacement, ground edge), JSON export, CPU MP4 guides from artwork/silhouette/edges and explicit advanced Fun Control handoff. Preserved source timing in sampling; supported guide duration may require truncation or final-pose hold. Added regression assertions and phase documentation. No anatomical pose detection or GPU quality verification; desktop and CPU validation pending. No manual CI dispatch.

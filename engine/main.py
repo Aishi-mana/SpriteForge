@@ -1556,6 +1556,20 @@ def full_frame_motion_templates():
     return motion_templates.catalog()
 
 
+@app.post("/api/direct-animation/motion/inspect")
+def direct_animation_motion_inspect(body: dict=Body(...)):
+    from . import direct_motion as M
+    try:return M.inspect(body)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/direct-animation/motion/guide")
+def direct_animation_motion_guide(body: dict=Body(...)):
+    from . import direct_motion as M
+    try:return StreamingResponse(io.BytesIO(M.generate(body)),media_type="video/mp4")
+    except (ValueError,TypeError,AttributeError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/motion/visual")
 def full_frame_visual_motion(body: dict=Body(...)):
     from . import visual_motion as M
