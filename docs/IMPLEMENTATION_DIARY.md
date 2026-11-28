@@ -1200,3 +1200,7 @@ PR #161 CPU validation passed and merged at e7567d6. Added direct editor motion 
 ### Phase 64C — Reference-guided character replacement (2026-11-29, Asia/Manila)
 
 Added direct editor replacement reference import / approved sprite, automatic original-range motion guide, experimental Wan Fun Control generation, raw candidate video, alpha extraction, source-canvas restoration and timestamp sampling, lock and budget checks, staged review and discard. Source metadata and unrelated frames retained. CPU regression cases and phase notes added. GPU and desktop acceptance pending; no exact pose or identity guarantee. No manual CI dispatch.
+
+### Phase 64D — Animation appearance and equipment edits (2026-11-29, Asia/Manila)
+
+Added sequential range/current-frame instruction edits with existing Qwen/NetaYume/SDXL backends, shared seed and presets, original/staged inputs, optional source alpha preservation, locked-frame validation and atomic staging. Added regression assertions and phase documentation. Per-frame AI may flicker; temporal consistency follows in 64E. Desktop/GPU and CPU validation pending. No manual CI dispatch.
