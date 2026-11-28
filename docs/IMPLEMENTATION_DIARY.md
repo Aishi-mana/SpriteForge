@@ -1017,3 +1017,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-A semantic animation alpha
 
 - Reused Atelier's core BiRefNet graph and existing shared background_removal checkpoint via isolated offline ComfyUI runtime. Added explicit AI/chroma/keep-background selection, detection, re-extraction, optional RGB-gated three-frame mask stabilization, tests. Actual mask polarity, interior gaps, hair quality and GPU compatibility require desktop acceptance. SAM2 interactive tracking and manual paint/restore are not implemented here. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-B manual transparency correction
+
+- Added selected-frame erase/restore brush, radius and strength, stroke overlay, explicit apply/discard, undo and validated server endpoint. Restore uses an explicitly imported, aligned original PNG; it does not reconstruct missing RGB or automatically recover source video frames. Locked frames and unedited frames protected; no SAM tracking or persistent foreground mask yet. Synthetic regression added; browser and desktop acceptance pending.
