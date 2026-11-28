@@ -1,0 +1,5 @@
+# Phase 65G — Asset revisions and relationships
+
+Every saved snapshot remains an independent asset. History / links displays current asset, ancestor chain and direct children, with thumbnail navigation and compatible playback. Explicitly link or unlink an existing asset using revision, outfit, appearance, reference, generated-from, extracted-from or related-to relationship. One parent per asset; revisions require matching kinds, extraction requires video parent and animation child. Cycles rejected under library lock. Deleting a source leaves descendants intact and reports missing parent. Metadata-only changes do not rewrite payload. Known exact in-session video and animation identity can attach provenance on save; other relationships are manually assigned. No automatic inference of identity, revision merging, cross-session tracking or multi-parent graph. Existing quotas apply to each copy.
+
+Acceptance: link character and outfit, save an extracted animation from a saved video, link edited revision, browse ancestors/children, reject cycle and wrong kind, unlink, delete source and verify remaining payloads. CPU regression added; desktop acceptance pending.
