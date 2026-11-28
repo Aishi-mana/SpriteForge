@@ -27,7 +27,7 @@ const collect = () => ({ prompt: $('prompt').value, steps: $('steps').value });
 const applied = []; const applySettings = s => applied.push(s); const setRef = u => { refURL = u }; const markDirty = () => { dirty = true };
 const poseBlob = async () => 'BLOB'; const openEditor = (u, o) => { editorCalls.push([u, o]) }; const render = (r, t) => rendered.push([r, t]); const tab = n => { mode = n }; const show = () => {}; const checkModel = () => true;
 
-` + block + `;globalThis.T = { qStatusText, qDiff, qEsc, qTitle, genParams, refParams, genPromptPreview, genPromptInvalidate, genPromptStale, qEnqueue, qFollow, qRefresh, hUse, armed, QS, qRenderList,
+` + block + `;globalThis.T = { qStatusText, qDiff, qEsc, qTitle, genParams, refParams, genPromptPreview, genPromptInvalidate, genPromptStale, qEnqueue, qFollow, qRefresh, hUse, armed, QS, qRenderList, hLoad, hOpen, qBlobURL,
   setMode: v => { mode = v }, crIndex, trCornerGrid, trNames, tsSolid, tlRepair, anMake, anExport, anBody, AN, anStop, TR, trBits, trMakeGrid, trBody, trSet, trClear, trGenerate, trMap, trExport, trSlots, TL, tileParams, tlKindChanged, tlAdd, tlSeamless, tlOffset, tlEdit, tsExport, tsRender, hTab, tlUse, setRef: u => { refURL = u }, get pts() { return pts }, get mode() { return mode }, get refURL() { return refURL }, applied, get dirty() { return dirty } };`;
 const editorCalls = [];
 new Function('$', 'api', 'J', 'rendered', 'editorCalls', env)($, api, J, rendered, editorCalls);
@@ -165,5 +165,18 @@ const r = T.refParams(); ok(r.ip_scale === 0.7 && r.n === 3 && r.canvas === 128 
   ok($('genPromptPositive').textContent==='','late preview cannot overwrite invalidated project snapshot');
   apiQueue=[new Error('preview unavailable')];await T.genPromptPreview();
   ok($('genPromptStatus').textContent.includes('preview unavailable'),'preview error reported');
+  // 66A: errors and out-of-order responses must not corrupt another workspace.
+  const Reader=globalThis.FileReader;
+  globalThis.FileReader=class {readAsDataURL(){this.onerror()}};
+  let readFailed=false;try{await T.qBlobURL('bad')}catch(e){readFailed=e.message.includes('Could not read')}
+  globalThis.FileReader=Reader;ok(readFailed,'queue file read failure rejects instead of hanging');
+  T.setMode(1);let oldResolve;apiQueue=[()=>new Promise(r=>oldResolve=r),{jobs:[],paused:true}];
+  const oldRefresh=T.qRefresh();await T.qRefresh();oldResolve({jobs:[{id:'old',status:'queued'}],paused:false});await oldRefresh;
+  ok(T.QS.jobs.length===0&&T.QS.paused,'older queue response cannot replace newer snapshot');
+  const count=rendered.length;T.setMode(3);apiQueue=[{jobs:[],paused:false},{status:'done',results:[{sprite:'saved'}]}];
+  await T.qFollow('job','',1);ok(rendered.length===count,'completed generation does not overwrite another workspace');
+  apiQueue=[new Error('offline')];await T.hLoad(true);ok($('hcount').textContent.includes('offline'),'history failure visible and recoverable');
+  T.setMode(9);let detailResolve;apiQueue=[()=>new Promise(r=>detailResolve=r)];const detail=T.hOpen('old');T.setMode(1);detailResolve({results:[]});await detail;
+  ok($('hdetail').innerHTML==='','stale history detail ignored after navigation');
   console.log(fail ? fail + ' FAILED' : 'ALL PASSED'); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e.stack || e); process.exit(1); });
