@@ -1180,3 +1180,7 @@ Added PNG/lossless WebP independent actor atlases, paged texture sheets, engine-
 ### Phase 63G — Independent paired AI generation (2026-11-28, Asia/Manila)
 
 PR #157 CPU validation passed and merged into main at a1b381d. Added paired Wan UI with individual start/end references, complementary prompts, shared sampling settings, sequential A/B generation, extraction, candidate thumbnails and explicit acceptance. Existing generation APIs reused; GPU and desktop validation pending. No joint contact guarantee.
+
+### Phase 63H — Experimental joint generation (2026-11-28, Asia/Manila)
+
+PR #158 CPU validation passed and merged at 30a86f6. Added explicit paired Wan prompt, joint composition and generation/import, exclusive pixel assignment masks, per-frame review and validated two-slot acceptance. Added standalone mask tests. No automatic anatomical separation or hidden pixel reconstruction; desktop/GPU/CI validation pending.
