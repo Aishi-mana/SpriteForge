@@ -1,0 +1,5 @@
+# Phase 65A — Unified Asset Library foundation
+
+Extends the existing local character-library directory and API, preserving legacy character, modular layer and rig snapshots. New kinds: standalone PNG and validated full-frame animation JSON (frames, timing, pivot and supported document metadata). Library UI supports explicit save, search/filter, thumbnail, download copy and existing confirmed deletion. No model or GPU required. Existing quotas remain 300 snapshots, 1 GB payload total, 26 MB per payload; existing image/document validation limits also apply. No automatic migration, duplicate library or project mutation. Static PNG only at this stage; raw MP4, animated playback, direct studio reuse shortcuts and revisions are follow-up work. Downloaded animation JSON is editable, not a rendered animated image.
+
+Acceptance: save PNG and current animation, reload app, filter both types, download and inspect copies, delete a snapshot and confirm project unchanged; confirm existing character/rig entries still load. CPU regression added; desktop and CPU execution pending.
