@@ -55,10 +55,18 @@ def settings(body):
     conditioning=body.get("conditioning","i2v")
     if conditioning not in ("i2v","flf"):raise ValueError("Invalid Wan conditioning")
     end_reference=body.get("end_reference")
-    if end_reference is not None and (not isinstance(end_reference,str) or conditioning!="flf"):raise ValueError("End reference requires first/last conditioning")
+    if end_reference is not None and (not isinstance(end_reference,str) or not end_reference.strip() or conditioning!="flf"):raise ValueError("End reference requires first/last conditioning and a valid image")
+    if end_reference is not None:
+        # A distinct target is a transition, not a return-to-start loop.
+        guidance={**guidance,"loop":False}
     prompt=G.prompt(body.get("prompt",""),guidance)
-    if conditioning=="flf" and end_reference is None:
-        prompt+=" A complete small motion cycle returning to the identical starting pose and expression."
+    if conditioning=="flf":
+        if end_reference is not None:
+            prompt+=" Complete the requested movement by transitioning to the supplied ending pose."
+        elif guidance["preset"] in ("idle","idle_minimal","alert","floating","weapon_ready"):
+            prompt+=" A complete small motion cycle returning to the identical starting pose and expression."
+        else:
+            prompt+=" Complete the requested movement and return to the supplied starting pose."
     return dict(width=w,height=h,frames=count,steps=steps,fps=fps,seed=seed if seed>=0 else secrets.randbelow(2147483648),
                 wan_quality=quality,guidance=guidance,prompt=prompt,reference=body.get("reference"),conditioning=conditioning,end_reference=end_reference)
 

@@ -16,6 +16,6 @@ def run():
     assert all(np.array_equal(np.asarray(frames[0]),np.asarray(f)) for f in frames)
     ui=(Path(__file__).resolve().parents[1]/"ui/index.html").read_text(encoding="utf-8")
     assert 'id="ffEasyMode"' in ui and "await ffPrepareGuide('builtin')" in ui
-    assert "(mode===\"guided\"||mode===\"fastloop\")?\"flf\":\"i2v\"" in ui
+    assert "function ffWanEndpointMode(choice,preset)" in ui and 'value="auto" selected>Automatic' in ui
     print("ok procedural guide library and simple workflow")
 if __name__=="__main__":run()
