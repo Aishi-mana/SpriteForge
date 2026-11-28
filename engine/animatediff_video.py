@@ -18,30 +18,97 @@ def _folders(root):
         return []
     return sorted(p for p in root.iterdir() if p.is_dir() and not p.is_symlink())
 
-def catalog(root):
-    """Only discover local Diffusers-format SD1.5 bases and compatible motion adapters."""
-    folder = Path(root) / "animatediff" if root else None
-    bases = []
-    adapters = []
-    if folder:
-        for p in _folders(folder / "base"):
-            index = _json(p / "model_index.json")
-            unet = _json(p / "unet/config.json")
-            if index.get("_class_name") in ("StableDiffusionPipeline", "StableDiffusionImg2ImgPipeline") and unet.get("cross_attention_dim") == 768:
-                bases.append(p)
-        for p in _folders(folder / "motion"):
-            config = _json(p / "config.json")
-            if config.get("_class_name") == "MotionAdapter" and config.get("block_out_channels") == [320, 640, 1280, 1280] and config.get("motion_max_seq_length", 32) >= 16 and any(p.glob("*.safetensors")):
-                adapters.append(p)
-    pairs = {PREFIX + b.name + "/" + a.name: (b, a) for b in bases for a in adapters}
+def _root(root):
+    return Path(root).resolve() if root and Path(root).is_dir() else None
+
+def _setup_dirs(root, create=False):
+    root = _root(root)
+    if root is None:
+        raise ValueError("Set an existing models directory in Settings first")
+    folder = root / "animatediff"
+    paths = [folder, folder / "base", folder / "motion"]
+    for p in paths:
+        if p.is_symlink() or not p.resolve().is_relative_to(root):
+            raise ValueError("AnimateDiff setup folders must stay inside the configured models directory")
+        if p.exists() and not p.is_dir():
+            raise ValueError("A file is blocking the AnimateDiff folder: " + str(p))
+        if create:
+            p.mkdir(exist_ok=True)
+    return paths[1:]
+
+def prepare_folders(root):
+    _setup_dirs(root, create=True)
+    return readiness(root)
+
+def _present(path):
+    try:
+        return path.is_file() and path.stat().st_size > 0
+    except OSError:
+        return False
+
+def _base_issues(p):
+    index = _json(p / "model_index.json")
+    unet = _json(p / "unet/config.json")
+    issues = []
+    if not index:
+        issues.append("Missing or invalid model_index.json")
+    elif index.get("_class_name") not in ("StableDiffusionPipeline", "StableDiffusionImg2ImgPipeline"):
+        issues.append("Not a Stable Diffusion 1.5 image pipeline")
+    if unet.get("cross_attention_dim") != 768:
+        issues.append("Missing or incompatible SD1.5 UNet config")
+    required = ["unet/diffusion_pytorch_model.safetensors", "vae/config.json",
+                "vae/diffusion_pytorch_model.safetensors", "text_encoder/config.json",
+                "text_encoder/model.safetensors", "tokenizer/vocab.json",
+                "tokenizer/merges.txt", "tokenizer/tokenizer_config.json", "scheduler/scheduler_config.json"]
+    issues.extend("Missing " + name for name in required if not _present(p / name))
+    return issues
+
+def _motion_issues(p):
+    config = _json(p / "config.json")
+    length = config.get("motion_max_seq_length", 32)
+    issues = []
+    if (config.get("_class_name") != "MotionAdapter" or
+        config.get("block_out_channels") != [320, 640, 1280, 1280] or
+        not isinstance(length, int) or length < 16):
+        issues.append("Missing or incompatible SD1.5 MotionAdapter config.json")
+    if not _present(p / "diffusion_pytorch_model.safetensors"):
+        issues.append("Missing diffusion_pytorch_model.safetensors")
+    return issues
+
+def _inspect(root):
     missing = []
-    if not bases: missing.append("SD1.5 Diffusers model folder in animatediff/base")
-    if not adapters: missing.append("SD1.5 Diffusers MotionAdapter folder in animatediff/motion")
+    details = {"base": [], "motion": [], "paths": {}, "raw_files": [], "can_prepare": False}
+    try:
+        base_dir, motion_dir = _setup_dirs(root)
+        details["paths"] = {"base": str(base_dir), "motion": str(motion_dir)}
+        details["can_prepare"] = True
+    except (ValueError, OSError) as exc:
+        return {}, [str(exc)], details
+    good = {}
+    for key, directory, check in (("base", base_dir, _base_issues), ("motion", motion_dir, _motion_issues)):
+        good[key] = []
+        for p in _folders(directory):
+            if not p.resolve().is_relative_to(directory.resolve()):
+                continue
+            issues = check(p)
+            details[key].append({"name": p.name, "ready": not issues, "issues": issues})
+            if not issues:
+                good[key].append(p)
+        if directory.is_dir():
+            details["raw_files"].extend(str(p.name) for p in sorted(directory.iterdir())
+                if p.is_file() and p.suffix.lower() in (".ckpt", ".safetensors", ".gguf", ".pt"))
+    if not good["base"]: missing.append("Complete SD1.5 Diffusers image model in animatediff/base")
+    if not good["motion"]: missing.append("Complete SD1.5 Diffusers MotionAdapter in animatediff/motion")
+    pairs = {PREFIX + b.name + "/" + a.name: (b, a) for b in good["base"] for a in good["motion"]}
+    return pairs, missing, details
+
+def catalog(root):
+    pairs, missing, _ = _inspect(root)
     return pairs, missing
 
 def readiness(root):
-    pairs, missing = catalog(root)
-    return {"ready": bool(pairs), "missing": missing,
+    pairs, missing, details = _inspect(root)
+    return {"ready": bool(pairs), "missing": missing, **details,
             "models": [{"name": key, "backend": "animatediff",
                         "label": "AnimateDiff — " + b.name + " / " + a.name}
                        for key, (b, a) in pairs.items()]}
