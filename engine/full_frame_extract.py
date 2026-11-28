@@ -11,7 +11,9 @@ def settings(q):
     n=world.integer
     bg=q.get("background","green")
     if bg not in (*G.BACKGROUNDS,"none"):raise ValueError("Invalid extraction background")
-    return dict(background=bg,fps=n(q.get("fps",12),1,30,"sampling FPS"),
+    method=q.get("method","chroma")
+    if method not in ("chroma","birefnet","none"):raise ValueError("Invalid alpha method")
+    return dict(method=method,temporal=n(q.get("temporal",0),0,100,"alpha consistency"),background=bg,fps=n(q.get("fps",12),1,30,"sampling FPS"),
         start=n(q.get("start",0),0,60000,"start milliseconds"),
         end=n(q.get("end",4000),1,60000,"end milliseconds"),
         tolerance=n(q.get("tolerance",24),0,255,"key tolerance"),
@@ -36,13 +38,34 @@ def key_frame(im,q):
         a[a[:,:,3]==0,:3]=0
     return Image.fromarray(a,"RGBA")
 
-def assemble(images,q,doc):
+def stabilize(alphas,images,strength):
+    # Only repair isolated alpha fluctuations where adjacent RGB agrees.
+    if not strength or len(alphas)<3:return alphas
+    out=list(alphas)
+    for i in range(1,len(alphas)-1):
+        a,b,c=[np.asarray(x,dtype=np.float32) for x in alphas[i-1:i+2]]
+        x,y,z=[np.asarray(im.convert('RGB'),dtype=np.float32) for im in images[i-1:i+2]]
+        stable=(np.max(abs(x-y),axis=2)<12)&(np.max(abs(z-y),axis=2)<12)&(abs(a-c)<24)
+        result=np.where(stable,b+(np.median(np.stack([a,b,c]),axis=0)-b)*strength/100,b)
+        out[i]=Image.fromarray(np.rint(result).astype(np.uint8),'L')
+    return out
+
+def assemble(images,q,doc,root=None):
     q=settings(q);d=F.validate(doc)
     images=list(images)
     if not images or len(images)>F.MAX_FRAMES:raise ValueError("Invalid sampled frame count")
     w,h=images[0].size
     if max(w,h)>2048 or w*h*len(images)>F.MAX_PIXELS or any(im.size!=(w,h) for im in images):raise ValueError("Sampled frames exceed canvas budget")
-    frames=[key_frame(im,q) for im in images]
+    if d["locked_frames"]:raise ValueError("Unlock frames before replacing the sequence")
+    if q["method"]=="birefnet":
+        from . import semantic_alpha
+        alphas=semantic_alpha.masks(images,root)
+        alphas=stabilize(alphas,images,q["temporal"])
+        frames=[]
+        for im,alpha in zip(images,alphas):
+            frame=im.convert("RGBA");frame.putalpha(alpha);frames.append(frame)
+    elif q["method"]=="none":frames=[im.convert("RGBA") for im in images]
+    else:frames=[key_frame(im,q) for im in images]
     boxes=[b for im in frames if (b:=im.getbbox())]
     if not boxes:raise ValueError("All sampled frames are transparent")
     if q["trim"]:
@@ -57,7 +80,7 @@ def assemble(images,q,doc):
     if any(v["frames"] for v in d["directions"].values()) and (w,h,q["fps"])!=(d["width"],d["height"],d["fps"]):raise ValueError("Extraction must match shared directional canvas and FPS; disable trim or choose matching settings")
     return F.validate({**d,"combat":[],"keyframes":[],"locked_frames":[],"width":w,"height":h,"pivot":[w//2,h-1],"fps":q["fps"],"frames":out})
 
-def extract(raw,q,doc):
+def extract(raw,q,doc,root=None):
     q=settings(q)
     if q["end"]<=q["start"]:raise ValueError("End must follow start")
     if not raw or len(raw)>64_000_000:raise ValueError("Video exceeds 64 MB limit")
@@ -79,5 +102,5 @@ def extract(raw,q,doc):
                 try:frame=reader.get_data(idx)
                 except IndexError:break
                 frames.append(Image.fromarray(frame))
-            return assemble(frames,q,doc)
+            return assemble(frames,q,doc,root)
         finally:reader.close()
