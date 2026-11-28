@@ -21,11 +21,9 @@ def render(body):
     if style not in ("chibi","standard"):raise ValueError("Invalid guide proportions")
     strength=n(body.get("strength",35),0,100,"guide intensity")/100
     q=body.get("guidance") or {}
-    from . import full_frame_video as V
-    ref=V.prepare_reference(body["reference"],w,h,q) if body.get("reference") else None
     # Derive bounds from the actual alpha reference using the same fit as Wan.
     x0,y0,x1,y1=w*.22,h*.1,w*.78,h*.9
-    if ref is not None:
+    if body.get("reference"):
         im=world.image(body["reference"])
         margin=world.integer(q.get("margin",10),0,30,"reference margin")/100
         im.thumbnail((max(1,int(w*(1-2*margin))),max(1,int(h*(1-2*margin)))),Image.Resampling.LANCZOS)
@@ -38,7 +36,7 @@ def render(body):
     hip=.69 if style=="chibi" else .55
     frames=[]
     for i in range(count):
-        t=i/(count-1);wave=math.sin(2*math.pi*t);pulse=(1-math.cos(2*math.pi*t))/2
+        t=0 if i==count-1 else i/(count-1);wave=math.sin(2*math.pi*t);pulse=(1-math.cos(2*math.pi*t))/2
         lift=0;chest=0;arm=0;stride=0;leg=0;lean=0
         if preset in ("idle_minimal","idle","alert","weapon_ready"):
             chest=-H*(.012 if preset=="idle_minimal" else .025)*strength*pulse
