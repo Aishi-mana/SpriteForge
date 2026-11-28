@@ -106,4 +106,25 @@ ui = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text(encoding=
 ok('id="ffADControls"' in ui and 'value="animatediff"' in ui and "count<8||count>16" in ui,"visible workflow and frame count")
 ok('id="ffADPrepare"' in ui and "function ffADGate()" in ui and "function ffADReport" in ui, "visible setup and readiness gate")
 ok('id="ffADProfile"' in ui and 'id="ffADReuseSeed"' in ui and "FF.adLastSeed=seed" in ui, "visible preservation controls and seed reuse")
+# Exercise both current and older Diffusers memory API layouts without model weights.
+memory_calls = []
+def called(name):
+    return lambda: memory_calls.append(name)
+current = SimpleNamespace(vae=SimpleNamespace(enable_slicing=called("vae")),
+                          unet=SimpleNamespace(enable_forward_chunking=called("chunk")),
+                          enable_model_cpu_offload=called("offload"))
+A.configure_memory(current)
+ok(memory_calls == ["offload","vae","chunk"], "current component-level VAE API")
+memory_calls.clear()
+older = SimpleNamespace(vae=SimpleNamespace(), unet=SimpleNamespace(),
+                        enable_model_cpu_offload=called("offload"),
+                        enable_vae_slicing=called("legacy"))
+A.configure_memory(older)
+ok(memory_calls == ["offload","legacy"], "legacy pipeline VAE API fallback")
+memory_calls.clear()
+minimal = SimpleNamespace(vae=SimpleNamespace(), unet=SimpleNamespace(),
+                          enable_model_cpu_offload=called("offload"))
+A.configure_memory(minimal)
+ok(memory_calls == ["offload"], "optional memory helpers absent without crashing")
+ok('<option value="birefnet" selected>BiRefNet AI (local)</option>' in ui, "BiRefNet default transparency")
 done("test_animatediff_video")

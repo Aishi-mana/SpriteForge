@@ -225,6 +225,20 @@ def generate(root, body, runner=None):
     image = V.prepare_reference(q["reference"], q["width"], q["height"], q["guidance"])
     return (runner or run)(*pairs[model], image, q)
 
+def configure_memory(pipe):
+    """Diffusers exposes VAE slicing on the component in newer releases."""
+    pipe.enable_model_cpu_offload()
+    slice_vae = getattr(pipe.vae, "enable_slicing", None)
+    legacy_slice = getattr(pipe, "enable_vae_slicing", None)
+    if callable(slice_vae):
+        slice_vae()
+    elif callable(legacy_slice):
+        legacy_slice()
+    chunk = getattr(pipe.unet, "enable_forward_chunking", None)
+    if callable(chunk):
+        chunk()
+    # Video encode/decode remains explicitly chunked in the pipeline call.
+
 def run(base, adapter, image, q):
     from . import generate as gen
     if not gen._lock.acquire(blocking=False):
@@ -245,9 +259,7 @@ def run(base, adapter, image, q):
         pipe = AnimateDiffVideoToVideoPipeline.from_pretrained(
             str(base), motion_adapter=motion, torch_dtype=torch.float16, local_files_only=True, use_safetensors=True)
         pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config, beta_schedule="linear", clip_sample=False)
-        pipe.enable_model_cpu_offload()
-        pipe.enable_vae_slicing()
-        pipe.unet.enable_forward_chunking()
+        configure_memory(pipe)
         STATUS["stage"] = "Generating AnimateDiff frames (" + q["profile"] + ", seed " + str(q["seed"]) + ")"
         # A repeated still is input conditioning only; the temporal denoiser generates every output frame.
         frames = pipe(video=[image.copy() for _ in range(q["frames"])], prompt=q["prompt"],
