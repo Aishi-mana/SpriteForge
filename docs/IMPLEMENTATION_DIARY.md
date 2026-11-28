@@ -962,3 +962,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-J: World integration and export
 
 - PR #113 CPU #270 passed and merged. Added full-frame directional World Studio source and saved-project loading, bounded clip validation, per-direction playback and current event display, image decode reuse, paged PNG atlas/sequence and lossless animated WebP ZIP exports with portable timing/pivot/combat metadata and Godot/Unity import notes. Native engine files, runtime damage/root motion and desktop/GPU acceptance deferred. No manual CI dispatch.
+
+
+## 2026-11-28 09:40 PHT — Phase 62A: Initial UI audit and queue handoff
+
+- User reported confusing layout and queue Animate buttons not working. Static review of UI found 20 workspaces, generic Animate routing to rig workflow, missing source image error handling, history response races, and missing full-frame result handoff. Added explicit rig/full-frame actions, immediate rig navigation, decode error reporting, full-frame reference transfer, project-load busy guard and history ticket checks. Added static UI contract regression. Actual desktop issue not reproduced; full browser and GPU acceptance remain pending. No manual CI dispatch.
