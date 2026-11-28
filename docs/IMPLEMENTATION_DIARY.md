@@ -982,3 +982,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62D: Integration and data integrity
 
 - Found saved-gallery edit deleted original before replacement; added validated atomic PUT replacement, unique IDs and project-scoped gallery callbacks. Serialize UI save/load, retain dirty state for edits during save, cancel stale load before application. Preflight secondary assets before modifying project files; serialize reads against writes. Correct directional reference src field; clear transient full-frame candidates on project load; guard shared FPS/canvas and world clip contracts; export keyframe/lock metadata. Regression tests added. Full crash-atomic multi-file saves and desktop/model acceptance remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62F: Queue result action hotfix
+
+- User desktop screenshot confirms all primary Queue history result buttons remain inert despite CPU validation. Root cause: hOpen renders result cards, then assigns toolbar onclick handlers to every descendant button[data-a], overwriting render's callbacks. Exclude #hres descendants from toolbar binding; add static contract regression and expand opt-in browser smoke to check individual action dispatch. Browser and desktop execution still pending. No manual CI dispatch.
