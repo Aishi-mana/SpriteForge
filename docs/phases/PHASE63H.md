@@ -1,0 +1,5 @@
+# Phase 63H — Experimental joint generation and separation
+
+Paired Preview > Experimental joint generation & separation. Supply independent reference images in the paired AI section, compose a shared starting image, describe the interaction and generate with existing Wan settings. Alternatively import a joint PNG sequence. A vertical split initializes exclusive A/B masks; paint ownership or discard background on each frame, copy a mask forward, and review every frame before accepting both clips. Both clips retain the shared source canvas and common origin; preview scales them to fit. No automatic anatomical segmentation, occlusion reconstruction or independent pivot estimation is provided. The explicit paired prompt flag leaves standard single-character prompting unchanged. The joint workflow uses a shared starting reference for FLF return-to-start, not independent ending references. Masks and candidates are session-only. Existing slots remain unchanged until validated acceptance.
+
+Standalone Node mask regression assertions added; desktop, GPU and CI validation pending. Import at most 32 frames with matching canvas and existing pixel/encoded budgets.
