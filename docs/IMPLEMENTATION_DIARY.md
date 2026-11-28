@@ -1052,3 +1052,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 13:28 PHT — 62J-C4 reusable motion plans
 
 - #133 passed CPU validation and merged. Added eight built-in timed pose-description templates, project persistence, editable percent/description sequence, JSON import/export and prompt compilation, regression coverage. These are textual timed pose descriptions, not spatial pose maps or hard constraints. Actual GPU quality pending; C5 motion-conditioned backend, C6 reference motion transfer, C7 benchmark and SAM tracking remain planned. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C5 experimental spatial motion control
+
+- #134 CPU validation passed and merged. Added native Wan22FunControlToVideo single-sampler graph based on Comfy-Org's 5B workflow (shift 8, CFG 5, uni_pc/simple, 20 steps), with GGUF loader option and distinct Wan2.2 VAE. Supports local Q4_K_M, Q3_K_M or BF16 file discovery; no downloads. Prepared pose/depth/edge MP4 or Canny preprocessing, bounded video resampling and model-specific UI. Existing 14B and LTX retained. Source: https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_wan2_2_5B_fun_control.json and https://huggingface.co/QuantStack/Wan2.2-Fun-5B-Control-GGUF. File detection is not runtime validation; actual GPU, visual identity, control adherence and 8 GB memory acceptance pending. C6 automatic motion extraction and template-to-visual controls deferred. No manual CI dispatch.
