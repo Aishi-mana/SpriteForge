@@ -1007,3 +1007,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62H Windows cleanup hotfix
 
 - User supplied real ComfyUI log: RTX 5070 Laptop GPU, 8151 MB VRAM, both Wan sampling stages completed, prompt executed in 80.40 seconds. UI reported WinError 32 on temporary engine.log. Replaced strict temporary directory cleanup with bounded retry and nonfatal cleanup, preserved last engine log outside job folder, explicitly waited for owned child exit. Added mocked locked-file regression. MP4 delivery and extraction still need live retest. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62H-C: Foreground protection and restrained idle
+
+- User confirmed Wan MP4 delivery and 33 extracted frames after manually installing imageio dependencies. Neutral color key damaged face and white armor; requested smaller idle movement. Added border-connected chroma mask, conservative tolerance/softness, minimal idle and prompt intensity, re-extraction with current tolerances, requirements and existing-venv launcher repair. Added synthetic regression. Foreground matching colors connected to border remain a limitation; semantic BiRefNet/SAM planned. Actual desktop retest pending; no manual CI dispatch.
