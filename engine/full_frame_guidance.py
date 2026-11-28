@@ -1,0 +1,40 @@
+"""Reference-conditioned sprite motion guidance; prompts are not hard identity locks."""
+from . import world
+
+PRESETS={
+    "custom":"",
+    "idle":"Subtle breathing and natural weight shifts, relaxed stance, small hair and cloth motion.",
+    "walk":"Natural alternating steps, coordinated arm swing and planted feet.",
+    "run":"Energetic running stride, coordinated arms, believable weight transfer.",
+    "jump":"Anticipation crouch, takeoff, airborne arc, soft landing and recovery.",
+    "attack":"Anticipation, decisive attack, follow-through and recovery.",
+    "cast":"Gather energy, deliberate casting gesture, release and recovery.",
+    "hurt":"Brief recoil and recovery while maintaining balance.",
+}
+VIEWS={"reference":"Preserve the reference viewing angle.","front":"Front view.","side":"Side view.","quarter":"Three-quarter view.","back":"Rear view."}
+BACKGROUNDS={"neutral":((240,240,240),"light neutral gray"),"green":((0,255,0),"solid chroma green"),"magenta":((255,0,255),"solid chroma magenta"),"blue":((0,0,255),"solid chroma blue")}
+def settings(value=None):
+    if value is None:value={}
+    if not isinstance(value,dict):raise ValueError("Invalid motion guidance")
+    out={}
+    for key,choices,default in (("preset",PRESETS,"custom"),("view",VIEWS,"reference"),("background",BACKGROUNDS,"neutral")):
+        q=value.get(key,default)
+        if not isinstance(q,str) or q not in choices:raise ValueError("Invalid motion "+key)
+        out[key]=q
+    for key in ("identity","camera","in_place","loop"):
+        out[key]=world.boolean(value.get(key,True),"motion "+key)
+    out["margin"]=world.integer(value.get("margin",10),0,30,"reference margin")
+    return out
+
+def prompt(text,guidance=None):
+    q=settings(guidance)
+    text=world.label(text,"motion description",2000,True)
+    if not text and q["preset"]=="custom":raise ValueError("Describe the motion or choose a preset")
+    parts=[text,PRESETS[q["preset"]]]
+    if q["identity"]:parts.append("Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
+    parts.append(VIEWS[q["view"]])
+    if q["camera"]:parts.append("Fixed camera, fixed framing and scale, no zoom, pan, cuts or camera rotation.")
+    if q["in_place"]:parts.append("Animate in place, keep character centered horizontally, stable ground contact except intentional airborne motion.")
+    if q["loop"]:parts.append("Return to the starting pose for a seamless repeating cycle.")
+    parts.append("Single full-body character entirely in frame, uniform "+BACKGROUNDS[q["background"]][1]+" background, no scenery, lettering or extra characters.")
+    return " ".join(p for p in parts if p)
