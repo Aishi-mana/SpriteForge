@@ -928,3 +928,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-D: Video-to-sprite extraction
 
 - PR #107 passed CPU validation and merged. Added optional imageio/FFmpeg video sampling, start/end range, FPS, chroma key tolerance and soft alpha, shared union crop, common pivot, atomic validated timeline replacement with undo, synthetic CPU regression tests. Actual decoder and desktop acceptance pending; no semantic segmentation, despill or per-frame anatomical alignment yet. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-E: Character consistency and flicker correction
+
+- PR #108 passed CPU validation and merged. Added local temporal bounds/color diagnostics, opt-in bounded position and color corrections, partial-alpha edge smoothing, chroma despill, selected-frame original/corrected preview and undoable acceptance. Zero strengths preserve exact source data; scale is diagnostic only. Synthetic regression tests added. No semantic identity detection, optical flow or GPU acceptance yet. No manual CI dispatch.
