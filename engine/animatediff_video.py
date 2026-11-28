@@ -1,5 +1,5 @@
 """Experimental SD1.5 AnimateDiff video-to-video for short reference-based sprite loops."""
-import gc, json, secrets, tempfile
+import gc, json, secrets, tempfile, hashlib, os, shutil, re
 from pathlib import Path
 from . import world, full_frame_guidance as G, full_frame_video as V
 
@@ -46,6 +46,68 @@ def _present(path):
     except OSError:
         return False
 
+# SHA256 of the published SD1.5 legacy Diffusers weights, verified against the
+# upstream Hugging Face file pages. Never deserialize arbitrary .bin checkpoints.
+LEGACY_SHA256 = {
+    "unet": "c7da0e21ba7ea50637bee26e81c220844defdf01aafca02b2c42ecdadb813de4",
+    "vae": "1b134cded8eb78b184aefb8805b6b572f36fa77b255c483665dda931fa0130c5",
+}
+WEIGHT = "diffusion_pytorch_model"
+
+def _legacy_components(base):
+    return [name for name in LEGACY_SHA256
+            if not _present(base / name / (WEIGHT + ".safetensors"))
+            and _present(base / name / (WEIGHT + ".bin"))]
+
+def _verified_weights(source, expected, torch):
+    # Hash the exact open file before restricted deserialization; no fallback.
+    with source.open("rb") as f:
+        digest = hashlib.sha256()
+        for chunk in iter(lambda: f.read(4 * 1024 * 1024), b""):
+            digest.update(chunk)
+        if digest.hexdigest() != expected:
+            raise ValueError("Legacy " + source.parent.name + " weights do not match the published SD1.5 file. Use the matching official file or a Safetensors model.")
+        f.seek(0)
+        return torch.load(f, map_location="cpu", weights_only=True)
+
+def convert_legacy(base):
+    components = _legacy_components(base)
+    if not components:
+        return
+    import torch
+    from safetensors.torch import save_file
+    version = re.match(r"(\d+)\.(\d+)", str(torch.__version__))
+    if not version or tuple(map(int, version.groups())) < (2, 6):
+        raise RuntimeError("Verified legacy conversion requires PyTorch 2.6 or newer. Update the SpriteForge runtime or use Safetensors weights.")
+    for name in components:
+        folder = base / name
+        source = folder / (WEIGHT + ".bin")
+        target = folder / (WEIGHT + ".safetensors")
+        if folder.is_symlink() or source.is_symlink() or not source.resolve().is_relative_to(base.resolve()):
+            raise ValueError("Legacy model weights must be local files inside the detected model folder")
+        if target.exists() or target.is_symlink():
+            raise ValueError("An existing invalid Safetensors file blocks conversion: " + str(target))
+        if shutil.disk_usage(folder).free < source.stat().st_size + 64 * 1024 * 1024:
+            raise RuntimeError("Not enough free disk space to convert " + name + " weights; original .bin is preserved.")
+        STATUS["stage"] = "Verifying and converting SD1.5 " + name + " weights (one-time)"
+        weights = _verified_weights(source, LEGACY_SHA256[name], torch)
+        if not isinstance(weights, dict) or not weights or any(
+            not isinstance(k, str) or type(v) is not torch.Tensor or v.layout != torch.strided
+            for k, v in weights.items()):
+            raise ValueError("Expected a plain tensor state dictionary for " + name)
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=folder, suffix=".safetensors.tmp", delete=False) as f:
+                tmp = Path(f.name)
+            save_file({k: v.detach().contiguous() for k, v in weights.items()}, str(tmp), metadata={"format": "pt"})
+            # Publish only a complete file; never replace an existing destination.
+            os.link(tmp, target)
+        finally:
+            if tmp is not None:
+                tmp.unlink(missing_ok=True)
+            del weights
+            gc.collect()
+
 def _base_issues(p):
     index = _json(p / "model_index.json")
     unet = _json(p / "unet/config.json")
@@ -56,11 +118,13 @@ def _base_issues(p):
         issues.append("Not a Stable Diffusion 1.5 image pipeline")
     if unet.get("cross_attention_dim") != 768:
         issues.append("Missing or incompatible SD1.5 UNet config")
-    required = ["unet/diffusion_pytorch_model.safetensors", "vae/config.json",
-                "vae/diffusion_pytorch_model.safetensors", "text_encoder/config.json",
+    required = ["vae/config.json", "text_encoder/config.json",
                 "text_encoder/model.safetensors", "tokenizer/vocab.json",
                 "tokenizer/merges.txt", "tokenizer/tokenizer_config.json", "scheduler/scheduler_config.json"]
     issues.extend("Missing " + name for name in required if not _present(p / name))
+    for name in LEGACY_SHA256:
+        if not _present(p / name / (WEIGHT + ".safetensors")) and not _present(p / name / (WEIGHT + ".bin")):
+            issues.append("Missing " + name + "/" + WEIGHT + ".safetensors or official SD1.5 .bin")
     return issues
 
 def _motion_issues(p):
@@ -91,7 +155,8 @@ def _inspect(root):
             if not p.resolve().is_relative_to(directory.resolve()):
                 continue
             issues = check(p)
-            details[key].append({"name": p.name, "ready": not issues, "issues": issues})
+            details[key].append({"name": p.name, "ready": not issues, "issues": issues,
+                                 "legacy": _legacy_components(p) if key == "base" else []})
             if not issues:
                 good[key].append(p)
         if directory.is_dir():
@@ -110,7 +175,8 @@ def readiness(root):
     pairs, missing, details = _inspect(root)
     return {"ready": bool(pairs), "missing": missing, **details,
             "models": [{"name": key, "backend": "animatediff",
-                        "label": "AnimateDiff — " + b.name + " / " + a.name}
+                        "label": "AnimateDiff — " + b.name + " / " + a.name,
+                        "legacy": _legacy_components(b)}
                        for key, (b, a) in pairs.items()]}
 
 PROFILES = {"preserve": (0.35, 4.0), "balanced": (0.50, 5.0), "motion": (0.65, 6.0)}
@@ -173,6 +239,7 @@ def run(base, adapter, image, q):
         gen._cache.update(key=None, pipe=None, cn_name=None)
         gc.collect()
         torch.cuda.empty_cache()
+        convert_legacy(base)
         STATUS["stage"] = "Loading AnimateDiff models"
         motion = MotionAdapter.from_pretrained(str(adapter), torch_dtype=torch.float16, local_files_only=True, use_safetensors=True)
         pipe = AnimateDiffVideoToVideoPipeline.from_pretrained(
