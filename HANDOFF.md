@@ -82,3 +82,8 @@ See [Repository workflow](docs/REPOSITORY_WORKFLOW.md) for a follow-up cleanup p
 ## Direct Animation Editor milestone (2026-11-29 PHT)
 
 64A–H merged; #168 CPU run 46167123563 passed and merged at 0716b2f4. 64I integration changes and desktop checklist on feature branch; CPU and actual desktop/GPU acceptance pending. See [64I acceptance](docs/phases/PHASE64I.md). Phase 65 unified asset library next.
+
+
+## Unified Asset Library milestone (Phase 65)
+
+65A–H merged, including backup PR #177 (CPU run 46176698217 successful). 65I integration fixes and desktop acceptance checklist on feature branch; CPU and actual Windows desktop/GPU verification pending. See [65I acceptance](docs/phases/PHASE65I.md) and [living diary](docs/IMPLEMENTATION_DIARY.md). Packaging remains on hold.
