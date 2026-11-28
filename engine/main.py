@@ -1574,6 +1574,15 @@ def full_frame_video_generate(body: dict=Body(...)):
     except Exception as e:raise HTTPException(500,"Video generation failed: "+str(e))
 
 
+@app.post("/api/full-frame/video/extract")
+def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), document: str=Form(...)):
+    from . import full_frame_extract as E
+    try:return E.extract(file.file.read(64_000_001),json.loads(options),json.loads(document))
+    except ValueError as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(503,str(e))
+    except Exception as e:raise HTTPException(400,"Video extraction failed: "+str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame
