@@ -2031,6 +2031,23 @@ def library_save(body: dict=Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/library/video")
+def library_save_video(file: UploadFile=File(...), metadata: str=Form(...)):
+    try:
+        data=json.loads(metadata)
+        if not isinstance(data,dict):raise ValueError("Invalid video metadata")
+        return asset_library.save_video(ROOT,file.file.read(asset_library.MAX_VIDEO_BYTES+1),data)
+    except (ValueError,OSError,RuntimeError) as e:raise HTTPException(400,str(e))
+
+
+@app.get("/api/library/{entry_id}/video")
+def library_video(entry_id: str,download: bool=False):
+    try:
+        path=asset_library.video_path(ROOT,entry_id)
+        return FileResponse(path,media_type="video/mp4",filename="animation.mp4" if download else None)
+    except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
+
+
 @app.get("/api/library/{entry_id}/preview")
 def library_preview(entry_id: str):
     try:return FileResponse(asset_library.preview_path(ROOT,entry_id),media_type="image/png")
