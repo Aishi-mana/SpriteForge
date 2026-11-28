@@ -10,7 +10,20 @@ VAES=["wan2.2_vae.safetensors","Wan2.2_VAE.safetensors"]
 
 def files(root):
     def find(names,folders):
-        return next((n for n in names if root and any((root/f/n).is_file() for f in folders)),None)
+        if not root:return None
+        for name in names:
+            for folder in folders:
+                directory=root/folder
+                if directory.is_dir():
+                    for entry in directory.iterdir():
+                        if entry.is_file() and entry.name==name:return entry.name
+        for name in names:
+            for folder in folders:
+                directory=root/folder
+                if directory.is_dir():
+                    for entry in directory.iterdir():
+                        if entry.is_file() and entry.name.casefold()==name.casefold():return entry.name
+        return None
     return find(WEIGHTS,("unet","diffusion_models")),find(VAES,("vae",))
 
 def settings(body):
