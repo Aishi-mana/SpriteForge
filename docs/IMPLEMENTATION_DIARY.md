@@ -913,3 +913,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-A: Full-frame Animation Studio foundation
 
 - PR #104 passed CPU validation and merged. Add independent full-frame workspace, approved character or imported PNG reference, motion description, same-canvas PNG frame imports, ordering/removal/undo, FPS/loop playback, pivot guide, validated bounded document and project/archive persistence. No skeletal dependency. CPU regression tests added; AI generation backend, automatic alignment, video import and export deferred. No manual CI dispatch.
+
+
+## 2026-11-28 08:36 PHT — Phase 61S-B: Local AI video backend
+
+- PR #105 passed CPU validation and merged. Add optional local Diffusers LTX image-to-video adapter, model discovery via video_models/model_index.json, reference letterboxing, bounded settings, shared GPU lock and image pipeline release, CPU offload, MP4 preview/download and discard-result handling. Fake runner tests cover routing and validation. No model download, actual GPU acceptance, server-side cancellation or frame extraction yet. No manual CI dispatch.

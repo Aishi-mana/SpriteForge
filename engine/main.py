@@ -1550,6 +1550,23 @@ def system_export(body: dict=Body(...)):
     except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.get("/api/full-frame/video/models")
+def full_frame_video_models():
+    from . import full_frame_video
+    return {"models":full_frame_video.discover(cfg()["models_dir"])}
+
+
+@app.post("/api/full-frame/video/generate")
+def full_frame_video_generate(body: dict=Body(...)):
+    from . import full_frame_video
+    try:
+        raw=full_frame_video.generate(cfg()["models_dir"],body)
+        return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
+    except ValueError as e:raise HTTPException(400,str(e))
+    except RuntimeError as e:raise HTTPException(503,str(e))
+    except Exception as e:raise HTTPException(500,"Video generation failed: "+str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame
