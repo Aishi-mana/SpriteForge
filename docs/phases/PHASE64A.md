@@ -1,0 +1,5 @@
+# Phase 64A — Direct Animation Editor foundation
+
+Full-frame Animation Studio > Direct Animation Editor. Open the current active direction as an isolated edit session. Compare original and candidate frames side by side, scrub or play both with the original timing, stage individual manual/AI image edits or same-canvas PNG replacements, or import a naturally sorted PNG sequence into an exact inclusive frame range. Locked frames are protected. Reset a frame, undo staged changes, discard the session, or apply the validated result with the existing animation Undo available. Original timing, pivot, canvas, frame count, gameplay metadata and other directions are preserved. Changes to the source document invalidate the session. No new motion model or automatic character replacement is implemented yet; those follow in 64B onward. Sessions are temporary, not saved until applied.
+
+Regression assertions cover source preservation, metadata and lock validation. Manual desktop and automated validation pending; no GPU execution at authoring.

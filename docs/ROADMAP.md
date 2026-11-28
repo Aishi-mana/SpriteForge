@@ -122,3 +122,38 @@ Each requires backend compatibility and desktop acceptance; detected files do no
 ## 2026-11-28 PHT — 62J-C8 friendly animation workflows
 
 - User confused by raw spatial MP4 and first/last conditioning controls. Added friendly workflow selector: guided AI loop (default), built-in motion guide (experimental Fun 5B), standard AI, quick deformation and advanced. Advanced model/endpoint/custom clip controls collapsed. Added 11 procedural OpenPose-style guide presets, chibi/standard proportions, reference alpha-bounds alignment, movement strength, exact loop endpoints, CPU preview and automatic preparation before generation. These are approximate front-facing skeletons, not tracked anatomy or guaranteed model adherence. Custom guide and existing benchmark remain available. Regression tests added; actual desktop UI and GPU quality remain unverified. No manual CI dispatch or downloads.
+
+
+## Phase 63 — Paired animations (2026-11-28 PHT)
+
+63A–63I merged through PR #160; PR CPU validation passed. Desktop/GPU acceptance remains pending. See phase notes and living diary.
+
+## Phase 64 — Direct animation editing and character replacement (user-approved, next)
+
+Goal: edit existing animation appearance while preserving source motion, frame timing, direction, positions and paired partner. Exact raster motion preservation is a goal, not an AI guarantee. Preserve originals and stage candidates before applying. Do not change default Wan behavior.
+
+- 64A — Direct Animation Editor foundation: isolated source/candidate session, frame selection, comparison, staged edits, undo/discard and safe apply.
+- 64B — Motion and pose reference extraction: reuse existing frame sequences, spatial guides and compatible local motion controls.
+- 64C — Character reference replacement: reference-guided appearance transfer on existing motion.
+- 64D — Outfit, appearance and equipment editing across selected or all frames.
+- 64E — Temporal consistency and flicker correction.
+- 64F — Selective paired character replacement, preserve untouched partner and interaction timeline.
+- 64G — Direct video editing and sprite extraction; preserve raw MP4, distinguish re-generation from exact video edits.
+- 64H — Original/edited comparison, undo, independent exports and review.
+- 64I — Integration and desktop/GPU validation.
+
+## Phase 65 — Unified asset library (user-approved, after Phase 64)
+
+Extend existing local modular library, not another isolated library. Shared asset picker and compatible actions across studios and queue/history. Store character references, sprites (PNG/WebP), editable animation frames/timing/pivots, paired interactions, original generated MP4/settings, environments/maps/tiles, effects, UI assets and rigs. Store video files on disk, not embedded in project JSON. Preserve originals and project copies; explicit save/delete/replace. Animated sprite and video viewers accessible independently of projects.
+
+- 65A — Unified asset storage and registry.
+- 65B — Central library interface, search/filter and browsing.
+- 65C — Shared shortcuts and asset selection: Open Library, Save as Asset, Preview, Edit, Animate, Use in Pair, Use in World, Export.
+- 65D — Animated sprite storage and viewer (FPS, stepping, zoom, transparency, loop).
+- 65E — Generated video storage and viewer (MP4 playback, scrubbing, speed, extraction).
+- 65F — Cross-studio asset routing and compatible queue/result shortcuts.
+- 65G — Collections, tags and favorites.
+- 65H — Versions, relationships and provenance.
+- 65I — Migration, performance and desktop validation.
+
+User elected to implement 64 before 65. Both roadmaps retained for chat handoff. Avoid manual CI dispatch; verify and merge passed PRs before subsequent phases.

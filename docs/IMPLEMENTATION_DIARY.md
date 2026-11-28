@@ -1188,3 +1188,7 @@ PR #158 CPU validation passed and merged at 30a86f6. Added explicit paired Wan p
 ### Phase 63I — Paired world integration (2026-11-28, Asia/Manila)
 
 PR #159 CPU validation passed and merged at b6dd909. Added paired world preview, map placement/scale, independent drawing with shared depth group, stage release, footprint warnings and pair validation. Added regression assertions and acceptance checklist. Desktop/GPU and CI validation pending; no movement solver or persistent map interaction instances.
+
+### Phase 64A — Direct animation editor foundation (2026-11-29, Asia/Manila)
+
+PR #160 CPU validation passed and merged at ed275f8, completing Phase 63 implementation. User approved Phase 64 direct animation editing and Phase 65 unified asset library, explicitly choosing 64 first. Recorded both roadmaps. Added isolated staged multi-frame editor, synchronized original/candidate comparison, individual and range PNG replacement, existing manual/AI frame editor handoff, lock protection, staged undo/discard and validated apply with timeline Undo. Added regression assertions. Desktop and automated validation pending; automatic motion extraction and character replacement remain future phases.
