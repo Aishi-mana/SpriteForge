@@ -17,3 +17,12 @@ vm.runInContext(html.split('/* LIB65-QUICK-BEGIN */')[1].split('/* LIB65-QUICK-E
  for(const s of ['Open Asset Library','Save animation to Library','Save candidate to Library','Save map image to Library','Save layout image to Library','Save composite to Library','Save master to Library','Save sprite to Library','data-a="library"'])assert.ok(html.includes(s),s);
  console.log('ok shared library save lifecycle and placement');console.log('ALL PASSED');
 })().catch(e=>{console.error(e);process.exitCode=1});
+
+const browser=vm.createContext({});
+vm.runInContext(html.split('/* LIB65-BROWSE-BEGIN */')[1].split('/* LIB65-BROWSE-END */')[0],browser);
+const rows=[{id:'a',name:'Hero 10',kind:'image',created:'2026-01-01',collection:'Forest',favorite:true},{id:'b',name:'Hero 2',kind:'animation',created:'2026-02-01'},{id:'c',name:'Mage',kind:'image',created:'2026-03-01',collection:'Forest',updated:'2026-04-01'}];
+assert.equal(browser.libOrganize(rows,'Forest',true,'new').map(x=>x.id).join(),'a');
+assert.equal(browser.libOrganize(rows,'',false,'name').map(x=>x.id).join(),'b,a,c');
+assert.equal(browser.libOrganize(rows,'',false,'old').map(x=>x.id).join(),'a,b,c');
+assert.equal(browser.libOrganize(rows,'',false,'updated').map(x=>x.id).join(),'c,b,a');
+assert.equal(rows.map(x=>x.id).join(),'a,b,c');
