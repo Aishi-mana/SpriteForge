@@ -957,3 +957,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-I: Combat and complex motion
 
 - PR #112 CPU #268 passed and merged. Added combat presets and validated per-frame phase, event/label, hitbox, VFX anchor and root displacement. Directional snapshots retain metadata; reorder/remove/interpolation remap events; extraction clears metadata. Canvas overlay and undoable editing. CPU tests added. Runtime collision, combo execution, multi-clip orchestration and root application deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-J: World integration and export
+
+- PR #113 CPU #270 passed and merged. Added full-frame directional World Studio source and saved-project loading, bounded clip validation, per-direction playback and current event display, image decode reuse, paged PNG atlas/sequence and lossless animated WebP ZIP exports with portable timing/pivot/combat metadata and Godot/Unity import notes. Native engine files, runtime damage/root motion and desktop/GPU acceptance deferred. No manual CI dispatch.
