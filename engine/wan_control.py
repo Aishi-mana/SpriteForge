@@ -53,7 +53,7 @@ def prepare(q,folder):
         fps=float(meta.get("fps",0))
         size=meta.get("size",(0,0))
         if not 1<=fps<=120 or len(size)!=2 or min(size)<1 or max(size)>2048:raise ValueError("Control video needs 1–120 FPS and dimensions at most 2048")
-        indices=[int(i*fps/q["fps"]+.5) for i in range(q["frames"])]
+        indices=[int((q.get("start_ms",0)/1000+i/q["fps"])*fps+.5) for i in range(q["frames"])]
         frames=[]
         last=-1
         for i in indices:
