@@ -59,3 +59,20 @@ vm.runInContext(html.split('/* LIB65-BACKUP-BEGIN */')[1].split('/* LIB65-BACKUP
 assert.equal(backupCtx.libBackupUrl(),'/api/library/backup');
 assert.equal(backupCtx.libBackupUrl({id:'abc'}),'/api/library/backup?entry_id=abc');
 for(const s of ['Download library backup ZIP','Import / restore backup ZIP','Export asset ZIP'])assert.ok(html.includes(s),s);
+
+const original={frames:['a']},edited={frames:['b']},unrelated={frames:['c']};
+relCtx.libRememberAnimation(original,'source','extracted_from');
+relCtx.libInheritAnimation(original,edited);
+assert.equal(relCtx.libAnimationSource(edited).id,'source');
+assert.equal(relCtx.libAnimationSource(edited).relation,'extracted_from');
+assert.equal(relCtx.libAnimationSource(unrelated),null);
+relCtx.libRememberAnimation(edited,'revision');
+assert.equal(relCtx.libAnimationSource(original).id,'source');
+assert.equal(relCtx.libAnimationSource(edited).id,'revision');
+const playbackEls={libAnimPlay:{},libAnimImage:{},libAnimSeek:{},libAnimFrame:{},libAnimSpeed:{value:'1'},libAnimLoop:{checked:false},libAnimDialog:{open:true}};
+let clock=0,tick=null;
+const playCtx=vm.createContext({$:id=>playbackEls[id],performance:{now:()=>clock},setInterval:f=>(tick=f,1),clearInterval:()=>{tick=null}});
+vm.runInContext(html.split('/* LIB65-ANIM-BEGIN */')[1].split('/* LIB65-ANIM-END */')[0],playCtx);
+vm.runInContext("LAV.doc={fps:10};LAV.frames=['a','b'];libAnimShow(0);libAnimPlay()",playCtx);
+clock=100;tick();assert.equal(playbackEls.libAnimImage.src,'b');assert.equal(playbackEls.libAnimPlay.textContent,'Pause');
+clock=199;tick();assert.notEqual(tick,null);clock=200;tick();assert.equal(tick,null);assert.equal(playbackEls.libAnimPlay.textContent,'Play');
