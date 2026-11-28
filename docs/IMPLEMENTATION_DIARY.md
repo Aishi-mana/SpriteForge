@@ -1119,3 +1119,9 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 ## 2026-11-28 PHT — 62K desktop acceptance integration
 
 - 62K-B PR #143 CPU validation #354 passed and merged at 78cf0a9. PR #144 conflicted when retargeted to main because of independently committed Windows fixture/diary corrections. Consolidated C and D into a clean main-based branch, retaining the samefile fixture correction and all C/D changes. CPU revalidation required; actual desktop testing remains pending. No manual CI dispatch.
+
+
+## 2026-11-28 17:29 PHT (desktop report) — 62K legacy Diffusers compatibility hotfix
+
+- Integrated PR #146 passed CPU #357 and merged at ca429a9. Desktop screenshot confirms motion adapter detected, base rejected only for missing Safetensors UNet/VAE files; user has the corresponding .bin weights in the correct directories.
+- Added recognition of these component files, visible pending-conversion status, and one-time local conversion under existing generation lock. Exact upstream SD1.5 SHA-256 allowlist from the Hugging Face UNet and VAE file pages; verify before any deserialization, PyTorch >=2.6 restricted weights-only CPU loading, plain tensors only, no arbitrary checkpoint loading or unsafe fallback. Write temporary Safetensors then publish without replacing original or existing target; verify free disk space. Existing Safetensors preferred. Regression tests use synthetic mocked conversion and rejection, no full model weights. Actual Windows conversion, RAM/disk requirements and GPU inference pending. No manual CI dispatch.
