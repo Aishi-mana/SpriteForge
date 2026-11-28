@@ -4,7 +4,11 @@ This backend uses SpriteForge's existing Diffusers environment, not a separate C
 
 ## Model setup
 
-In the models directory configured in SpriteForge, place complete local Diffusers-format model directories:
+Select **AnimateDiff — short AI animation** in Full-frame Animation Studio. Click **Create model folders** to create the two directories inside the configured models directory. The screen displays their exact paths, links to example model repositories, and missing components for each detected folder. Copy or download the complete local Diffusers-format folders into those paths, then click **Refresh models**. Generation remains unavailable until a pair passes the file checklist.
+
+Example baseline repositories: [SD1.5 image model](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/tree/main) and [AnimateDiff v1.5-2 motion adapter](https://huggingface.co/guoyww/animatediff-motion-adapter-v1-5-2/tree/main). These are compatibility starting points, not a recommendation for a particular artistic style. Preserve the subdirectories and filenames. The initial loader expects standard (unsharded, non-variant) safetensors files, not just the standalone checkpoint at the repository root.
+
+Expected layout:
 
     animatediff/
       base/
@@ -31,4 +35,4 @@ Use a compatible SD1.5 base (not SDXL, Qwen or Wan) and an SD1.5 Diffusers Motio
 5. Generate and compare the raw MP4. Use the existing extraction, timeline and sprite export controls.
 6. Generate a second time in the same session. Record speed, visual motion, identity drift and memory errors.
 
-Detection verifies model metadata, not GPU runtime compatibility. CPU offload and chunking reduce memory pressure but do not guarantee operation on an 8 GB GPU. Desktop/GPU acceptance is pending. The initial reference conditioning is not a hard first/last-frame or facial lock.
+Detection checks metadata and nonempty required component files, not their tensor contents, licenses, or GPU runtime compatibility. The setup screen does not automatically download, convert, or relocate weights. CPU offload and chunking reduce memory pressure but do not guarantee operation on an 8 GB GPU. Desktop/GPU acceptance is pending. The initial reference conditioning is not a hard first/last-frame or facial lock.
