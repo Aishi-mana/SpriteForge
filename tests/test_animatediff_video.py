@@ -51,7 +51,21 @@ for change in ({"model":"animatediff/../v2"},{"frames":17},{"width":257},{"refer
         ok(False,"invalid request")
     except ValueError:
         ok(True,"invalid request rejected")
+idle = A.settings(body)
+ok(idle["strength"] == 0.5 and idle["cfg"] == 5.0 and "blinking" in idle["negative"], "default idle guidance and balanced sampling")
+blink = A.settings({**body, "prompt":"Blink once, keep the mouth still", "ad_profile":"preserve"})
+ok("Blink once" in blink["prompt"] and "blinking" not in blink["negative"] and "tiny periodic breathing only" not in blink["prompt"], "typed motion overrides conflicting idle preset")
+ok(blink["strength"] == 0.35 and blink["cfg"] == 4.0 and "changing lighting" in blink["negative"], "preserve profile and lighting guidance")
+motion = A.settings({**body, "ad_profile":"motion"})
+ok(motion["strength"] == 0.65 and motion["cfg"] == 6.0, "more movement profile")
+for profile in ("unknown", [], None):
+    try:
+        A.settings({**body, "ad_profile":profile})
+        ok(False, "invalid profile accepted")
+    except ValueError:
+        ok(True, "invalid profile rejected")
 ui = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text(encoding="utf-8")
 ok('id="ffADControls"' in ui and 'value="animatediff"' in ui and "count<8||count>16" in ui,"visible workflow and frame count")
 ok('id="ffADPrepare"' in ui and "function ffADGate()" in ui and "function ffADReport" in ui, "visible setup and readiness gate")
+ok('id="ffADProfile"' in ui and 'id="ffADReuseSeed"' in ui and "FF.adLastSeed=seed" in ui, "visible preservation controls and seed reuse")
 done("test_animatediff_video")
