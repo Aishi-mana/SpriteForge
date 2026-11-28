@@ -1617,9 +1617,15 @@ def full_frame_alpha_models():
 
 
 @app.post("/api/full-frame/video/extract")
-def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), document: str=Form(...)):
+def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), document: Optional[str]=Form(None), document_file: Optional[UploadFile]=File(None)):
     from . import full_frame_extract as E
-    try:return E.extract(file.file.read(64_000_001),json.loads(options),json.loads(document),cfg()["models_dir"])
+    try:
+        if document_file is not None:
+            raw_doc=document_file.file.read(32_000_001)
+            if len(raw_doc)>32_000_000:raise ValueError("Animation document exceeds 32 MB")
+            document=raw_doc.decode("utf-8")
+        if document is None:raise ValueError("Missing animation document")
+        return E.extract(file.file.read(64_000_001),json.loads(options),json.loads(document),cfg()["models_dir"])
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(503,str(e))
     except Exception as e:raise HTTPException(400,"Video extraction failed: "+str(e))
