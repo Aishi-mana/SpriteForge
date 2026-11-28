@@ -1284,3 +1284,8 @@ Verified PR #178 CPU run 46177515167 passed Windows (2258 checks) and Ubuntu (22
 Verified PR #179 merged at 0009efb and its CPU run 46178808305 succeeded. Resumed existing branch from identical main after previous uncommitted patch. Moved existing navigation ahead of project and technical setup, kept project controls visible, added local pinned/recent workspace shortcuts and remembered advanced sampling disclosure, global Queue/history and project access, and explicit AI versus rig guidance. No model or generation default changes. Existing ID inventory preserved, JavaScript syntax parsed. Added source and Node regressions and phase notes. CPU execution and Windows desktop acceptance pending; no manual CI dispatch. Branch phase-66b-workspace-ux.
 
 - PR #180 CPU run 46181172750 failed on Windows and Ubuntu; existing library_shortcuts_test.js asserts the toolbar label Open Asset Library. Restored the established label without changing behavior. Automatic revalidation pending.
+
+
+### Phase 66C — Cross-studio transfers (2026-11-29 PHT)
+
+Built on corrected 66B branch pending CPU revalidation. Added result/history and current-frame Send to studio modal (World/System/VFX), reuse of existing PNG imports, revision/busy guards, explicit replacement confirmation and recoverable error state. Added current full-frame animation to Scenes as independent directional actor via existing validation, without file roundtrip. Reference replacement confirmation keeps existing animation frames. VFX first-time preset setup may require retry. Source ID inventory and JavaScript syntax preflight passed; source regression tests added. CPU and desktop acceptance pending; no manual CI dispatch. No model defaults changed.
