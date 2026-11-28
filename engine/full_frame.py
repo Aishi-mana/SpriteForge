@@ -32,7 +32,10 @@ def validate(value):
         if not isinstance(indices,list) or any(type(k) is not int or not 0<=k<len(frames) for k in indices) or len(set(indices))!=len(indices):raise ValueError("Invalid frame markers")
     if not set(locks)<=set(keys):raise ValueError("Locked frames must be keyframes")
     from . import full_frame_guidance
-    return dict(keyframes=sorted(keys),locked_frames=sorted(locks),guidance=full_frame_guidance.settings(value.get("guidance")),version=1,name=world.label(value.get("name","New animation"),"animation name"),
+    result=dict(keyframes=sorted(keys),locked_frames=sorted(locks),guidance=full_frame_guidance.settings(value.get("guidance")),version=1,name=world.label(value.get("name","New animation"),"animation name"),
         prompt=world.label(value.get("prompt",""),"motion description",2000,True),reference=ref,width=w,height=h,pivot=pivot,
         fps=n(value.get("fps",12),1,60,"animation FPS"),loop=world.boolean(value.get("loop",True),"animation loop"),
         pixel=world.boolean(value.get("pixel",False),"animation sampling"),frames=frames)
+
+    from . import full_frame_directions as D
+    return D.validate_library(value,result)

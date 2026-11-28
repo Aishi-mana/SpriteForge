@@ -1602,6 +1602,18 @@ def full_frame_interpolate(body: dict=Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/full-frame/directions")
+def full_frame_directions(body: dict=Body(...)):
+    from . import full_frame_directions as D
+    try:
+        doc=body.get("document")
+        action=body.get("action")
+        if action=="switch":return D.switch(doc,body.get("direction"))
+        if action=="seam":return D.seam(doc)
+        return D.loop_edit(doc,action,body.get("count",2))
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame
