@@ -967,3 +967,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 09:40 PHT — Phase 62A: Initial UI audit and queue handoff
 
 - User reported confusing layout and queue Animate buttons not working. Static review of UI found 20 workspaces, generic Animate routing to rig workflow, missing source image error handling, history response races, and missing full-frame result handoff. Added explicit rig/full-frame actions, immediate rig navigation, decode error reporting, full-frame reference transfer, project-load busy guard and history ticket checks. Added static UI contract regression. Actual desktop issue not reproduced; full browser and GPU acceptance remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62B: Browser workflow smoke coverage
+
+- Added explicit opt-in Playwright Chromium smoke script using real page, queue/history fixture, both animation handoffs, rig API error, invalid image and all navigation buttons. No live GPU or project mutations. Harden rig source failure and stale overlay response handling, full-frame busy checks and queue result metadata. Browser test not executed in this connector environment; manual opt-in avoids extra CI minutes. Stacked on 62A pending validation.
