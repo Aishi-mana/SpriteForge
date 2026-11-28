@@ -1250,3 +1250,5 @@ PR #172 CPU run 46169352433 passed and merged at 8f8c04802a8223370074a97a0e980b9
 ### Phase 65E — Generated video storage and viewer (2026-11-29 PHT)
 
 PR #173 CPU run 46169676634 passed and merged at ca35ee2e. Added atomic original MP4 binary storage with FFmpeg metadata/first-frame poster and shared quota accounting, multipart upload and file download/playback API. Added library MP4 import/filter, native viewer with speed/loop and direct shortcuts for full-frame video and original/edited video. 64 MB per video; existing 1 GB/300 entries retained. No transcoding, automatic relationships or full clip decoding. Added CPU byte roundtrip/quota and JS upload/placement regression. CPU execution, desktop codec and GPU acceptance pending; no manual CI dispatch.
+
+- PR #174 CPU run 46170116796 failed on Windows and Ubuntu: real MP4 fixture test requires imageio, absent from requirements-test.txt. Added imageio and imageio-ffmpeg to CPU requirements (already runtime dependencies); retained real codec roundtrip test. Revalidation pending.
