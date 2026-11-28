@@ -56,4 +56,4 @@ def interpolate(doc,options):
             result=between(arrays[i],arrays[j],k/factor,q)
             buf=io.BytesIO();Image.fromarray(result,"RGBA").save(buf,"PNG")
             append("data:image/png;base64,"+base64.b64encode(buf.getvalue()).decode())
-    return F.validate({**d,"fps":fps,"frames":out})
+    return F.validate({**d,"fps":fps,"frames":out,"keyframes":[k*factor for k in d["keyframes"]],"locked_frames":[k*factor for k in d["locked_frames"]]})
