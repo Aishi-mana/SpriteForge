@@ -40,19 +40,19 @@ def settings(value=None):
     out["poses"]=motion_templates.validate(value.get("poses"))
     return out
 
-def prompt(text,guidance=None):
+def prompt(text,guidance=None,paired=False):
     q=settings(guidance)
     text=world.label(text,"motion description",2000,True)
     if not text and q["preset"]=="custom" and not q["poses"]:raise ValueError("Describe the motion or choose a preset")
     parts=[text,PRESETS[q["preset"]],INTENSITIES[q["intensity"]],motion_templates.describe(q["poses"])]
     if q["preset"] in ("idle","idle_minimal","alert","weapon_ready") and q["identity"]:
         parts.append("Maintain the original facial expression and eye state throughout; lips and jaw remain still, no speech, blinking or facial animation. Breathing is confined to tiny chest movement; head, hands and equipment remain steady.")
-    if q["identity"]:parts.append("Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
+    if q["identity"]:parts.append("Preserve both distinct character identities, outfits, proportions and artwork style." if paired else "Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
     parts.append(VIEWS[q["view"]])
     if q["camera"]:parts.append("Fixed camera, fixed framing and scale, no zoom, pan, cuts or camera rotation.")
-    if q["in_place"]:parts.append("Animate in place, keep character centered horizontally, stable ground contact except intentional airborne motion.")
+    if q["in_place"]:parts.append("Keep the pair inside the frame with stable ground contact." if paired else "Animate in place, keep character centered horizontally, stable ground contact except intentional airborne motion.")
     if q["loop"]:parts.append("Return to the starting pose for a seamless repeating cycle.")
-    parts.append("Single full-body character entirely in frame, uniform "+BACKGROUNDS[q["background"]][1]+" background, no scenery, lettering or extra characters.")
+    parts.append(("Exactly two distinct full-body characters entirely in frame, uniform " if paired else "Single full-body character entirely in frame, uniform ")+BACKGROUNDS[q["background"]][1]+" background, no scenery, lettering or extra characters.")
     return " ".join(p for p in parts if p)
 
 
