@@ -1072,3 +1072,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C8 friendly animation workflows
 
 - User confused by raw spatial MP4 and first/last conditioning controls. Added friendly workflow selector: guided AI loop (default), built-in motion guide (experimental Fun 5B), standard AI, quick deformation and advanced. Advanced model/endpoint/custom clip controls collapsed. Added 11 procedural OpenPose-style guide presets, chibi/standard proportions, reference alpha-bounds alignment, movement strength, exact loop endpoints, CPU preview and automatic preparation before generation. These are approximate front-facing skeletons, not tracked anatomy or guaranteed model adherence. Custom guide and existing benchmark remain available. Regression tests added; actual desktop UI and GPU quality remain unverified. No manual CI dispatch or downloads.
+
+
+## 2026-11-28 14:57 PHT — 62J-A desktop acceptance hotfix
+
+- Desktop guided loop improved but unwanted mouth motion persists; extraction after existing frames fails at multipart 1024 KiB text-part cap. Send complete validated animation document as bounded JSON file part (32 MB), retain 64 MB video limit and existing document/lock validation; keep legacy text parameter. Retain preview blob, invalidate stale extraction on discard, reset preview sampling ownership and restore on successful generation, preserve retry status. Strengthen idle-specific facial stability positive/negative guidance; Wan 14B CFG=1 may ignore negative guidance, not a hard expression lock. Repeat extraction regression uses mocked CPU endpoint; desktop repeat generation and quality remain unverified. No manual CI dispatch.

@@ -45,6 +45,8 @@ def prompt(text,guidance=None):
     text=world.label(text,"motion description",2000,True)
     if not text and q["preset"]=="custom" and not q["poses"]:raise ValueError("Describe the motion or choose a preset")
     parts=[text,PRESETS[q["preset"]],INTENSITIES[q["intensity"]],motion_templates.describe(q["poses"])]
+    if q["preset"] in ("idle","idle_minimal","alert","weapon_ready") and q["identity"]:
+        parts.append("Maintain the original facial expression and eye state throughout; lips and jaw remain still, no speech, blinking or facial animation. Breathing is confined to tiny chest movement; head, hands and equipment remain steady.")
     if q["identity"]:parts.append("Same character as reference, consistent face, body proportions, hairstyle, outfit, accessories, colors and original art style; coherent complete character poses.")
     parts.append(VIEWS[q["view"]])
     if q["camera"]:parts.append("Fixed camera, fixed framing and scale, no zoom, pan, cuts or camera rotation.")
@@ -52,3 +54,11 @@ def prompt(text,guidance=None):
     if q["loop"]:parts.append("Return to the starting pose for a seamless repeating cycle.")
     parts.append("Single full-body character entirely in frame, uniform "+BACKGROUNDS[q["background"]][1]+" background, no scenery, lettering or extra characters.")
     return " ".join(p for p in parts if p)
+
+
+def negative(guidance=None):
+    q=settings(guidance)
+    base="blurry, distorted, watermark, text"
+    if q["preset"] in ("idle","idle_minimal","alert","weapon_ready") and q["identity"]:
+        return base+", talking, lip movement, jaw movement, changing expression, blinking, head turning, arm gestures, exaggerated breathing"
+    return base
