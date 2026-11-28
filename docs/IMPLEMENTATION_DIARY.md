@@ -1168,3 +1168,7 @@ Added source-frame anchor picking, pivot-relative offsets, contact guide and sep
 ### Phase 63D — Per-frame transforms (2026-11-28, Asia/Manila)
 
 Added exact-frame position/depth overrides, timeline markers, frame-specific contact alignment, CPU compositor integration and persistence. Regression coverage added; execution and desktop validation pending. Whole-actor alpha occlusion only.
+
+### Phase 63E — Interaction presets and stages (2026-11-28, Asia/Manila)
+
+Added six named interaction presets plus custom, configurable enter/loop/exit ranges, staged playback with queued release and pair JSON persistence. Added standalone Node regression assertions; execution and desktop validation pending. Presets configure existing clips, not AI-generated poses.
