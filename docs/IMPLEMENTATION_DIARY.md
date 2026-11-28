@@ -997,3 +997,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62G: Animation workflow usability
 
 - Desktop screenshot confirmed Queue-to-full-frame handoff now works. User found generation hidden behind collapsed sections. Promoted character, motion preset/prompt, local LTX model selector/readiness, frame count/FPS and Generate animation to visible two-column workflow; 25-frame conservative default, optional automatic extraction and playback, explicit timeline replacement, locked-frame and revision guards, advanced controls retained, timeline thumbnails compact. Added layout regression and browser smoke coverage for visible controls and missing model. Live browser/GPU execution pending; no manual CI dispatch.
+
+
+## 2026-11-28 11:04 PHT — Phase 62H: Shared Wan video runtime
+
+- Reused MVManaAtelier Wan image-to-video workflow and shared ComfyUI model/runtime discovery. Exact Q3_K_M high/low pair, acceleration LoRAs, UMT5 and VAE readiness; optional LTX retained. Owned temporary headless server, GGUF whitelist, node check, model-path mapping, GPU lock and cache release, bounded output, stage polling, 480x480/33/16/4 defaults. Other applications must be closed manually; no cross-app GPU lock or cancellation guarantee. CPU regression added; real ComfyUI/Wan execution pending. No manual CI dispatch.
