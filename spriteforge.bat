@@ -14,6 +14,14 @@ if not exist .venv\Scripts\python.exe (
   pip install -r requirements.txt
 )
 
+rem --- Repair video extraction dependencies in existing installations ---
+".venv\Scripts\python.exe" -c "import imageio, imageio_ffmpeg" >nul 2>nul
+if errorlevel 1 (
+  echo Installing video frame extraction dependencies...
+  ".venv\Scripts\python.exe" -m pip install imageio imageio-ffmpeg
+  if errorlevel 1 (echo Video extraction setup failed. Check internet access and retry. & pause & exit /b 1)
+)
+
 rem --- 2. Rust toolchain? If missing, fall back to browser mode ---
 where cargo >nul 2>nul
 if errorlevel 1 (
