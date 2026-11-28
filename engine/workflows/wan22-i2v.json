@@ -1,0 +1,216 @@
+{
+  "unet_h": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "%MODEL%"
+    }
+  },
+  "unet_l": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "%MODEL_LOW%"
+    }
+  },
+  "clip": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    }
+  },
+  "vae": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    }
+  },
+  "ref1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "%REF1%"
+    }
+  },
+  "lora_h": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "unet_h",
+        0
+      ],
+      "lora_name": "%LORA_HIGH%",
+      "strength_model": 1.0
+    }
+  },
+  "lora_l": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "unet_l",
+        0
+      ],
+      "lora_name": "%LORA_LOW%",
+      "strength_model": 1.0
+    }
+  },
+  "sh_h": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+      "model": [
+        "lora_h",
+        0
+      ],
+      "shift": 5.0
+    }
+  },
+  "sh_l": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+      "model": [
+        "lora_l",
+        0
+      ],
+      "shift": 5.0
+    }
+  },
+  "pos": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "clip",
+        0
+      ],
+      "text": "%PROMPT%"
+    }
+  },
+  "neg": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "clip",
+        0
+      ],
+      "text": "%NEGATIVE%"
+    }
+  },
+  "ks1": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+      "model": [
+        "sh_h",
+        0
+      ],
+      "add_noise": "enable",
+      "noise_seed": "%SEED%",
+      "steps": "%STEPS%",
+      "cfg": "%CFG%",
+      "sampler_name": "%SAMPLER%",
+      "scheduler": "%SCHEDULER%",
+      "positive": [
+        "i2v",
+        0
+      ],
+      "negative": [
+        "i2v",
+        1
+      ],
+      "latent_image": [
+        "i2v",
+        2
+      ],
+      "start_at_step": 0,
+      "end_at_step": "%STEPS_HALF%",
+      "return_with_leftover_noise": "enable"
+    }
+  },
+  "ks2": {
+    "class_type": "KSamplerAdvanced",
+    "inputs": {
+      "model": [
+        "sh_l",
+        0
+      ],
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": "%STEPS%",
+      "cfg": "%CFG%",
+      "sampler_name": "%SAMPLER%",
+      "scheduler": "%SCHEDULER%",
+      "positive": [
+        "i2v",
+        0
+      ],
+      "negative": [
+        "i2v",
+        1
+      ],
+      "latent_image": [
+        "ks1",
+        0
+      ],
+      "start_at_step": "%STEPS_HALF%",
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable"
+    }
+  },
+  "dec": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "ks2",
+        0
+      ],
+      "vae": [
+        "vae",
+        0
+      ]
+    }
+  },
+  "vid": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "dec",
+        0
+      ],
+      "fps": 16
+    }
+  },
+  "save": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "vid",
+        0
+      ],
+      "filename_prefix": "%PREFIX%",
+      "format": "auto",
+      "codec": "auto"
+    }
+  },
+  "i2v": {
+    "class_type": "WanImageToVideo",
+    "inputs": {
+      "positive": [
+        "pos",
+        0
+      ],
+      "negative": [
+        "neg",
+        0
+      ],
+      "vae": [
+        "vae",
+        0
+      ],
+      "width": "%WIDTH%",
+      "height": "%HEIGHT%",
+      "length": "%FRAMES%",
+      "batch_size": 1,
+      "start_image": [
+        "ref1",
+        0
+      ]
+    }
+  }
+}
