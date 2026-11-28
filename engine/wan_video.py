@@ -63,7 +63,7 @@ def graph(q):
     flf=q.get("conditioning")=="flf"
     template=json.loads((Path(__file__).parent/"workflows"/("wan22-flf.json" if flf else "wan22-i2v.json")).read_text(encoding="utf-8"))
     vals={"%MODEL%":HIGH,"%MODEL_LOW%":LOW,"%LORA_HIGH%":LH,"%LORA_LOW%":LL,"%REF1%":"reference.png","%REF2%":"end.png",
-          "%PROMPT%":q["prompt"],"%NEGATIVE%":"blurry, distorted, watermark, text, static",
+          "%PROMPT%":q["prompt"],"%NEGATIVE%":G.negative(q.get("guidance")),
           "%SEED%":q["seed"],"%STEPS%":q["steps"],"%STEPS_HALF%":q["steps"]//2,"%CFG%":1.0,
           "%SAMPLER%":"euler","%SCHEDULER%":"simple","%WIDTH%":q["width"],"%HEIGHT%":q["height"],
           "%FRAMES%":q["frames"],"%PREFIX%":"spriteforge"}
