@@ -1077,3 +1077,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 14:57 PHT — 62J-A desktop acceptance hotfix
 
 - Desktop guided loop improved but unwanted mouth motion persists; extraction after existing frames fails at multipart 1024 KiB text-part cap. Send complete validated animation document as bounded JSON file part (32 MB), retain 64 MB video limit and existing document/lock validation; keep legacy text parameter. Retain preview blob, invalidate stale extraction on discard, reset preview sampling ownership and restore on successful generation, preserve retry status. Strengthen idle-specific facial stability positive/negative guidance; Wan 14B CFG=1 may ignore negative guidance, not a hard expression lock. Repeat extraction regression uses mocked CPU endpoint; desktop repeat generation and quality remain unverified. No manual CI dispatch.
+
+
+## 2026-11-28 (Asia/Manila) — Animation export accessibility and mandatory UX policy
+
+User reported missing visible sprite exports and oversized timeline thumbnails. Moved existing PNG atlas, PNG sequence and animated WebP ZIP actions beside timeline, added current-frame download using global PNG/WebP preference, retained project save and World Studio link, and set compact fixed-width thumbnails. Added static regression coverage. Updated root AGENTS.md, README and HANDOFF with mandatory user-first workflow requirements for future contributors and chat sessions. Desktop visual verification and CPU validation pending. No manual CI dispatch. PR #140 native AI quality is independent; its run #341 failed on test runner import and obsolete exact-string assertion, corrected separately on that branch.
