@@ -13,9 +13,9 @@
 [32m[INFO][0m Adding extra search path text_encoders C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\clip
 [32m[INFO][0m Adding extra search path loras C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\loras
 [32m[INFO][0m Adding extra search path vae C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\vae
-[32m[INFO][0m Setting output directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-rgd7ggsx\output
-[32m[INFO][0m Setting input directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-rgd7ggsx\input
-[32m[INFO][0m Setting user directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-rgd7ggsx\user
+[32m[INFO][0m Setting output directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-l4y145nw\output
+[32m[INFO][0m Setting input directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-l4y145nw\input
+[32m[INFO][0m Setting user directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-l4y145nw\user
 [32m[INFO][0m Prestartup Skipping comfyui-easy-use due to disable_all_custom_nodes and whitelist_custom_nodes
 [32m[INFO][0m Prestartup Skipping rgthree-comfy due to disable_all_custom_nodes and whitelist_custom_nodes
 [32m[INFO][0m Found comfy_kitchen backend triton: {'available': False, 'disabled': True, 'unavailable_reason': "ImportError: No module named 'triton'", 'capabilities': []}
@@ -40,7 +40,7 @@
 [32m[INFO][0m ComfyUI version: 0.35.0
 [32m[INFO][0m comfy-aimdo version: 0.5.3
 [32m[INFO][0m comfy-kitchen version: 0.2.33
-[32m[INFO][0m Setting temp directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-rgd7ggsx\temp\temp
+[32m[INFO][0m Setting temp directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-l4y145nw\temp\temp
 [32m[INFO][0m comfyui-frontend-package version: 1.51.10
 [32m[INFO][0m comfyui-workflow-templates version: 0.11.57
 [32m[INFO][0m comfyui-embedded-docs version: 0.5.11
@@ -109,7 +109,7 @@ Change preview_id FK from assets.id to asset_references.id.
 [32m[INFO][0m Using RAM pressure cache.
 [32m[INFO][0m Starting server
 
-[32m[INFO][0m To see the GUI go to: http://127.0.0.1:53706
+[32m[INFO][0m To see the GUI go to: http://127.0.0.1:60143
 [32m[INFO][0m got prompt
 [32m[INFO][0m Using pytorch attention in VAE
 [32m[INFO][0m Using pytorch attention in VAE
@@ -129,13 +129,14 @@ Change preview_id FK from assets.id to asset_references.id.
 [32m[INFO][0m model_type FLOW
 [32m[INFO][0m Requested to load WAN21
 [32m[INFO][0m loaded partially; 4861.73 MB usable, 4807.99 MB loaded, 2168.25 MB offloaded, 53.74 MB buffer reserved, lowvram patches: 0
-  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:12<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:12<00:12, 12.87s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:22<00:12, 12.87s/it]                                   100%|██████████| 2/2 [00:22<00:00, 11.23s/it]100%|██████████| 2/2 [00:22<00:00, 11.23s/it]
+  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:12<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:12<00:12, 12.21s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:21<00:12, 12.21s/it]                                   100%|██████████| 2/2 [00:21<00:00, 10.81s/it]100%|██████████| 2/2 [00:21<00:00, 10.81s/it]
 [32m[INFO][0m gguf qtypes: F16 (694), Q3_K (280), Q5_K (2), Q4_K (118), F32 (1)
 [32m[INFO][0m model weight dtype torch.float16, manual cast: None
 [32m[INFO][0m model_type FLOW
 [32m[INFO][0m Requested to load WAN21
 [32m[INFO][0m loaded partially; 4860.73 MB usable, 4806.99 MB loaded, 2169.25 MB offloaded, 53.74 MB buffer reserved, lowvram patches: 0
-  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:15<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:15<00:15, 15.13s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:23<00:15, 15.13s/it]                                   100%|██████████| 2/2 [00:23<00:00, 11.73s/it]100%|██████████| 2/2 [00:23<00:00, 11.73s/it]
+  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:12<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:12<00:12, 12.98s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:21<00:12, 12.98s/it]                                   100%|██████████| 2/2 [00:21<00:00, 10.93s/it]100%|██████████| 2/2 [00:21<00:00, 10.93s/it]
 [32m[INFO][0m Requested to load WanVAE
+[32m[INFO][0m Unloaded partially: 1778.67 MB freed, 3028.32 MB remains loaded, 151.59 MB buffer reserved, lowvram patches: 122
 [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 241MB Staged. 0 patches attached. Force pre-loaded 60 weights: 61 KB.
-[32m[INFO][0m [32mPrompt executed in 89.59 seconds[0m
+[32m[INFO][0m [32mPrompt executed in 85.49 seconds[0m
