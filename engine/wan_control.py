@@ -2,7 +2,7 @@
 import base64,binascii,io
 from pathlib import Path
 from PIL import Image,ImageOps
-from . import world
+from . import world, full_frame_guidance as G
 
 MODEL="wan22-fun5b"
 WEIGHTS=["Wan2.2-Fun-5B-Control-Q4_K_M.gguf","Wan2.2-Fun-5B-Control-Q3_K_M.gguf","wan2.2_fun_control_5B_bf16.safetensors"]
@@ -78,7 +78,7 @@ def graph(q,clip):
       "components":node("GetVideoComponents",video=["video",0]),
       "shift":node("ModelSamplingSD3",model=["model",0],shift=8.0),
       "pos":node("CLIPTextEncode",clip=["clip",0],text=q["prompt"]),
-      "neg":node("CLIPTextEncode",clip=["clip",0],text="blurry, distorted, inconsistent character, watermark, text"),
+      "neg":node("CLIPTextEncode",clip=["clip",0],text=G.negative(q.get("guidance"))),
       "control":node("Wan22FunControlToVideo",positive=["pos",0],negative=["neg",0],vae=["vae",0],width=q["width"],height=q["height"],length=q["frames"],batch_size=1,ref_image=["ref",0],control_video=["components",0]),
       "sample":node("KSampler",model=["shift",0],seed=q["seed"],steps=q["steps"],cfg=5.0,sampler_name="uni_pc",scheduler="simple",positive=["control",0],negative=["control",1],latent_image=["control",2],denoise=1.0),
       "decode":node("VAEDecode",samples=["sample",0],vae=["vae",0]),
