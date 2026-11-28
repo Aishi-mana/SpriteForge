@@ -1032,3 +1032,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C animation polish (initial implementation)
 
 - Added CPU-only controlled breathing from transparent reference, 0–4 px amplitude, periodic torso-band warp, exact unwarped head/feet regions, explicit timeline replacement/locks/undo. Approximate anatomy band is not a semantic body rig. Added conservative BiRefNet residual cleanup and stronger RGB-gated edge correction above 50%; UI defaults 80% temporal and 70% cleanup, method visible in extraction result. Re-extraction retains source MP4. Server now receives actual document for lock enforcement. Regression tests added. Desktop quality, quantitative flicker diagnostics, SAM tracking and broader cleanup remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C1 controlled idle storage/UX hotfix
+
+- User desktop reported 'Idle exceeds artwork budget' with 33 frames, 16 FPS and 1 px amplitude. Fit reference copy to selected output maximum (480 px default), account for original reference in pixel and encoded limits, bounded automatic downscale retry, reuse symmetric phase renders, retain frame count/FPS and original reference. Hide video-only generation controls in controlled mode; report actual output dimensions and actionable errors. Directional canvases stay fixed. Regression added; real reference desktop retest pending. No manual CI dispatch.
