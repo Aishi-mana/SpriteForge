@@ -38,6 +38,11 @@ def main():
             page.goto(f"http://127.0.0.1:{server.server_port}/index.html")
             page.locator("#t9").click()
             page.locator("#hgrid img").first.click()
+            assert page.locator("#hres [data-a=anim]").is_visible()
+            assert not page.locator("#hres [data-a=alpha]").is_visible()
+            page.locator("#hres .sf62resultMore summary").click()
+            assert page.locator("#hres [data-a=alpha]").is_visible()
+            print("ok  advanced result actions expand on demand")
             page.locator("#hres [data-a=anim]").click()
             page.wait_for_function("mode===4 && document.getElementById('status').textContent.includes('Fixture rig rejected')")
             assert "rig/autoplace" in requests
@@ -52,6 +57,9 @@ def main():
             page.wait_for_function("document.getElementById('status').textContent.includes('Cannot decode')")
             print("ok  image decode failure visible")
             for mode in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20):
+                group=next((i for i,ids in enumerate([[1,2,7],[16,5,8,11,3,6],[20,4,13,14],[18,10],[17,19],[12,15]]) if mode in ids),None)
+                if group is not None and page.locator("#nav62g"+str(group)).get_attribute("aria-expanded")!="true":
+                    page.locator("#nav62g"+str(group)).click()
                 page.locator("#t"+str(mode)).click()
                 assert page.evaluate("mode")==mode
             print("ok  all 20 navigation buttons")
