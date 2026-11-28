@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 from . import modular, modular_rig
 
-KINDS=("character","asset","rig")
+KINDS=("character","asset","rig","image","animation")
 MAX_ENTRIES=300
 MAX_BYTES=1_000_000_000
 _LOCK=threading.RLock()
@@ -41,6 +41,18 @@ def _metadata(data):
                 tags=list(dict.fromkeys(_text(t,40,"tag",True) for t in tags)))
 
 def _normalized(data,kind):
+    if kind=="image":
+        from . import world
+        image=data.get("image")
+        if not isinstance(image,str) or len(image)>24_000_000:raise ValueError("Invalid image or image budget exceeded")
+        im=world.image(image)
+        return {"image":image},im,{"category":"image","width":im.width,"height":im.height}
+    if kind=="animation":
+        from . import full_frame, world
+        doc=full_frame.validate(data.get("document"))
+        if not doc["frames"]:raise ValueError("Add animation frames before saving")
+        return {"document":doc},world.image(doc["frames"][0]),{"category":"animation","width":doc["width"],"height":doc["height"],"frames":len(doc["frames"]),"fps":doc["fps"]}
+
     if kind=="character":
         clean,images=modular.validate(data.get("recipe"))
         if not images:raise ValueError("Add a character layer before saving")
@@ -114,6 +126,7 @@ def apply(root,entry_id,recipe,keep_placement=False):
     """Create a validated copy. Rig presets require the exact existing body."""
     entry=load(root,entry_id);kind=entry["meta"]["kind"];data=entry["payload"]
     if kind=="character":return modular.validate(data["recipe"])[0]
+    if kind not in ("asset","rig"):raise ValueError("Use the appropriate studio to open this asset")
     clean,_=modular.validate(recipe)
     if kind=="rig":
         _,_,key,_,_,_=modular_rig.prepare(clean)

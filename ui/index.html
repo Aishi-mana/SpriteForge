@@ -363,13 +363,13 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <button class="sec" onclick="mdReset()">Clear modular character</button>
 </div>
 <div id="p-library" class="hide">
-<label>Save a reusable snapshot from Modular</label><select id="libKind"><option value="character">Complete character / outfit collection</option><option value="asset">Selected modular layer</option><option value="rig">Saved body rig preset</option></select>
+<label>Save a reusable asset</label><select id="libKind" onchange="libKindChanged()"><option value="character">Complete character / outfit collection</option><option value="asset">Selected modular layer</option><option value="rig">Saved body rig preset</option><option value="image">Image from file</option><option value="animation">Current full-frame animation</option></select><label id="libImageLabel" hidden>Image file<input id="libImageFile" type="file" accept="image/png"></label>
 <label>Library name</label><input id="libName" maxlength="80" placeholder="Traveling knight">
 <label>Tags (comma separated)</label><input id="libTags" maxlength="480" placeholder="rpg, armor, blue">
 <label>Notes</label><textarea id="libNotes" maxlength="1000" placeholder="Character style, intended base, or fitting notes"></textarea>
 <button id="libSave" onclick="libSave()">Save snapshot to library</button>
 <div class="mut">Separate from project saves. A snapshot is a copy; editing or deleting it does not alter other projects.</div>
-<label>Library filter</label><select id="libFilter" onchange="libRefresh()"><option value="">All entries</option><option value="character">Characters / collections</option><option value="asset">Individual assets</option><option value="rig">Rig presets</option></select>
+<label>Library filter</label><select id="libFilter" onchange="libRefresh()"><option value="">All entries</option><option value="character">Characters / collections</option><option value="asset">Individual assets</option><option value="rig">Rig presets</option><option value="image">Images</option><option value="animation">Animations</option></select>
 <input id="libSearch" maxlength="200" placeholder="Search name, category, tags or notes" oninput="libSearchLater()">
 <label class="chk"><input type="checkbox" id="libPlacement" checked><span>Keep stored placement on same-size canvas</span></label>
 <button class="sec" onclick="libRefresh()">Refresh library</button>
@@ -650,7 +650,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <div style="margin-top:16px"><b>Posed sprite preview</b><div id="csStatus" class="mut">Render to see the transformed sprite.</div><canvas id="csPose" style="display:none;max-width:100%;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px"></canvas><label class="chk"><input id="csOverlay" type="checkbox" checked onchange="csDrawPose()"><span>Show posed bone overlay</span></label><div class="row"><button class="sec" id="csPng" onclick="csOutput('png')">Download pose</button><button class="sec" id="csSave" onclick="csOutput('save')">Save posed sprite</button><button class="sec" id="csRef" onclick="csOutput('ref')">Use posed reference</button></div></div>
 </div>
 <div class="card hide" id="librarycard" style="max-width:none">
-<b>Character &amp; asset library</b><div class="mut" id="libStatus">Loading library…</div>
+<b>Unified Asset Library</b><div class="mut" id="libStatus">Loading library…</div>
 <div class="grid" id="libRows"></div>
 <details open style="margin-top:18px"><summary><b>Installed models &amp; compatible LoRAs</b></summary>
 <div id="libRuntime" class="mut"></div><label>Inspect checkpoint</label><select id="libModel" onchange="libModelShow()"></select>
@@ -1967,7 +1967,8 @@ function csOutput(action){if(!CS.pose)return;const url=CS.pose.sprite;if(action=
 /*CUSTOM-RIG-END*/
 const MD={recipe:mdDefault(),selected:-1,revision:0,timer:null,preview:null,previewRevision:-1,rendering:false,pending:false,epoch:0};
 const LIB={rows:[],request:0,modelRequest:0,models:[],timer:null,busy:false,scanning:false};
-function libOpen(kind){$('libKind').value=kind;const l=MD.recipe.layers[MD.selected];$('libName').value=kind==='asset'&&l?l.name:($('pname').value.trim()||'')+(kind==='rig'?' rig':'');tab(12)}
+function libKindChanged(){$('libImageLabel').hidden=$('libKind').value!=='image'}
+function libOpen(kind){$('libKind').value=kind;libKindChanged();const l=MD.recipe.layers[MD.selected];$('libName').value=kind==='asset'&&l?l.name:($('pname').value.trim()||'')+(kind==='rig'?' rig':'');tab(12)}
 function libText(parent,value,cls=''){const e=document.createElement('div');e.className=cls;e.textContent=value;parent.appendChild(e);return e}
 function libButton(parent,label,fn,disabled=false){const b=document.createElement('button');b.className='sec';b.textContent=label;b.disabled=disabled;b.onclick=fn;parent.appendChild(b);return b}
 function libSearchLater(){clearTimeout(LIB.timer);LIB.timer=setTimeout(libRefresh,200)}
@@ -1978,16 +1979,17 @@ async function libRefresh(){
 }
 function libDraw(){const box=$('libRows');box.replaceChildren();$('libStatus').textContent=LIB.rows.length+' matching local snapshots';
  for(const entry of LIB.rows){const card=document.createElement('div');card.className='card';card.style.cssText='margin:0;min-width:0;overflow-wrap:anywhere';const im=new Image();im.src='/api/library/'+entry.id+'/preview';im.loading='lazy';im.alt=entry.name;im.style.cssText='max-width:128px;max-height:128px;object-fit:contain;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px';card.appendChild(im);libText(card,entry.name);libText(card,entry.kind+' · '+entry.category+' · '+entry.width+'×'+entry.height+(entry.layers?' · '+entry.layers+' layers':''),'mut');if(entry.tags.length)libText(card,entry.tags.join(' · '),'mut');if(entry.notes)libText(card,entry.notes,'mut');
- const row=document.createElement('div');row.className='row';card.appendChild(row);libButton(row,entry.kind==='character'?'Load copy':entry.kind==='asset'?'Add layer':'Apply rig',()=>libApply(entry),LIB.busy);libButton(row,'Delete',()=>libDelete(entry),LIB.busy);box.appendChild(card)}
+ const row=document.createElement('div');row.className='row';card.appendChild(row);if(['image','animation'].includes(entry.kind))libButton(row,'Download copy',()=>libDownloadCopy(entry),LIB.busy);else libButton(row,entry.kind==='character'?'Load copy':entry.kind==='asset'?'Add layer':'Apply rig',()=>libApply(entry),LIB.busy);libButton(row,'Delete',()=>libDelete(entry),LIB.busy);box.appendChild(card)}
  $('libSave').disabled=LIB.busy;
 }
 function libBusy(){return LIB.busy||DR.busy||MA.busy||MR.busy}
+async function libDownloadCopy(entry){try{const d=await api('/api/library/'+entry.id);if(entry.kind==='animation')da64MotionDownload(new Blob([JSON.stringify(d.payload.document)],{type:'application/json'}),entry.id+'.json');else{const a=document.createElement('a');a.href=d.payload.image;a.download=entry.id+'.png';a.click()}}catch(e){$('libStatus').textContent='Download failed: '+e.message}}
 async function libSave(){if(libBusy()){ $('libStatus').textContent='Finish the active character job first.';return }
  const kind=$('libKind').value,name=$('libName').value.trim(),tags=$('libTags').value.split(',').map(t=>t.trim()).filter(Boolean),notes=$('libNotes').value;
  if(!name){$('libStatus').textContent='Enter a library name';return}
  if(kind==='asset'&&!MD.recipe.layers[MD.selected]){$('libStatus').textContent='Select a layer in Modular first';return}
  if(kind==='rig'&&!MD.recipe.rig){$('libStatus').textContent='Save a body rig in Modular first';return}
- LIB.busy=true;libDraw();try{const d=await api('/api/library',{...J,body:JSON.stringify({kind,name,tags,notes,recipe:MD.recipe,index:MD.selected})});$('status').textContent='Saved library snapshot: '+d.name;await libRefresh()}catch(e){$('libStatus').textContent='Save failed: '+e.message}finally{LIB.busy=false;$('libSave').disabled=false;for(const b of $('libRows').querySelectorAll('button'))b.disabled=false}
+ LIB.busy=true;libDraw();try{const data={kind,name,tags,notes};if(kind==='image'){const f=$('libImageFile').files[0];if(!f||f.size>17000000)throw Error('Choose a PNG under 17 MB');[data.image]=await da64Read([f])}else if(kind==='animation'){if(FF.busy||FF.videoBusy||!FF.doc.frames.length)throw Error('Finish or create a full-frame animation first');data.document=FF.doc}else{data.recipe=MD.recipe;data.index=MD.selected}const d=await api('/api/library',{...J,body:JSON.stringify(data)});$('status').textContent='Saved library snapshot: '+d.name;await libRefresh()}catch(e){$('libStatus').textContent='Save failed: '+e.message}finally{LIB.busy=false;$('libSave').disabled=false;for(const b of $('libRows').querySelectorAll('button'))b.disabled=false}
 }
 async function libApply(entry){if(libBusy())return;
  if(entry.kind==='character'&&MD.recipe.layers.length&&!confirm('Replace the current modular recipe with a copy of '+entry.name+'? Existing project saves and the library snapshot are unchanged.'))return;
