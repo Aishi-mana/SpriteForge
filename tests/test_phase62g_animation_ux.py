@@ -21,10 +21,14 @@ def run():
     block = ui.split('id="fullFrameCard"', 1)[1].split('id="systemCard"', 1)[0]
     layout = Layout()
     layout.feed("<div " + block)
-    for ident in ("ffReference", "ffPrompt", "ffPreset", "ffVideoModel", "ffVideoCount",
+    for ident in ("ffReference", "ffPrompt", "ffPreset", "ffEasyMode", "ffVideoCount",
                   "ffVideoFps", "ffGenerateMain", "ffVideoStatus", "ffAutoExtract",
                   "ffReplaceFrames", "ffCanvas", "ffFrames"):
         assert layout.ids[ident] == [0], ident
+    # C8 exposes the workflow selector; raw model selection remains in advanced settings.
+    assert layout.ids["ffVideoModel"] == [1]
+    assert layout.ids["ffTechnical"] == [1]
+    assert layout.ids["ffBuiltinControls"] == [0]
     assert all(len(v) == 1 for v in layout.ids.values())
     assert "if(FF.doc.frames.length&&!replace)" in ui
     assert "FF.quickVideoRev!==FF.rev" in ui
