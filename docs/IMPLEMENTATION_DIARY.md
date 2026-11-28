@@ -1037,3 +1037,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C1 controlled idle storage/UX hotfix
 
 - User desktop reported 'Idle exceeds artwork budget' with 33 frames, 16 FPS and 1 px amplitude. Fit reference copy to selected output maximum (480 px default), account for original reference in pixel and encoded limits, bounded automatic downscale retry, reuse symmetric phase renders, retain frame count/FPS and original reference. Hide video-only generation controls in controlled mode; report actual output dimensions and actionable errors. Directional canvases stay fixed. Regression added; real reference desktop retest pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C2 playback flicker hotfix
+
+- User confirms 33 controlled frames at 480x480/16 FPS but reports flicker and no visible idle motion. Found preview resets canvas dimensions and clears it before each asynchronous PNG decode, potentially displaying blank frames. Predecode frame images before playback, cache by current frame array, paint synchronously once ready, preserve last displayed frame during loading, guard stale playback. Increase recommended breathing amplitude to 3 px (max 8), still approximate torso-only warp. Added static UI and synthetic motion regression; actual flicker source and visual quality require desktop retest. No manual CI dispatch.

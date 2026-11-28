@@ -13,7 +13,7 @@ def generate(doc,options):
     n=world.integer
     count=n(options.get("frames",32),8,97,"idle frames")
     fps=n(options.get("fps",16),8,30,"idle FPS")
-    amplitude=n(options.get("amplitude",1),0,4,"breathing pixels")
+    amplitude=n(options.get("amplitude",3),0,8,"breathing pixels")
     im=world.image(d["reference"]).convert("RGBA")
     if im.getchannel("A").getextrema()[0]==255:raise ValueError("Controlled idle requires a transparent reference")
     if not im.getchannel("A").getbbox():raise ValueError("Reference is empty")
