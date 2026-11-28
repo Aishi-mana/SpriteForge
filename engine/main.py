@@ -1556,6 +1556,20 @@ def full_frame_motion_templates():
     return motion_templates.catalog()
 
 
+@app.post("/api/direct-animation/replace/plan")
+def direct_animation_replace_plan(body: dict=Body(...)):
+    from . import direct_replace as R
+    try:return R.plan(body)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
+@app.post("/api/direct-animation/replace/restore")
+def direct_animation_replace_restore(body: dict=Body(...)):
+    from . import direct_replace as R
+    try:return R.restore(body)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/direct-animation/motion/inspect")
 def direct_animation_motion_inspect(body: dict=Body(...)):
     from . import direct_motion as M
