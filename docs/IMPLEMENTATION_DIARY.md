@@ -1267,3 +1267,8 @@ PR #174 CPU run 46171252948 passed and merged at 31f5d95a; PR #175 CPU run 46171
 ### Phase 65H — Import, export and library backup (2026-11-29 PHT)
 
 PR #176 CPU run 46173496404 passed and merged at 3f801a26. Added engine/library_backup.py, disk-backed ZIP download and multipart restore API, full library/individual export and restore controls. Manifest sizes and SHA-256, strict allowed member paths and payload validation, staged restore with collision remapping, internal relationship preservation and external link detachment. Existing quotas retained; no overwrite mode, models/projects/config excluded. Ordinary publication failure rollback, not crash-atomic. Added six-kind roundtrip and invalid archive/capacity regression plus JS placement assertions. CPU and desktop validation pending; no manual CI dispatch.
+
+
+### Phase 65I — Integration and desktop validation (2026-11-29 PHT)
+
+PR #177 CPU run 46176698217 passed and merged at fe6e5a40. Reviewed library save/picker/viewer/revision/restore integration. Fixed final-frame hold, picker failure recovery and active import close protection, replacement confirmations, workspace/session checks, MP4 extraction range and WeakMap lineage for supported edit/undo paths. Added mocked playback and lineage regression and desktop acceptance checklist; README/HANDOFF milestone updated. CPU execution pending; actual Windows WebView, GPU and native engine acceptance not executed. No manual CI dispatch or packaging change.
