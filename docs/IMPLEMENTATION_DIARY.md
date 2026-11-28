@@ -945,3 +945,5 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-G: Keyframe editing and regeneration
 
 - Persist keyframe markers and locks; remap on reorder/removal/interpolation, preserve locked frames during consistency correction, block extraction replacement until unlocked. Stage imported PNG or existing image editor output as a candidate, compare and accept a single frame with undo. Added CPU tests. AI editing uses existing editor capabilities, no direct neighboring-frame conditioning. Stacked on 61S-F; desktop/GPU acceptance pending. No manual CI dispatch.
+
+- 61S-E validation #259 failed on Windows and Ubuntu: two-sample endpoint median changed stable boundary frames. Restrict temporal color and position corrections to interior frames; endpoint alpha/despill behavior unchanged. Revalidate automatically.
