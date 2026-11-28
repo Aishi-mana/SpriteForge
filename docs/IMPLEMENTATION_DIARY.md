@@ -1103,6 +1103,8 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 - 62K-A PR #142 CPU validation #348 passed and merged at daa53d1. Desktop GPU acceptance still pending.
 - Added fixed-path folder creation within the configured models directory, separate image model and motion adapter component checks, per-folder missing-file diagnostics, standalone-weight warnings, exact destination paths, example upstream model links and a visible generation readiness gate. Refresh works without restarting. Standard unsharded default-name safetensors layout only; file existence is not tensor integrity or GPU validation. No automatic model downloads/conversion or changes to generation fidelity in this phase. Updated mocked regression fixtures and setup documentation. CPU validation pending; desktop visual verification pending. Next 62K-C reference consistency and motion fidelity, 62K-D benchmarks; text-to-video and Wan improvements deferred. No manual CI dispatch.
 
+- CPU #350: Ubuntu passed; Windows failed the test's path equality check after model paths were resolved. Changed fixture comparison to Path.samefile on both B and C; rerun pending. No inference failure was observed in this mocked test.
+
 
 ## 2026-11-28 PHT — 62K-C character preservation and motion fidelity
 
