@@ -908,3 +908,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61R-J: Exports and stabilization
 
 - PR #102 and #103 passed CPU validation and merged. Added validated UI ZIP export with RGBA PNGs, categorized icons, external-path manifest, editable theme roundtrip, Godot and Unity layout hints and integration README. Added archive integrity, metadata, coordinate/border mapping, empty theme and invalid-reference tests. Native engine scenes/importers and desktop acceptance deferred. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-A: Full-frame Animation Studio foundation
+
+- PR #104 passed CPU validation and merged. Add independent full-frame workspace, approved character or imported PNG reference, motion description, same-canvas PNG frame imports, ordering/removal/undo, FPS/loop playback, pivot guide, validated bounded document and project/archive persistence. No skeletal dependency. CPU regression tests added; AI generation backend, automatic alignment, video import and export deferred. No manual CI dispatch.
