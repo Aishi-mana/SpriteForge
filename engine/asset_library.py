@@ -30,6 +30,10 @@ def _text(v,n,label,required=False):
         raise ValueError("Invalid "+label)
     return v.strip()
 
+def _favorite(value):
+    if type(value) is not bool:raise ValueError("Invalid favorite flag")
+    return value
+
 def _metadata(data):
     if not isinstance(data,dict):raise ValueError("Invalid entry")
     kind=data.get("kind")
@@ -38,6 +42,8 @@ def _metadata(data):
     if not isinstance(tags,list) or len(tags)>12:raise ValueError("At most 12 tags")
     return dict(kind=kind,name=_text(data.get("name",""),80,"name",True),
                 notes=_text(data.get("notes",""),1000,"notes"),
+                collection=_text(data.get("collection",""),80,"collection"),
+                favorite=_favorite(data.get("favorite",False)),
                 tags=list(dict.fromkeys(_text(t,40,"tag",True) for t in tags)))
 
 def _normalized(data,kind):
@@ -80,7 +86,8 @@ def list_entries(root,kind="",query=""):
             try:
                 meta=json.loads((p/"meta.json").read_text(encoding="utf-8"))
                 if meta.get("id")!=p.name or meta.get("kind") not in KINDS:continue
-                hay=" ".join([meta["name"],meta["notes"],meta["category"],*meta["tags"]]).casefold()
+                meta.setdefault("collection","");meta.setdefault("favorite",False)
+                hay=" ".join([meta["name"],meta["notes"],meta["category"],meta["collection"],*meta["tags"]]).casefold()
                 if (not kind or meta["kind"]==kind) and all(t in hay for t in query.split()):rows.append(meta)
             except (OSError,ValueError,KeyError,TypeError):continue
     return sorted(rows,key=lambda m:m["created"],reverse=True)
@@ -113,6 +120,27 @@ def load(root,entry_id):
         p=_entry(root,entry_id)
         return {"meta":json.loads((p/"meta.json").read_text(encoding="utf-8")),
                 "payload":json.loads((p/"payload.json").read_text(encoding="utf-8"))}
+
+def update_metadata(root,entry_id,patch):
+    """Update only organization fields; never rewrite payload or preview."""
+    allowed={"name","notes","tags","collection","favorite"}
+    if not isinstance(patch,dict) or not patch or set(patch)-allowed:
+        raise ValueError("Invalid metadata fields")
+    with _LOCK:
+        p=_entry(root,entry_id)
+        target=p/"meta.json"
+        meta=json.loads(target.read_text(encoding="utf-8"))
+        clean=_metadata({**meta,**patch})
+        meta.update(clean)
+        meta["updated"]=datetime.now(timezone.utc).isoformat()
+        with tempfile.NamedTemporaryFile(mode="w",encoding="utf-8",dir=p,prefix=".meta-",delete=False) as out:
+            tmp=Path(out.name)
+            try:json.dump(meta,out,ensure_ascii=False)
+            except Exception:
+                out.close();tmp.unlink(missing_ok=True);raise
+        try:tmp.replace(target)
+        finally:tmp.unlink(missing_ok=True)
+        return meta
 
 def preview_path(root,entry_id):
     return _entry(root,entry_id)/"preview.png"

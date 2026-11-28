@@ -1235,3 +1235,8 @@ PR #169 CPU run 46167658301 passed and merged at 3801caeb; desktop/GPU acceptanc
 ### Phase 65B — Shared save shortcuts (2026-11-29 PHT)
 
 PR #170 CPU run 46168050634 passed and merged at 342dffd9. Added global library navigation and shared named save helper in ui/index.html; shortcuts on generated/portrait results, approved character art, appearance, pixel editor, modular composite, full-frame animation/current frame, original/staged direct animation, VFX frame, map and UI layout. Reused existing API/quotas; no project dependency, no automatic application. Native prompts/alerts for initial in-place save; flattened map/layout only, raw video and specialized bundles deferred. Added JS regression for request, cancellation, busy and failure recovery plus placement, registered in test_ui.py. CPU and actual desktop verification pending; no manual CI dispatch.
+
+
+### Phase 65C — Asset browser and organization (2026-11-29 PHT)
+
+PR #171 CPU run 46168688995 passed and merged at 212180f3. Added collection and favorite metadata, atomic metadata-only PATCH, legacy defaults and collection search in engine/asset_library.py and engine/main.py. UI adds metadata dialog, favorites and collection filters, compact list, sorting and clear filters. Single text-label collections; view settings session-only. Added CPU and JS regression assertions for payload/preview isolation, invalid fields, sort/filter and nonmutation. CPU execution and desktop acceptance pending; no manual CI dispatch.
