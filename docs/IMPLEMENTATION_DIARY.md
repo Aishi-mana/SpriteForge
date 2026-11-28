@@ -1277,3 +1277,8 @@ PR #177 CPU run 46176698217 passed and merged at fe6e5a40. Reviewed library save
 ### Phase 66A — Full-system functional audit (2026-11-29 PHT)
 
 Verified PR #178 CPU run 46177515167 passed Windows (2258 checks) and Ubuntu (2267 checks), merged at e76907c6. Audited literal handlers (1066) and all 20 workspace tabs; no unresolved literal function names after helper allowlist. Reviewed queue/history/result routing and library/project integration source. Fixed queue FileReader rejection, stale refresh ordering, background result routing, history error visibility and stale details; moved queued input decoding into job exception boundary so missing/corrupt input fails the job rather than kills the worker. Added UI/queue regressions. Source-level audit only; full desktop click coverage, VRAM/RAM and generation timing not measured. CPU execution for new changes pending. No manual CI dispatch.
+
+
+### Phase 66B — Workspace consolidation (2026-11-29 PHT)
+
+Verified PR #179 merged at 0009efb and its CPU run 46178808305 succeeded. Resumed existing branch from identical main after previous uncommitted patch. Moved existing navigation ahead of project and technical setup, kept project controls visible, added local pinned/recent workspace shortcuts and remembered advanced sampling disclosure, global Queue/history and project access, and explicit AI versus rig guidance. No model or generation default changes. Existing ID inventory preserved, JavaScript syntax parsed. Added source and Node regressions and phase notes. CPU execution and Windows desktop acceptance pending; no manual CI dispatch. Branch phase-66b-workspace-ux.
