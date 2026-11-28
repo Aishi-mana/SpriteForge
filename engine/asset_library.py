@@ -56,8 +56,10 @@ def _normalized(data,kind):
     if kind=="animation":
         from . import full_frame, world
         doc=full_frame.validate(data.get("document"))
-        if not doc["frames"]:raise ValueError("Add animation frames before saving")
-        return {"document":doc},world.image(doc["frames"][0]),{"category":"animation","width":doc["width"],"height":doc["height"],"frames":len(doc["frames"]),"fps":doc["fps"]}
+        clips=[doc["frames"]]+[v["frames"] for v in doc["directions"].values()]
+        populated=[frames for frames in clips if frames]
+        if not populated:raise ValueError("Add animation frames before saving")
+        return {"document":doc},world.image(populated[0][0]),{"category":"animation","width":doc["width"],"height":doc["height"],"frames":sum(map(len,populated)),"fps":doc["fps"],"clips":len(populated)}
 
     if kind=="character":
         clean,images=modular.validate(data.get("recipe"))
