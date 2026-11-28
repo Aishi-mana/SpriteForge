@@ -113,6 +113,22 @@ def readiness(root):
                         "label": "AnimateDiff — " + b.name + " / " + a.name}
                        for key, (b, a) in pairs.items()]}
 
+PROFILES = {"preserve": (0.35, 4.0), "balanced": (0.50, 5.0), "motion": (0.65, 6.0)}
+
+def motion_prompts(text, guidance):
+    # Typed instructions take precedence over preset-specific restrictions.
+    # In particular, idle's default no-blink/no-gesture guidance must not override a requested action.
+    text = world.label(text, "motion description", 2000, True)
+    effective = dict(guidance)
+    if text:
+        effective["preset"] = "custom"
+    positive = G.prompt(text, effective)
+    negative = G.negative(effective)
+    if guidance["identity"]:
+        positive += " Keep the original palette, shading, lighting direction and costume details consistent across frames."
+        negative += ", identity drift, costume changes, inconsistent palette, changing lighting, flickering colors"
+    return positive, negative
+
 def settings(body):
     n = world.integer
     w = n(body.get("width", 512), 256, 512, "AnimateDiff width")
@@ -122,13 +138,17 @@ def settings(body):
         raise ValueError("AnimateDiff dimensions must be divisible by 64")
     guidance = G.settings(body.get("guidance"))
     seed = n(body.get("seed", -1), -1, 2147483647, "video seed")
+    profile = body.get("ad_profile", "balanced")
+    if not isinstance(profile, str) or profile not in PROFILES:
+        raise ValueError("Choose a valid AnimateDiff motion profile")
+    strength, cfg = PROFILES[profile]
+    positive, negative = motion_prompts(body.get("prompt", ""), guidance)
     return dict(width=w, height=h, frames=count, guidance=guidance,
-                prompt=G.prompt(body.get("prompt", ""), guidance),
-                negative=G.negative(guidance) + ", changing lighting, flickering colors",
+                prompt=positive, negative=negative, profile=profile, cfg=cfg,
                 fps=n(body.get("fps", 8), 8, 30, "video FPS"),
                 steps=n(body.get("steps", 12), 8, 40, "video steps"),
                 seed=seed if seed >= 0 else secrets.randbelow(2147483648),
-                reference=body.get("reference"), strength=0.5)
+                reference=body.get("reference"), strength=strength)
 
 def generate(root, body, runner=None):
     pairs, _ = catalog(root)
@@ -161,11 +181,11 @@ def run(base, adapter, image, q):
         pipe.enable_model_cpu_offload()
         pipe.enable_vae_slicing()
         pipe.unet.enable_forward_chunking()
-        STATUS["stage"] = "Generating AnimateDiff frames"
+        STATUS["stage"] = "Generating AnimateDiff frames (" + q["profile"] + ", seed " + str(q["seed"]) + ")"
         # A repeated still is input conditioning only; the temporal denoiser generates every output frame.
         frames = pipe(video=[image.copy() for _ in range(q["frames"])], prompt=q["prompt"],
                       negative_prompt=q["negative"], width=q["width"], height=q["height"],
-                      num_inference_steps=q["steps"], strength=q["strength"], guidance_scale=5.0,
+                      num_inference_steps=q["steps"], strength=q["strength"], guidance_scale=q["cfg"],
                       generator=torch.Generator(device="cpu").manual_seed(q["seed"]),
                       output_type="pil", decode_chunk_size=2).frames[0]
         if len(frames) != q["frames"]:
