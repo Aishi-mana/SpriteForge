@@ -51,4 +51,8 @@ for patch in [{"kind":"rig"},{"favorite":"yes"},{"name":""},{"collection":"x"*81
     try:L.update_metadata(root,static["id"],patch);ok(False,"invalid metadata rejected")
     except ValueError:ok(True,"invalid metadata rejected")
 ok(L.load(root,static["id"])==after,"invalid edits leave snapshot unchanged")
+directional={**doc,"direction":"S","frames":[],"directions":{"N":{"frames":[image,image]}}}
+directional_entry=L.save(root,{"kind":"animation","name":"North clip","document":directional})
+ok(directional_entry["frames"]==2 and directional_entry["clips"]==1,"save populated inactive direction")
+ok(L.load(root,directional_entry["id"])["payload"]["document"]["directions"]["N"]["frames"]==[image,image],"direction retained")
 done("test_asset_library")
