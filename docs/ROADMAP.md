@@ -78,17 +78,24 @@ Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose previe
 
 - Phase 62 — Full system audit, UX consolidation and stabilization: [62A queue and animation handoff](phases/PHASE62A.md) merged, CPU validated; [B browser workflow smoke tests](phases/PHASE62B.md) merged, CPU validated, browser execution pending; [C navigation/layout consolidation](phases/PHASE62C.md) merged, CPU validated; [D project/model/export integration](phases/PHASE62D.md) merged, CPU validated; [E desktop/GPU acceptance](phases/PHASE62E.md) tooling implemented, live execution pending.
 
-- Phase 62H: shared Wan 2.2 GGUF/ComfyUI video runtime and readiness implemented; live inference pending. LTX remains optional.
+## Current priority — animation quality before feature expansion (2026-11-28)
 
-## Planned shared model integrations (after Wan delivery acceptance)
+- 62H: Wan 2.2 shared runtime, Windows cleanup hotfix (#124), and extraction/idle improvements (#125) merged. User confirmed actual RTX 5070 Laptop GPU inference (80.40 seconds), MP4 delivery and 33 extracted frames. Extraction dependencies installed locally; launcher repair added.
+- 62J-A (#126) and 62J-B (#128) merged and CPU validated: optional BiRefNet, RGB-gated temporal alpha correction, manual erase/restore. Restore requires matching aligned source PNG. Latest desktop screenshot shows intact face/armor compared with old keying, but user reports playback flicker, excessive idle movement and residual background. Selected transparency method is not fully visible in screenshot; do not assume BiRefNet inference verified solely from model detection.
+- **Next: 62J-C — Animation polish and stability.** Diagnose raw video vs extracted alpha flicker; improve mask temporal coherence and edge/pocket cleanup without damaging foreground; expose actual extraction method and progress; support reprocessing current MP4 without generation and preserve undo/locks. Add constrained reference-based breathing loop option distinct from AI prompt intensity; preserve expression, equipment, planted feet and silhouette with user-adjustable small movement. AI prompts alone cannot guarantee movement amplitude.
+- 62K-A/B: SAM 2.1 interactive segmentation and motion-aware mask propagation if runtime/checkpoint compatible; persistent foreground protection and original-frame recovery. Use existing sam2.1_hiera_small.pt in Downloads/AI models if compatible. Do not claim implemented until tested.
+- Acceptance gate: on user's 8 GB RTX 5070 Laptop, verify raw vs extracted playback, no distracting mask flicker, enclosed gaps clean, face/white armor intact, restrained breathing and stable expression, seamless loop, PNG/atlas export and re-extraction/undo. Preserve source MP4. CPU tests do not establish visual quality. User explicitly prioritizes animation quality over new model features.
+- After animation acceptance: promote validated transparency pipeline to a shared service for character/sprite generation and editing, equipment, icons/UI assets, environment props, effects and existing library artwork. Offer AI / conservative chroma / keep background; opt out for intentionally opaque artwork, maps and backgrounds. Validate soft effects separately.
+
+## Deferred shared model integrations
 
 - 62I: read-only shared model inventory and capability detection, including optional additional model folder.
-- 62J: BiRefNet background removal and alpha refinement.
-- 62K: SAM 2.1 interactive segmentation and video tracking.
+- 62J: global BiRefNet/alpha refinement rollout after animation acceptance (A/B merged; C next).
+- 62K: SAM 2.1 interactive segmentation and video tracking (pending).
 - 62L: FLUX.2 Klein and Qwen GGUF generation/editing, with dependency checks.
 - 62M: AI upscaling and artwork enhancement.
 - 62N: AnimateLCM alternative animation backend.
 - 62O: Qwen3-VL visual assistant.
 - 62P: IC-Light relighting.
 
-Each requires backend compatibility and desktop acceptance; detected files do not establish readiness. Keep primary actions visible and avoid duplicate model downloads.
+Each requires backend compatibility and desktop acceptance; detected files do not establish readiness. Keep primary actions visible and avoid duplicate model downloads. No manual GitHub Actions dispatch.
