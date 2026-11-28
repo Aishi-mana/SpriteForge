@@ -370,7 +370,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <button id="libSave" onclick="libSave()">Save snapshot to library</button>
 <div class="mut">Separate from project saves. A snapshot is a copy; editing or deleting it does not alter other projects.</div>
 <label>Library filter</label><select id="libFilter" onchange="libRefresh()"><option value="">All entries</option><option value="character">Characters / collections</option><option value="asset">Individual assets</option><option value="rig">Rig presets</option><option value="image">Images</option><option value="animation">Animations</option></select>
-<input id="libSearch" maxlength="200" placeholder="Search name, category, tags or notes" oninput="libSearchLater()">
+<input id="libSearch" maxlength="200" placeholder="Search name, collection, tags or notes" oninput="libSearchLater()">
 <label class="chk"><input type="checkbox" id="libPlacement" checked><span>Keep stored placement on same-size canvas</span></label>
 <button class="sec" onclick="libRefresh()">Refresh library</button>
 <button class="sec" onclick="libModels()">Rescan installed models</button>
@@ -651,7 +651,8 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 </div>
 <div class="card hide" id="librarycard" style="max-width:none">
 <b>Unified Asset Library</b><div class="mut" id="libStatus">Loading library…</div>
-<div class="grid" id="libRows"></div>
+<div class="row" style="flex-wrap:wrap"><div><label for="libCollectionFilter">Collection</label><select id="libCollectionFilter" onchange="libDraw()"><option value="">All collections</option></select></div><div><label for="libSort">Sort by</label><select id="libSort" onchange="libDraw()"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="name">Name A–Z</option><option value="kind">Asset type</option><option value="updated">Recently edited</option></select></div><label class="chk"><input id="libFavorites" type="checkbox" onchange="libDraw()"><span>Favorites only</span></label><label class="chk"><input id="libCompact" type="checkbox" onchange="libDraw()"><span>Compact list</span></label><button class="sec" onclick="libResetFilters()">Clear filters</button></div><div class="grid" id="libRows"></div>
+<dialog id="libMetaDialog" style="width:min(480px,90vw);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px"><h3>Edit asset information</h3><label for="libMetaName">Name</label><input id="libMetaName" maxlength="80"><label for="libMetaCollection">Collection (optional)</label><input id="libMetaCollection" maxlength="80" list="libCollections"><datalist id="libCollections"></datalist><label for="libMetaTags">Tags (comma separated)</label><input id="libMetaTags" maxlength="480"><label for="libMetaNotes">Notes</label><textarea id="libMetaNotes" maxlength="1000"></textarea><label class="chk"><input type="checkbox" id="libMetaFavorite"><span>Favorite</span></label><div id="libMetaStatus" class="mut" role="status"></div><div class="row"><button id="libMetaSave" onclick="libCommitMetadata()">Save information</button><button class="sec" onclick="libCloseMetadata()">Cancel</button></div></dialog>
 <details open style="margin-top:18px"><summary><b>Installed models &amp; compatible LoRAs</b></summary>
 <div id="libRuntime" class="mut"></div><label>Inspect checkpoint</label><select id="libModel" onchange="libModelShow()"></select>
 <div id="libModelDetail" class="mut" style="white-space:pre-wrap;overflow-wrap:anywhere"></div><div id="libComponents"></div>
@@ -1996,9 +1997,29 @@ async function libRefresh(){
  try{const d=await api('/api/library?kind='+encodeURIComponent($('libFilter').value)+'&q='+encodeURIComponent($('libSearch').value));if(ticket!==LIB.request)return;LIB.rows=d.entries;libDraw()}
  catch(e){if(ticket===LIB.request)$('libStatus').textContent='Library error: '+e.message}
 }
-function libDraw(){const box=$('libRows');box.replaceChildren();$('libStatus').textContent=LIB.rows.length+' matching local snapshots';
- for(const entry of LIB.rows){const card=document.createElement('div');card.className='card';card.style.cssText='margin:0;min-width:0;overflow-wrap:anywhere';const im=new Image();im.src='/api/library/'+entry.id+'/preview';im.loading='lazy';im.alt=entry.name;im.style.cssText='max-width:128px;max-height:128px;object-fit:contain;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px';card.appendChild(im);libText(card,entry.name);libText(card,entry.kind+' · '+entry.category+' · '+entry.width+'×'+entry.height+(entry.layers?' · '+entry.layers+' layers':''),'mut');if(entry.tags.length)libText(card,entry.tags.join(' · '),'mut');if(entry.notes)libText(card,entry.notes,'mut');
- const row=document.createElement('div');row.className='row';card.appendChild(row);if(['image','animation'].includes(entry.kind))libButton(row,'Download copy',()=>libDownloadCopy(entry),LIB.busy);else libButton(row,entry.kind==='character'?'Load copy':entry.kind==='asset'?'Add layer':'Apply rig',()=>libApply(entry),LIB.busy);libButton(row,'Delete',()=>libDelete(entry),LIB.busy);box.appendChild(card)}
+/* LIB65-BROWSE-BEGIN */
+function libOrganize(rows,collection,favorites,sort){
+ const out=rows.filter(e=>(!collection||e.collection===collection)&&(!favorites||e.favorite===true));
+ const name=(a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'})||a.id.localeCompare(b.id);
+ const date=(a,b)=>String(a.created||'').localeCompare(String(b.created||''))||name(a,b);
+ return out.sort(sort==='old'?date:sort==='name'?name:sort==='kind'?(a,b)=>a.kind.localeCompare(b.kind)||name(a,b):sort==='updated'?(a,b)=>String(b.updated||b.created||'').localeCompare(String(a.updated||a.created||''))||name(a,b):(a,b)=>date(b,a));
+}
+function libResetFilters(){$('libFilter').value='';$('libSearch').value='';$('libCollectionFilter').value='';$('libFavorites').checked=false;$('libSort').value='new';libRefresh()}
+function libCollectionsRefresh(){
+ const select=$('libCollectionFilter'),old=select.value;
+ const names=[...new Set(LIB.rows.map(e=>e.collection).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ if(old&&!names.includes(old))names.push(old);
+ select.replaceChildren(new Option('All collections',''),...names.map(n=>new Option(n,n)));select.value=old;
+ $('libCollections').replaceChildren(...names.map(n=>new Option(n,n)));
+}
+function libEditMetadata(entry){if(LIB.busy)return;LIB.editId=entry.id;$('libMetaName').value=entry.name;$('libMetaCollection').value=entry.collection||'';$('libMetaTags').value=entry.tags.join(', ');$('libMetaNotes').value=entry.notes||'';$('libMetaFavorite').checked=entry.favorite===true;$('libMetaStatus').textContent='';$('libMetaDialog').showModal()}
+function libCloseMetadata(){if(!LIB.busy){$('libMetaDialog').close();LIB.editId=null}}
+async function libPatchMetadata(id,patch,status){if(LIB.busy)return false;LIB.busy=true;let error='';try{await api('/api/library/'+id,{...J,method:'PATCH',body:JSON.stringify(patch)});await libRefresh();return true}catch(e){error='Update failed: '+e.message;return false}finally{LIB.busy=false;libDraw();if(error)status.textContent=error}}
+async function libCommitMetadata(){if(!LIB.editId||LIB.busy)return;const status=$('libMetaStatus'),button=$('libMetaSave');const patch={name:$('libMetaName').value.trim(),collection:$('libMetaCollection').value.trim(),tags:$('libMetaTags').value.split(',').map(t=>t.trim()).filter(Boolean),notes:$('libMetaNotes').value,favorite:$('libMetaFavorite').checked};button.disabled=true;try{if(await libPatchMetadata(LIB.editId,patch,status))libCloseMetadata()}finally{button.disabled=false}}
+/* LIB65-BROWSE-END */
+function libDraw(){const box=$('libRows');box.replaceChildren();libCollectionsRefresh();const compact=$('libCompact').checked,rows=libOrganize(LIB.rows,$('libCollectionFilter').value,$('libFavorites').checked,$('libSort').value);box.style.display=compact?'flex':'';box.style.flexDirection=compact?'column':'';$('libStatus').textContent=rows.length+' matching local snapshots';if(!rows.length)libText(box,'No matching assets. Clear filters or save artwork to the library.','mut');
+ for(const entry of rows){const card=document.createElement('div');card.className='card';card.style.cssText='margin:0;min-width:0;overflow-wrap:anywhere';const im=new Image();im.src='/api/library/'+entry.id+'/preview';im.loading='lazy';im.alt=entry.name;im.style.cssText='max-width:'+(compact?64:128)+'px;max-height:'+(compact?64:128)+'px;object-fit:contain;background:repeating-conic-gradient(#2b2d38 0 25%,#22242d 0 50%) 0 0/12px 12px';card.appendChild(im);libText(card,(entry.favorite?'★ ':'')+entry.name);if(entry.collection)libText(card,'Collection: '+entry.collection,'mut');libText(card,entry.kind+' · '+entry.category+' · '+entry.width+'×'+entry.height+(entry.layers?' · '+entry.layers+' layers':''),'mut');if(entry.tags.length)libText(card,entry.tags.join(' · '),'mut');if(entry.notes)libText(card,entry.notes,'mut');
+ const row=document.createElement('div');row.className='row';card.appendChild(row);if(['image','animation'].includes(entry.kind))libButton(row,'Download copy',()=>libDownloadCopy(entry),LIB.busy);else libButton(row,entry.kind==='character'?'Load copy':entry.kind==='asset'?'Add layer':'Apply rig',()=>libApply(entry),LIB.busy);libButton(row,entry.favorite?'Remove favorite':'Favorite',()=>libPatchMetadata(entry.id,{favorite:!entry.favorite},$('libStatus')),LIB.busy);libButton(row,'Edit info',()=>libEditMetadata(entry),LIB.busy);libButton(row,'Delete',()=>libDelete(entry),LIB.busy);box.appendChild(card)}
  $('libSave').disabled=LIB.busy;
 }
 function libBusy(){return LIB.busy||DR.busy||MA.busy||MR.busy}
