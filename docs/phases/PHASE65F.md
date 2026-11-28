@@ -1,0 +1,5 @@
+# Phase 65F — Shared asset picker and studio reuse
+
+Shared modal lists compatible saved image, animation or video assets with thumbnails, text search and favorite filter. Explicit Use copy action. Reference pose, full-frame reference/animation/video, direct editor replacement/source video, World layer, System art, VFX art, Modular layer, Scenes animation and Paired A/B animation/reference reuse existing validators/imports. Full-frame replacement uses existing Undo; scene/pair use one selected populated direction and existing actor budgets. Source library unchanged. World/System/VFX import retains existing processing rules; static image entries only for image pickers, existing character/layer/rig apply remains in library. Video loads original bytes into preview for advanced extraction, not automatic extraction. No asset relationship tracking yet.
+
+Acceptance: open picker in each destination, filter, cancel during load, choose copy, confirm replacements, verify original unaffected; test oversized inputs and repeat imports. JS regression covers filter, direction selection and button placement; actual desktop acceptance pending.
