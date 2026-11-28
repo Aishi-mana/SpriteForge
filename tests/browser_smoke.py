@@ -43,6 +43,25 @@ def main():
             page.locator("#hres .sf62resultMore summary").click()
             assert page.locator("#hres [data-a=alpha]").is_visible()
             print("ok  advanced result actions expand on demand")
+            # Check dispatch for every available result action without touching user data.
+            page.evaluate("""() => {
+                window.resultCalls = [];
+                window.resultOriginals = {};
+                for (const name of ['ie61Open','ie61HistoryOpen','alpha61Open','openEditor','useRef','dirAnchor','mdAdd','csSource','setAnim','ffFromResult','tlUse','saveSprite','dl']) {
+                    window.resultOriginals[name] = window[name];
+                    window[name] = (...args) => { window.resultCalls.push(name); };
+                }
+            }""")
+            for action, handler in {
+                "instruction":"ie61Open", "history":"ie61HistoryOpen", "alpha":"alpha61Open",
+                "edit":"openEditor", "ref":"useRef", "modular":"mdAdd", "customrig":"csSource",
+                "anim":"setAnim", "fullframe":"ffFromResult", "tile":"tlUse", "save":"saveSprite",
+                "1":"dl", "8":"dl",
+            }.items():
+                page.locator(f'#hres [data-a="{action}"]').click()
+                assert page.evaluate("resultCalls.at(-1)") == handler, action
+            page.evaluate("Object.assign(window, window.resultOriginals)")
+            print("ok  history result actions retain their individual handlers")
             page.locator("#hres [data-a=anim]").click()
             page.wait_for_function("mode===4 && document.getElementById('status').textContent.includes('Fixture rig rejected')")
             assert "rig/autoplace" in requests
