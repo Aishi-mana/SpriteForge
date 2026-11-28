@@ -13,7 +13,7 @@ def settings(q):
     if bg not in (*G.BACKGROUNDS,"none"):raise ValueError("Invalid extraction background")
     method=q.get("method","chroma")
     if method not in ("chroma","birefnet","none"):raise ValueError("Invalid alpha method")
-    return dict(method=method,temporal=n(q.get("temporal",0),0,100,"alpha consistency"),background=bg,fps=n(q.get("fps",12),1,30,"sampling FPS"),
+    return dict(method=method,cleanup=n(q.get("cleanup",0),0,100,"background cleanup"),temporal=n(q.get("temporal",0),0,100,"alpha consistency"),background=bg,fps=n(q.get("fps",12),1,30,"sampling FPS"),
         start=n(q.get("start",0),0,60000,"start milliseconds"),
         end=n(q.get("end",4000),1,60000,"end milliseconds"),
         tolerance=n(q.get("tolerance",24),0,255,"key tolerance"),
@@ -38,6 +38,19 @@ def key_frame(im,q):
         a[a[:,:,3]==0,:3]=0
     return Image.fromarray(a,"RGBA")
 
+def cleanup_mask(alpha,image,q):
+    """Remove only low-confidence pixels that also match the known background."""
+    if not q["cleanup"] or q["background"]=="none":return alpha
+    a=np.asarray(alpha,dtype=np.float32)
+    rgb=np.asarray(image.convert("RGB"),dtype=np.float32)
+    key=np.array(G.BACKGROUNDS[q["background"]][0],dtype=np.float32)
+    dist=np.max(abs(rgb-key),axis=2)
+    # Strong foreground is protected, even in enclosed matching-color regions.
+    confidence=np.clip((128-a)/96,0,1)
+    similarity=np.clip((18-dist)/12,0,1)
+    weight=confidence*similarity*q["cleanup"]/100
+    return Image.fromarray(np.rint(a*(1-weight)).astype(np.uint8),"L")
+
 def stabilize(alphas,images,strength):
     # Only repair isolated alpha fluctuations where adjacent RGB agrees.
     if not strength or len(alphas)<3:return alphas
@@ -46,6 +59,11 @@ def stabilize(alphas,images,strength):
         a,b,c=[np.asarray(x,dtype=np.float32) for x in alphas[i-1:i+2]]
         x,y,z=[np.asarray(im.convert('RGB'),dtype=np.float32) for im in images[i-1:i+2]]
         stable=(np.max(abs(x-y),axis=2)<12)&(np.max(abs(z-y),axis=2)<12)&(abs(a-c)<24)
+        # A stronger setting can also repair uncertain edge alpha, but never
+        # propagate over changing RGB or contradictory adjacent masks.
+        if strength>50:
+            edge=(b>0)&(b<255)&(np.max(abs(x-y),axis=2)<20)&(np.max(abs(z-y),axis=2)<20)&(abs(a-c)<16)
+            stable|=edge
         result=np.where(stable,b+(np.median(np.stack([a,b,c]),axis=0)-b)*strength/100,b)
         out[i]=Image.fromarray(np.rint(result).astype(np.uint8),'L')
     return out
@@ -61,6 +79,7 @@ def assemble(images,q,doc,root=None):
         from . import semantic_alpha
         alphas=semantic_alpha.masks(images,root)
         alphas=stabilize(alphas,images,q["temporal"])
+        alphas=[cleanup_mask(alpha,im,q) for im,alpha in zip(images,alphas)]
         frames=[]
         for im,alpha in zip(images,alphas):
             frame=im.convert("RGBA");frame.putalpha(alpha);frames.append(frame)

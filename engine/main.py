@@ -1583,6 +1583,13 @@ def full_frame_video_generate(body: dict=Body(...)):
     except Exception as e:raise HTTPException(500,"Video generation failed: "+str(e))
 
 
+@app.post("/api/full-frame/idle")
+def full_frame_idle(body: dict=Body(...)):
+    from . import controlled_idle
+    try:return controlled_idle.generate(body.get("document"),body.get("options",{}))
+    except (ValueError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.get("/api/full-frame/alpha/models")
 def full_frame_alpha_models():
     from . import semantic_alpha

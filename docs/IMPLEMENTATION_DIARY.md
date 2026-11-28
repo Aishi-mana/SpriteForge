@@ -1027,3 +1027,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 12:08 PHT — Animation acceptance checkpoint and roadmap reprioritization
 
 - #124, #125, #126 and #128 merged after CPU validation. User confirms video and 33-frame extraction; latest desktop test reports visible flicker, excessive idle movement and residual background despite improved character detail. Screenshot shows custom preset and Minimal intensity, but not the selected transparency method in full. No claim of verified BiRefNet inference from detection alone. User requests roadmap persistence and animation polish before global transparency rollout or other models. Next 62J-C, then SAM if needed and compatible. This entry records plans, not implementation of new algorithms.
+
+
+## 2026-11-28 PHT — 62J-C animation polish (initial implementation)
+
+- Added CPU-only controlled breathing from transparent reference, 0–4 px amplitude, periodic torso-band warp, exact unwarped head/feet regions, explicit timeline replacement/locks/undo. Approximate anatomy band is not a semantic body rig. Added conservative BiRefNet residual cleanup and stronger RGB-gated edge correction above 50%; UI defaults 80% temporal and 70% cleanup, method visible in extraction result. Re-extraction retains source MP4. Server now receives actual document for lock enforcement. Regression tests added. Desktop quality, quantitative flicker diagnostics, SAM tracking and broader cleanup remain pending. No manual CI dispatch.
