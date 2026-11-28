@@ -72,6 +72,12 @@ def main():
             page.wait_for_function("mode===20 && FF.doc.reference && !FF.busy")
             assert page.evaluate("FF.doc.reference")==PNG
             print("ok  queue history to full-frame reference")
+            for ident in ("ffReference", "ffPrompt", "ffPreset", "ffVideoModel", "ffGenerateMain", "ffAutoExtract", "ffFrames"):
+                assert page.locator("#"+ident).is_visible(), ident
+            page.locator("#ffGenerateMain").click()
+            page.wait_for_function("document.getElementById('ffVideoStatus').textContent.includes('installed video model')")
+            print("ok  visible generation action and missing-model message")
+
             page.evaluate("setAnim('data:image/png;base64,invalid')")
             page.wait_for_function("document.getElementById('status').textContent.includes('Cannot decode')")
             print("ok  image decode failure visible")
