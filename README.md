@@ -1,5 +1,7 @@
 # SpriteForge
 
+> **Required for all contributors and AI agents:** read [AGENTS.md — mandatory user-first UX policy](AGENTS.md#mandatory-user-first-ux-policy--read-before-every-change) before making changes. Essential actions must be visible, discoverable, and easy to repeat.
+
 A **local-first AI pixel-art sprite studio** for Windows (usable offline after required models have been downloaded): generate character sprites, give them poses, animate them
 with a bone rig, and export sprite sheets with ready-made Godot 4 / Unity data. Everything runs on your own machine
 (SDXL via `diffusers`, supported local Qwen Rapid and NetaYume workers, plus optional local chat via `llama.cpp`).
