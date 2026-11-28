@@ -44,12 +44,20 @@ def settings(body):
     fps=n(body.get("fps",16),8,30,"FPS")
     seed=n(body.get("seed",-1),-1,2147483647,"seed")
     guidance=G.settings(body.get("guidance"))
+    conditioning=body.get("conditioning","i2v")
+    if conditioning not in ("i2v","flf"):raise ValueError("Invalid Wan conditioning")
+    end_reference=body.get("end_reference")
+    if end_reference is not None and (not isinstance(end_reference,str) or conditioning!="flf"):raise ValueError("End reference requires first/last conditioning")
+    prompt=G.prompt(body.get("prompt",""),guidance)
+    if conditioning=="flf" and end_reference is None:
+        prompt+=" A complete small motion cycle returning to the identical starting pose and expression."
     return dict(width=w,height=h,frames=count,steps=steps,fps=fps,seed=seed if seed>=0 else secrets.randbelow(2147483648),
-                guidance=guidance,prompt=G.prompt(body.get("prompt",""),guidance),reference=body.get("reference"))
+                guidance=guidance,prompt=prompt,reference=body.get("reference"),conditioning=conditioning,end_reference=end_reference)
 
 def graph(q):
-    template=json.loads((Path(__file__).parent/"workflows/wan22-i2v.json").read_text(encoding="utf-8"))
-    vals={"%MODEL%":HIGH,"%MODEL_LOW%":LOW,"%LORA_HIGH%":LH,"%LORA_LOW%":LL,"%REF1%":"reference.png",
+    flf=q.get("conditioning")=="flf"
+    template=json.loads((Path(__file__).parent/"workflows"/("wan22-flf.json" if flf else "wan22-i2v.json")).read_text(encoding="utf-8"))
+    vals={"%MODEL%":HIGH,"%MODEL_LOW%":LOW,"%LORA_HIGH%":LH,"%LORA_LOW%":LL,"%REF1%":"reference.png","%REF2%":"end.png",
           "%PROMPT%":q["prompt"],"%NEGATIVE%":"blurry, distorted, watermark, text, static",
           "%SEED%":q["seed"],"%STEPS%":q["steps"],"%STEPS_HALF%":q["steps"]//2,"%CFG%":1.0,
           "%SAMPLER%":"euler","%SCHEDULER%":"simple","%WIDTH%":q["width"],"%HEIGHT%":q["height"],
@@ -123,6 +131,11 @@ def run(root,body):
         with workspace() as d:
             for name in ("input","output","temp","user"):(d/name).mkdir()
             V.prepare_reference(q["reference"],q["width"],q["height"],q["guidance"]).save(d/"input/reference.png")
+            if q["conditioning"]=="flf":
+                if q["end_reference"] is None:
+                    shutil.copyfile(d/"input/reference.png",d/"input/end.png")
+                else:
+                    V.prepare_reference(q["end_reference"],q["width"],q["height"],q["guidance"]).save(d/"input/end.png")
             # JSON is valid YAML; isolate all per-job data from both desktop apps.
             (d/"paths.yaml").write_text(json.dumps({"spriteforge":{"base_path":str(p.resolve()),
                 "diffusion_models":"unet\ndiffusion_models","text_encoders":"text_encoders\nclip","loras":"loras","vae":"vae"}}),encoding="utf-8")
@@ -148,7 +161,7 @@ def run(root,body):
                     absent=sorted({v["class_type"] for v in g.values()}-set(info))
                     if absent:raise RuntimeError("ComfyUI missing workflow nodes: "+", ".join(absent))
                     pid=http(port,"/prompt",{"prompt":g,"client_id":"spriteforge"},60)["prompt_id"]
-                    STATUS["stage"]="Generating Wan motion"
+                    STATUS["stage"]="Generating Wan first/last motion" if q["conditioning"]=="flf" else "Generating Wan motion"
                     deadline=time.monotonic()+3600
                     while time.monotonic()<deadline:
                         if child.poll() is not None:raise RuntimeError("ComfyUI stopped during generation")
