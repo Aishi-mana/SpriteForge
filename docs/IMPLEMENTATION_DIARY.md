@@ -940,3 +940,8 @@ Use the following template for each future change (replace placeholders with act
 - Added CPU nearest-frame, premultiplied-alpha blend and bounded translation-assisted interpolation, 2–4x frame multipliers, optional duration preservation, loop seam and non-loop terminal holds, exact original frames, bounded output and separate preview playback/scrub/accept/undo. Tests cover motion, alpha, timing and budgets. Stacked on 61S-E pending validation. Optical flow, neural interpolation and desktop acceptance deferred. No manual CI dispatch.
 
 - Included 61S-E boundary correction: preserve first and last frames during temporal color and position correction.
+
+
+## 2026-11-28 PHT — Phase 61S-G: Keyframe editing and regeneration
+
+- Persist keyframe markers and locks; remap on reorder/removal/interpolation, preserve locked frames during consistency correction, block extraction replacement until unlocked. Stage imported PNG or existing image editor output as a candidate, compare and accept a single frame with undo. Added CPU tests. AI editing uses existing editor capabilities, no direct neighboring-frame conditioning. Stacked on 61S-F; desktop/GPU acceptance pending. No manual CI dispatch.

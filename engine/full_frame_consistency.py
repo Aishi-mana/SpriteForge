@@ -47,7 +47,7 @@ def correct(doc,options):
     metrics=[stats(a) for a in arrays]
     out=[]
     for i,a in enumerate(arrays):
-        if metrics[i] is None:
+        if metrics[i] is None or i in d["locked_frames"]:
             out.append(d["frames"][i]);continue
         s=metrics[i];neighbors=[v for v in metrics[max(0,i-1):i+2] if v is not None];target=np.median(neighbors,axis=0)
         b=a.copy()
