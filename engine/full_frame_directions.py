@@ -5,7 +5,7 @@ from PIL import Image
 from . import full_frame as F, world
 
 DIRECTIONS=("N","NE","E","SE","S","SW","W","NW")
-FIELDS=("frames","reference","keyframes","locked_frames","guidance","prompt")
+FIELDS=("combat","frames","reference","keyframes","locked_frames","guidance","prompt")
 SHARED=("width","height","pivot","fps","pixel","loop")
 
 def validate_library(value,result):
@@ -38,7 +38,7 @@ def switch(doc,target):
     if target==d["direction"]:return d
     library=dict(d["directions"])
     library[d["direction"]]={k:d[k] for k in FIELDS}
-    clip=library.pop(target,{"frames":[],"reference":None,"keyframes":[],"locked_frames":[],"guidance":d["guidance"],"prompt":d["prompt"]})
+    clip=library.pop(target,{"combat":[],"frames":[],"reference":None,"keyframes":[],"locked_frames":[],"guidance":d["guidance"],"prompt":d["prompt"]})
     return F.validate({**d,**clip,"direction":target,"directions":library})
 
 def seam(doc):
