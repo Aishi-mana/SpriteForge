@@ -92,3 +92,8 @@ The implementation baseline is **Phase 61Q-F**, merged 2026-11-27 at `0f3df14f42
 | First reference/skeleton run is slow | It downloads the IP-Adapter / ControlNet once. |
 | Assistant can't load | Diagnostics > Assistant; see `llm.log`. Only a file named `llama-server` and a `.gguf` are accepted. |
 | Tauri build fails | Install Rust + VS C++ Build Tools, or use browser mode (it falls back automatically). |
+
+
+## Unified Asset Library milestone (Phase 65)
+
+65A–H merged, including backup PR #177 (CPU run 46176698217 successful). 65I integration fixes and desktop acceptance checklist on feature branch; CPU and actual Windows desktop/GPU verification pending. See [65I acceptance](docs/phases/PHASE65I.md) and [living diary](docs/IMPLEMENTATION_DIARY.md). Packaging remains on hold.
