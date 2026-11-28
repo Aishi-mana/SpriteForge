@@ -1220,3 +1220,8 @@ PR #165 CPU validation passed and merged at c821bbf. Added original/candidate MP
 ### Phase 64H — Direct animation review and export (2026-11-29, 00:47 PHT)
 
 PR #167 CPU validation passed and merged at 74fa103. Added overlay/pixel-difference comparison, changed-frame navigation, bounded undo/redo, restore-all, source-fingerprinted staged checkpoint export/import, independent original/candidate PNG atlas/frames/WebP/JSON export, and paired candidate ZIP export. Regression assertions and phase documentation added. Desktop and automated validation pending; checkpoints require matching source and do not store MP4s. No manual CI dispatch.
+
+
+### Phase 64I — Direct editor integration (2026-11-29 00:53 PHT)
+
+PR #168 CPU run 46167123563 passed and merged at 0716b2f4. Reviewed direct editor session lifecycle in ui/index.html; added busy-action explanations, invalidation of asynchronous comparison draws on close and stale-error guard. Extended tests/test_direct_review.js with actual staging/history helper integration assertions; added docs/phases/PHASE64I.md desktop acceptance checklist. CPU execution and Windows/GPU verification pending; no manual CI dispatch. Phase 65 remains next.
