@@ -10,6 +10,14 @@ PRESETS={
     "attack":"Anticipation, decisive attack, follow-through and recovery.",
     "cast":"Gather energy, deliberate casting gesture, release and recovery.",
     "hurt":"Brief recoil and recovery while maintaining balance.",
+    "slash":"Weapon swing with clear windup, sweeping arc, contact pose and recovery.",
+    "thrust":"Controlled forward thrust, extension and return to ready stance.",
+    "heavy":"Slow windup, forceful full-body attack, follow-through and recovery.",
+    "ranged":"Aim, release, recoil and reset; maintain consistent equipment.",
+    "block":"Raise guard, brace on impact and return to ready stance.",
+    "dodge":"Quick evasive movement, controlled landing and recovery.",
+    "parry":"Brief defensive deflection and return to ready stance.",
+    "defeat":"Loss of balance, controlled fall and final resting pose.",
 }
 VIEWS={"reference":"Preserve the reference viewing angle.","front":"Front view.","side":"Side view.","quarter":"Three-quarter view.","back":"Rear view."}
 BACKGROUNDS={"neutral":((240,240,240),"light neutral gray"),"green":((0,255,0),"solid chroma green"),"magenta":((255,0,255),"solid chroma magenta"),"blue":((0,0,255),"solid chroma blue")}

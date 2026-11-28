@@ -952,3 +952,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-H: Seamless loops and directions
 
 - Reconciled E–G, CPU runs #261/#264/#265 passed and all merged. Add independent directional snapshots with shared canvas/pivot/FPS, four/eight direction selection, aggregate validation, direction switching, seam difference analysis, ping-pong and alpha bridge append operations. Original frames and locks retained. CPU tests added; desktop acceptance pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-I: Combat and complex motion
+
+- PR #112 CPU #268 passed and merged. Added combat presets and validated per-frame phase, event/label, hitbox, VFX anchor and root displacement. Directional snapshots retain metadata; reorder/remove/interpolation remap events; extraction clears metadata. Canvas overlay and undoable editing. CPU tests added. Runtime collision, combo execution, multi-clip orchestration and root application deferred. No manual CI dispatch.
