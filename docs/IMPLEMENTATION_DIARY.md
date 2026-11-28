@@ -1012,3 +1012,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62H-C: Foreground protection and restrained idle
 
 - User confirmed Wan MP4 delivery and 33 extracted frames after manually installing imageio dependencies. Neutral color key damaged face and white armor; requested smaller idle movement. Added border-connected chroma mask, conservative tolerance/softness, minimal idle and prompt intensity, re-extraction with current tolerances, requirements and existing-venv launcher repair. Added synthetic regression. Foreground matching colors connected to border remain a limitation; semantic BiRefNet/SAM planned. Actual desktop retest pending; no manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-A semantic animation alpha
+
+- Reused Atelier's core BiRefNet graph and existing shared background_removal checkpoint via isolated offline ComfyUI runtime. Added explicit AI/chroma/keep-background selection, detection, re-extraction, optional RGB-gated three-frame mask stabilization, tests. Actual mask polarity, interior gaps, hair quality and GPU compatibility require desktop acceptance. SAM2 interactive tracking and manual paint/restore are not implemented here. No manual CI dispatch.

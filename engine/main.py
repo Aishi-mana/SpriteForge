@@ -1583,10 +1583,16 @@ def full_frame_video_generate(body: dict=Body(...)):
     except Exception as e:raise HTTPException(500,"Video generation failed: "+str(e))
 
 
+@app.get("/api/full-frame/alpha/models")
+def full_frame_alpha_models():
+    from . import semantic_alpha
+    return semantic_alpha.readiness(cfg()["models_dir"])[0]
+
+
 @app.post("/api/full-frame/video/extract")
 def full_frame_extract(file: UploadFile=File(...), options: str=Form(...), document: str=Form(...)):
     from . import full_frame_extract as E
-    try:return E.extract(file.file.read(64_000_001),json.loads(options),json.loads(document))
+    try:return E.extract(file.file.read(64_000_001),json.loads(options),json.loads(document),cfg()["models_dir"])
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(503,str(e))
     except Exception as e:raise HTTPException(400,"Video extraction failed: "+str(e))
