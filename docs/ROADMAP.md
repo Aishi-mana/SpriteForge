@@ -107,3 +107,8 @@ Each requires backend compatibility and desktop acceptance; detected files do no
 - 62J-C4: reusable timed pose descriptions, project persistence and JSON interchange (implementation pending validation). Text guidance only.
 - 62J-C5: investigate Wan Fun Control 5B and actual spatial motion conditioning, verify model/runtime/license and 8 GB feasibility before rollout.
 - 62J-C6: reference motion transfer; 62J-C7: quality and performance benchmarking. Keep controlled deformation as fallback. User confirmed renderer flicker fixed; controlled deformation quality unsatisfactory. Global transparency remains deferred until visual acceptance.
+
+
+## 2026-11-28 PHT — 62J-C5 experimental spatial motion control
+
+- #134 CPU validation passed and merged. Added native Wan22FunControlToVideo single-sampler graph based on Comfy-Org's 5B workflow (shift 8, CFG 5, uni_pc/simple, 20 steps), with GGUF loader option and distinct Wan2.2 VAE. Supports local Q4_K_M, Q3_K_M or BF16 file discovery; no downloads. Prepared pose/depth/edge MP4 or Canny preprocessing, bounded video resampling and model-specific UI. Existing 14B and LTX retained. Source: https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_wan2_2_5B_fun_control.json and https://huggingface.co/QuantStack/Wan2.2-Fun-5B-Control-GGUF. File detection is not runtime validation; actual GPU, visual identity, control adherence and 8 GB memory acceptance pending. C6 automatic motion extraction and template-to-visual controls deferred. No manual CI dispatch.
