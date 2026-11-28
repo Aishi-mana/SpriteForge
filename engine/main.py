@@ -1629,6 +1629,13 @@ def full_frame_alpha_brush(body: dict=Body(...)):
     except (ValueError,OSError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/full-frame/benchmark")
+def full_frame_benchmark(body: dict=Body(...)):
+    from . import animation_benchmark as B
+    try:return B.measure(body.get("document"))
+    except (ValueError,TypeError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/consistency")
 def full_frame_consistency(body: dict=Body(...)):
     from . import full_frame_consistency as C
