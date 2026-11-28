@@ -85,7 +85,7 @@ def run(root,body):
             V.prepare_reference(q["reference"],q["width"],q["height"],q["guidance"]).save(d/"input/reference.png")
             # JSON is valid YAML; isolate all per-job data from both desktop apps.
             (d/"paths.yaml").write_text(json.dumps({"spriteforge":{"base_path":str(p.resolve()),
-                "diffusion_models":"unet\\ndiffusion_models","text_encoders":"text_encoders\\nclip","loras":"loras","vae":"vae"}}).replace("\\\\n","\\n"),encoding="utf-8")
+                "diffusion_models":"unet\ndiffusion_models","text_encoders":"text_encoders\nclip","loras":"loras","vae":"vae"}}),encoding="utf-8")
             with socket.socket() as sock:
                 sock.bind(("127.0.0.1",0));port=sock.getsockname()[1]
             args=[str(python.resolve()),"main.py","--listen","127.0.0.1","--port",str(port),"--disable-auto-launch",
