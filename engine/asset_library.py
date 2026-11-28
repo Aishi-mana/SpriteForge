@@ -48,6 +48,23 @@ def _metadata(data):
                 favorite=_favorite(data.get("favorite",False)),
                 tags=list(dict.fromkeys(_text(t,40,"tag",True) for t in tags)))
 
+RELATIONS=("revision","outfit","appearance","reference","generated_from","extracted_from","related")
+
+def _relationship(root,meta,data):
+    parent=data.get("parent_id")
+    relation=data.get("relation")
+    if parent is None and relation is None:return
+    if relation not in RELATIONS:raise ValueError("Choose a relationship type")
+    try:
+        p=_entry(root,parent)
+        source=json.loads((p/"meta.json").read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:raise ValueError("Source asset no longer exists") from exc
+    if relation=="revision" and source["kind"]!=meta["kind"]:
+        raise ValueError("Revisions must have the same asset type")
+    if relation=="extracted_from" and (source["kind"],meta["kind"])!=("video","animation"):
+        raise ValueError("Extraction links require a video source and animation result")
+    meta.update(parent_id=parent,relation=relation)
+
 def _normalized(data,kind):
     if kind=="video":raise ValueError("Use MP4 upload to save a video")
     if kind=="image":
@@ -122,6 +139,7 @@ def save_video(root,raw,data):
         payload=json.dumps({"format":"mp4"},separators=(",",":")).encode()
         with _LOCK:
             base=folder(root);base.mkdir(parents=True,exist_ok=True);_capacity(base,len(raw)+len(payload))
+            _relationship(root,meta,data)
             entry_id=uuid.uuid4().hex
             meta.update(id=entry_id,created=datetime.now(timezone.utc).isoformat(),category="video",width=w,height=h,fps=fps,duration=duration,bytes=len(raw))
             tmp=Path(tempfile.mkdtemp(prefix=".pending-",dir=base))
@@ -148,6 +166,7 @@ def save(root,data):
     with _LOCK:
         base=folder(root);base.mkdir(parents=True,exist_ok=True)
         _capacity(base,len(encoded))
+        _relationship(root,meta,data)
         entry_id=uuid.uuid4().hex
         meta.update(details,id=entry_id,created=datetime.now(timezone.utc).isoformat())
         tmp=Path(tempfile.mkdtemp(prefix=".pending-",dir=base))
@@ -186,6 +205,47 @@ def update_metadata(root,entry_id,patch):
                 out.close();tmp.unlink(missing_ok=True);raise
         try:tmp.replace(target)
         finally:tmp.unlink(missing_ok=True)
+        return meta
+
+def relationships(root,entry_id):
+    with _LOCK:
+        p=_entry(root,entry_id)
+        current=json.loads((p/"meta.json").read_text(encoding="utf-8"))
+        rows={m["id"]:m for m in list_entries(root)}
+        parent=rows.get(current.get("parent_id"))
+        children=[m for m in rows.values() if m.get("parent_id")==entry_id]
+        ancestors=[];seen={entry_id};cursor=current
+        while cursor.get("parent_id") and cursor["parent_id"] not in seen:
+            key=cursor["parent_id"];seen.add(key)
+            cursor=rows.get(key)
+            if cursor is None:break
+            ancestors.append(cursor)
+        return {"current":current,"parent":parent,"children":children,"ancestors":ancestors,
+                "missing_parent":bool(current.get("parent_id") and parent is None)}
+
+def link(root,entry_id,parent_id,relation):
+    with _LOCK:
+        p=_entry(root,entry_id);target=p/"meta.json"
+        meta=json.loads(target.read_text(encoding="utf-8"))
+        if parent_id is None and relation is None:
+            meta.pop("parent_id",None);meta.pop("relation",None)
+        else:
+            _relationship(root,meta,{"parent_id":parent_id,"relation":relation})
+            seen={entry_id};cursor=parent_id
+            while cursor:
+                if cursor in seen:raise ValueError("Relationship would create a cycle")
+                seen.add(cursor)
+                try:other=json.loads((_entry(root,cursor)/"meta.json").read_text(encoding="utf-8"))
+                except FileNotFoundError:break
+                cursor=other.get("parent_id")
+        meta["updated"]=datetime.now(timezone.utc).isoformat()
+        tmp=None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w",encoding="utf-8",dir=p,prefix=".meta-",delete=False) as out:
+                tmp=Path(out.name);json.dump(meta,out,ensure_ascii=False)
+            tmp.replace(target)
+        finally:
+            if tmp is not None:tmp.unlink(missing_ok=True)
         return meta
 
 def preview_path(root,entry_id):
