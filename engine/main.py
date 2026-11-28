@@ -1556,6 +1556,13 @@ def full_frame_motion_templates():
     return motion_templates.catalog()
 
 
+@app.post("/api/direct-animation/temporal")
+def direct_animation_temporal(body: dict=Body(...)):
+    from . import direct_temporal as T
+    try:return T.process(body,apply=body.get("apply") is True)
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/direct-animation/replace/plan")
 def direct_animation_replace_plan(body: dict=Body(...)):
     from . import direct_replace as R
