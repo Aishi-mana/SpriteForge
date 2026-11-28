@@ -1568,7 +1568,9 @@ def full_frame_video_models():
     from . import full_frame_video, wan_video
     root=cfg()["models_dir"]
     wan=wan_video.readiness(root)[0]
-    return {"models":([wan] if wan["ready"] else [])+full_frame_video.discover(root),"wan":wan}
+    from . import wan_control
+    control=wan_video.readiness(root,wan_control.MODEL)[0]
+    return {"models":([wan] if wan["ready"] else [])+([control] if control["ready"] else [])+full_frame_video.discover(root),"wan":wan,"control":control}
 
 
 @app.get("/api/full-frame/video/status")
@@ -1582,7 +1584,7 @@ def full_frame_video_generate(body: dict=Body(...)):
     from . import full_frame_video
     try:
         from . import wan_video
-        raw=wan_video.run(cfg()["models_dir"],body) if body.get("model")==wan_video.MODEL else full_frame_video.generate(cfg()["models_dir"],body)
+        raw=wan_video.run(cfg()["models_dir"],body) if body.get("model") in (wan_video.MODEL,"wan22-fun5b") else full_frame_video.generate(cfg()["models_dir"],body)
         return StreamingResponse(io.BytesIO(raw),media_type="video/mp4")
     except ValueError as e:raise HTTPException(400,str(e))
     except RuntimeError as e:raise HTTPException(503,str(e))
