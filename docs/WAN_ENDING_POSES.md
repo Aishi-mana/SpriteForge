@@ -1,6 +1,6 @@
 # Wan 2.2 — ending pose reference
 
-In Full-frame Animation Studio select **Wan AI — native quality (slower)**, **Wan AI — fast preview**, or **Standard AI animation**. The **Ending pose (Wan)** control is directly visible when the Wan 2.2 A14B model is selected, including in advanced mode. No new models are required.
+In Full-frame Animation Studio, **Standard AI animation** is the first option and the selected default (fast, 4 steps). **Wan AI — fast preview** also selects fast, 4 steps; **Wan AI — native quality (slower)** selects native, 20 steps. Each workflow selection resets its intended sampling mode and steps without clearing the chosen ending image. The actual sampling mode and step count are shown near the workflow selector. The **Ending pose (Wan)** control is directly visible when the Wan 2.2 A14B model is selected, including in advanced mode. No new models are required.
 
 | Ending pose | Behavior |
 | --- | --- |
