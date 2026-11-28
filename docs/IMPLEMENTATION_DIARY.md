@@ -1047,3 +1047,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C3 guided AI animation
 
 - User confirmed playback flicker fixed by #132; controlled deformation remains visually unsatisfactory. Reused MVManaAtelier Wan first/last graph with existing GGUF pair and runtime. Added explicit first/last conditioning selector and optional aligned end PNG; default same reference at both endpoints for loop guidance. Standard I2V, controlled idle, MP4 preview and alpha extraction retained. Graph regression added. Endpoint conditioning does not lock intermediate poses or expressions; motion templates and stronger control backend remain future work. Actual GPU acceptance pending. No manual CI dispatch.
+
+
+## 2026-11-28 13:28 PHT — 62J-C4 reusable motion plans
+
+- #133 passed CPU validation and merged. Added eight built-in timed pose-description templates, project persistence, editable percent/description sequence, JSON import/export and prompt compilation, regression coverage. These are textual timed pose descriptions, not spatial pose maps or hard constraints. Actual GPU quality pending; C5 motion-conditioned backend, C6 reference motion transfer, C7 benchmark and SAM tracking remain planned. No manual CI dispatch.

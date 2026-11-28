@@ -99,3 +99,11 @@ Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose previe
 - 62P: IC-Light relighting.
 
 Each requires backend compatibility and desktop acceptance; detected files do not establish readiness. Keep primary actions visible and avoid duplicate model downloads. No manual GitHub Actions dispatch.
+
+
+## Guided animation follow-up
+
+- 62J-C3: Wan first/last reference conditioning (#133 merged, GPU quality unverified).
+- 62J-C4: reusable timed pose descriptions, project persistence and JSON interchange (implementation pending validation). Text guidance only.
+- 62J-C5: investigate Wan Fun Control 5B and actual spatial motion conditioning, verify model/runtime/license and 8 GB feasibility before rollout.
+- 62J-C6: reference motion transfer; 62J-C7: quality and performance benchmarking. Keep controlled deformation as fallback. User confirmed renderer flicker fixed; controlled deformation quality unsatisfactory. Global transparency remains deferred until visual acceptance.

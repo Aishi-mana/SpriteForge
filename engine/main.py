@@ -1550,6 +1550,12 @@ def system_export(body: dict=Body(...)):
     except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.get("/api/full-frame/motion/templates")
+def full_frame_motion_templates():
+    from . import motion_templates
+    return motion_templates.catalog()
+
+
 @app.post("/api/full-frame/video/prompt")
 def full_frame_video_prompt(body: dict=Body(...)):
     from . import full_frame_guidance as G
