@@ -1550,6 +1550,13 @@ def system_export(body: dict=Body(...)):
     except (ValueError, TypeError, AttributeError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/full-frame/validate")
+def full_frame_validate(body: dict=Body(...)):
+    from . import full_frame
+    try:return full_frame.validate(body)
+    except (ValueError,TypeError,AttributeError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/system/validate")
 def system_validate(body: dict=Body(...)):
     from . import system_assets
