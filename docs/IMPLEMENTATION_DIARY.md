@@ -1042,3 +1042,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62J-C2 playback flicker hotfix
 
 - User confirms 33 controlled frames at 480x480/16 FPS but reports flicker and no visible idle motion. Found preview resets canvas dimensions and clears it before each asynchronous PNG decode, potentially displaying blank frames. Predecode frame images before playback, cache by current frame array, paint synchronously once ready, preserve last displayed frame during loading, guard stale playback. Increase recommended breathing amplitude to 3 px (max 8), still approximate torso-only warp. Added static UI and synthetic motion regression; actual flicker source and visual quality require desktop retest. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-C3 guided AI animation
+
+- User confirmed playback flicker fixed by #132; controlled deformation remains visually unsatisfactory. Reused MVManaAtelier Wan first/last graph with existing GGUF pair and runtime. Added explicit first/last conditioning selector and optional aligned end PNG; default same reference at both endpoints for loop guidance. Standard I2V, controlled idle, MP4 preview and alpha extraction retained. Graph regression added. Endpoint conditioning does not lock intermediate poses or expressions; motion templates and stronger control backend remain future work. Actual GPU acceptance pending. No manual CI dispatch.
