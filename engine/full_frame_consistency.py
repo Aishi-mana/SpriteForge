@@ -51,7 +51,7 @@ def correct(doc,options):
             out.append(d["frames"][i]);continue
         s=metrics[i];neighbors=[v for v in metrics[max(0,i-1):i+2] if v is not None];target=np.median(neighbors,axis=0)
         b=a.copy()
-        if q["color"]:
+        if q["color"] and 0<i<len(arrays)-1:
             delta=np.clip(target[4:]-s[4:],-24,24)*q["color"]/100
             mask=b[:,:,3]>0;b[:,:,:3][mask]=np.clip(b[:,:,:3][mask].astype(float)+delta,0,255).astype(np.uint8)
         if q["edge"] and 0<i<len(arrays)-1:
@@ -67,7 +67,7 @@ def correct(doc,options):
             limit=np.max(rgb[:,:,other],axis=2)
             for c in channels:rgb[:,:,c][mask]-=np.maximum(0,rgb[:,:,c][mask]-limit[mask])*q["spill"]/100
             b[:,:,:3]=np.rint(rgb).astype(np.uint8)
-        if q["position"]:
+        if q["position"] and 0<i<len(arrays)-1:
             dx,dy=np.rint(np.clip((target[:2]-s[:2])*q["position"]/100,-q["max_shift"],q["max_shift"])).astype(int)
             # Never shift a visible pixel off the canvas.
             ys,xs=np.where(b[:,:,3]>0);h,w=b.shape[:2]
