@@ -1216,3 +1216,7 @@ PR #164 CPU validation passed and merged at 5c8a9f6. Added paired actor replacem
 ### Phase 64G — Direct video editing and sprite extraction (2026-11-29, Asia/Manila)
 
 PR #165 CPU validation passed and merged at c821bbf. Added original/candidate MP4 workspace, CPU trim/resampling/reverse, optional Fun Control motion-guided regeneration, separate downloads, candidate alpha extraction and validated staging into existing animation range. Source MP4 bytes retained in session. Audio not retained in edited clips; no exact AI video edit guarantee. Added sampling regression cases and docs; CPU, desktop and GPU acceptance pending. No manual CI dispatch.
+
+### Phase 64H — Direct animation review and export (2026-11-29, 00:47 PHT)
+
+PR #167 CPU validation passed and merged at 74fa103. Added overlay/pixel-difference comparison, changed-frame navigation, bounded undo/redo, restore-all, source-fingerprinted staged checkpoint export/import, independent original/candidate PNG atlas/frames/WebP/JSON export, and paired candidate ZIP export. Regression assertions and phase documentation added. Desktop and automated validation pending; checkpoints require matching source and do not store MP4s. No manual CI dispatch.
