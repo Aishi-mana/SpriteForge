@@ -918,3 +918,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 08:36 PHT — Phase 61S-B: Local AI video backend
 
 - PR #105 passed CPU validation and merged. Add optional local Diffusers LTX image-to-video adapter, model discovery via video_models/model_index.json, reference letterboxing, bounded settings, shared GPU lock and image pipeline release, CPU offload, MP4 preview/download and discard-result handling. Fake runner tests cover routing and validation. No model download, actual GPU acceptance, server-side cancellation or frame extraction yet. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-C: Reference-guided character animation
+
+- Add persisted motion presets, optional identity/camera/in-place/loop guidance, view selection, matching neutral/chroma reference backgrounds, safe framing margin and server-generated prompt preview. Existing reference pixels are preserved apart from fit/compositing. Tests cover prompt construction, background, validation and persistence. Stacked on 61S-B pending validation. Identity consistency and seamless loops are guidance only; extraction and actual GPU acceptance pending. No manual CI dispatch.

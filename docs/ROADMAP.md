@@ -74,4 +74,4 @@ Phase 40: independent custom skeleton hierarchy editor and rigid CPU pose previe
 
 - Proposed next major phase after 61R: full-frame sprite animation (image-to-video and reference-guided redrawn frame paths, temporal consistency, transparent extraction, alignment, cleanup and sprite-sheet export). Existing skeletal workflow remains optional; model/backend feasibility pending.
 
-- Phase 61S — [A full-frame Animation Studio foundation](phases/PHASE61SA.md) merged, CPU/JS validated; [B video backend](phases/PHASE61SB.md) implemented, validation pending; C reference-guided motion; D frame extraction; E consistency; F interpolation; G keyframe editing; H loops/directions; I combat; J integration/export.
+- Phase 61S — [A full-frame Animation Studio foundation](phases/PHASE61SA.md) merged, CPU/JS validated; [B video backend](phases/PHASE61SB.md) implemented, validation pending; [C reference-guided motion](phases/PHASE61SC.md) implemented, validation pending; D frame extraction; E consistency; F interpolation; G keyframe editing; H loops/directions; I combat; J integration/export.

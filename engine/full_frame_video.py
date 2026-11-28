@@ -2,7 +2,7 @@
 import json, io, threading, tempfile, gc, secrets
 from pathlib import Path
 from PIL import Image, ImageOps
-from . import world
+from . import world, full_frame_guidance as G
 
 CLASSES={"LTXImageToVideoPipeline":"ltx"}
 def discover(root):
@@ -25,21 +25,24 @@ def settings(body):
     count=n(body.get("frames",49),9,97,"video frame count")
     if w%32 or h%32 or (count-1)%8:raise ValueError("LTX requires dimensions divisible by 32 and frame count 8k+1")
     if w*h*count>40_000_000:raise ValueError("Video exceeds pixel budget")
-    return dict(model=world.label(body.get("model"),"video model",180),prompt=world.label(body.get("prompt"),"motion prompt",2000),
+    guidance=G.settings(body.get("guidance"))
+    return dict(guidance=guidance,model=world.label(body.get("model"),"video model",180),prompt=G.prompt(body.get("prompt",""),guidance),
         width=w,height=h,frames=count,fps=n(body.get("fps",12),8,30,"video FPS"),steps=n(body.get("steps",30),1,60,"video steps"),
         seed=n(body.get("seed",-1),-1,2147483647,"video seed"),reference=body.get("reference"))
 
-def prepare_reference(uri,w,h):
+def prepare_reference(uri,w,h,guidance=None):
     im=world.image(uri)
-    im.thumbnail((w,h),Image.Resampling.LANCZOS)
-    canvas=Image.new("RGB",(w,h),(240,240,240))
+    q=G.settings(guidance)
+    margin=q["margin"]/100
+    im.thumbnail((max(1,int(w*(1-2*margin))),max(1,int(h*(1-2*margin)))),Image.Resampling.LANCZOS)
+    canvas=Image.new("RGB",(w,h),G.BACKGROUNDS[q["background"]][0])
     canvas.paste(im,((w-im.width)//2,(h-im.height)//2),im.getchannel("A"))
     return canvas
 
 def generate(root,body,runner=None):
     q=settings(body)
     if q["model"] not in {m["name"] for m in discover(root)}:raise ValueError("Select a discovered local LTX video model")
-    im=prepare_reference(q["reference"],q["width"],q["height"])
+    im=prepare_reference(q["reference"],q["width"],q["height"],q["guidance"])
     if q["seed"]<0:q["seed"]=secrets.randbelow(2147483648)
     return (runner or run_ltx)(Path(root)/"video_models"/q["model"],im,q)
 

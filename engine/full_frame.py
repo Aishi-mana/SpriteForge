@@ -27,7 +27,8 @@ def validate(value):
     if pixels>MAX_PIXELS:raise ValueError("Animation exceeds decoded pixel budget")
     for frame in frames:
         if world.image(frame).size!=(w,h):raise ValueError("All frames must match the animation canvas")
-    return dict(version=1,name=world.label(value.get("name","New animation"),"animation name"),
+    from . import full_frame_guidance
+    return dict(guidance=full_frame_guidance.settings(value.get("guidance")),version=1,name=world.label(value.get("name","New animation"),"animation name"),
         prompt=world.label(value.get("prompt",""),"motion description",2000,True),reference=ref,width=w,height=h,pivot=pivot,
         fps=n(value.get("fps",12),1,60,"animation FPS"),loop=world.boolean(value.get("loop",True),"animation loop"),
         pixel=world.boolean(value.get("pixel",False),"animation sampling"),frames=frames)
