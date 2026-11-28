@@ -1,0 +1,5 @@
+# Phase 65D — Animated sprite storage and viewer
+
+Saved animation documents now open in a read-only viewer with checkerboard transparency, play/pause, previous/next, timeline scrub, saved FPS, preview speed and loop toggle. Select any populated direction; empty active direction no longer blocks saving when another direction contains frames. Export current frame PNG, full editable JSON, animated WebP ZIP and sprite atlas ZIP using existing export APIs. VFX Studio can save rendered frame sequences as full-frame snapshots (not editable effect recipes). Existing limits apply; no GPU required. Viewer speed and loop overrides are session-only. WebP may coalesce identical frames; PNG/JSON retain frame order. No raw MP4 storage yet.
+
+Desktop acceptance: save a looping and nonlooping animation, open viewer, scrub/play/pause, switch direction, export and reopen, close during loading and playback, verify source unchanged; repeat with VFX. CPU regression added for timing and inactive-direction snapshots; desktop and CPU validation pending.
