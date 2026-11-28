@@ -1586,6 +1586,15 @@ def full_frame_video_models():
     return {"models":([wan] if wan["ready"] else [])+([control] if control["ready"] else [])+full_frame_video.discover(root)+animatediff["models"],"wan":wan,"control":control,"animatediff":animatediff}
 
 
+@app.post("/api/full-frame/video/animatediff/setup")
+def full_frame_animatediff_setup():
+    from . import animatediff_video
+    try:
+        return animatediff_video.prepare_folders(cfg()["models_dir"])
+    except (ValueError, OSError) as e:
+        raise HTTPException(400, str(e))
+
+
 @app.get("/api/full-frame/video/status")
 def full_frame_video_status():
     from . import wan_video, animatediff_video
