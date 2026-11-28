@@ -2,6 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const html=fs.readFileSync(path.join(__dirname,'../../ui/index.html'),'utf8');
 let calls=[],alerts=[],name='  Hero  ',fail=false;
 const ctx=vm.createContext({LIB:{busy:false},J:{method:'POST'},mode:1,prompt:()=>name,alert:s=>alerts.push(s),api:async(url,opts)=>{calls.push([url,JSON.parse(opts.body)]);if(fail)throw Error('disk full');return {name:'Hero'}},FF:{busy:false,videoBusy:false,quickBusy:false}});
+vm.runInContext(html.split('/* LIB65-ANIM-BEGIN */')[1].split('/* LIB65-ANIM-END */')[0],ctx);
 vm.runInContext(html.split('/* LIB65-QUICK-BEGIN */')[1].split('/* LIB65-QUICK-END */')[0],ctx);
 (async()=>{
  const button={textContent:'Save',disabled:false},image='data:image/png;base64,abc';
@@ -26,3 +27,10 @@ assert.equal(browser.libOrganize(rows,'',false,'name').map(x=>x.id).join(),'b,a,
 assert.equal(browser.libOrganize(rows,'',false,'old').map(x=>x.id).join(),'a,b,c');
 assert.equal(browser.libOrganize(rows,'',false,'updated').map(x=>x.id).join(),'c,b,a');
 assert.equal(rows.map(x=>x.id).join(),'a,b,c');
+
+assert.equal(ctx.libAnimIndex(0,500,12,1,10,true),6);
+assert.equal(ctx.libAnimIndex(0,1000,12,1,10,true),2);
+assert.equal(ctx.libAnimIndex(0,1000,12,1,10,false),9);
+assert.equal(ctx.libAnimIndex(2,500,12,0.5,10,false),5);
+assert.equal(ctx.libAnimClips({direction:'S',frames:[],directions:{N:{frames:['a']},E:{frames:[]}}}).map(v=>v.key).join(),'N');
+assert.ok(html.includes("libButton(row,'Play / view'"));
