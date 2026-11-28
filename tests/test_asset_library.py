@@ -55,4 +55,24 @@ directional={**doc,"direction":"S","frames":[],"directions":{"N":{"frames":[imag
 directional_entry=L.save(root,{"kind":"animation","name":"North clip","document":directional})
 ok(directional_entry["frames"]==2 and directional_entry["clips"]==1,"save populated inactive direction")
 ok(L.load(root,directional_entry["id"])["payload"]["document"]["directions"]["N"]["frames"]==[image,image],"direction retained")
+from engine import visual_motion
+from PIL import Image
+raw=visual_motion.encode([Image.new("RGB",(32,32),"red"),Image.new("RGB",(32,32),"blue")],8,root/"sample.mp4")
+video=L.save_video(root,raw,{"name":"Motion"})
+ok(video["kind"]=="video" and video["bytes"]==len(raw),"video metadata")
+ok(L.video_path(root,video["id"]).read_bytes()==raw,"original video bytes preserved")
+ok(L.preview_path(root,video["id"]).is_file(),"video poster created")
+ok(L.list_entries(root,"video")[0]["id"]==video["id"],"video filter")
+L.update_metadata(root,video["id"],{"favorite":True})
+ok(L.video_path(root,video["id"]).read_bytes()==raw,"video metadata edit preserves bytes")
+try:L.save_video(root,b"invalid",{"name":"Invalid"});ok(False,"bad MP4 rejected")
+except ValueError:ok(True,"bad MP4 rejected")
+old_limit=L.MAX_BYTES
+try:
+    L.MAX_BYTES=len(raw)
+    try:L.save(root,{"kind":"image","name":"Over quota","image":image});ok(False,"video included in quota")
+    except ValueError:ok(True,"video included in quota")
+finally:L.MAX_BYTES=old_limit
+L.delete(root,video["id"])
+ok(not L.list_entries(root,"video"),"video deletion")
 done("test_asset_library")
