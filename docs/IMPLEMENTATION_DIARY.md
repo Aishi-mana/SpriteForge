@@ -987,3 +987,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 10:04 PHT — Phase 62E: Live acceptance tooling
 
 - PRs #117 and #118 passed CPU validation and merged. Added opt-in live API/SDXL benchmark probe, resource snapshots, non-overwriting JSON report, mocked contract regression and manual release gate. No desktop/GPU execution in connector environment. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62F: Queue result action hotfix
+
+- User desktop screenshot confirms all primary Queue history result buttons remain inert despite CPU validation. Root cause: hOpen renders result cards, then assigns toolbar onclick handlers to every descendant button[data-a], overwriting render's callbacks. Exclude #hres descendants from toolbar binding; add static contract regression and expand opt-in browser smoke to check individual action dispatch. Browser and desktop execution still pending. No manual CI dispatch.
