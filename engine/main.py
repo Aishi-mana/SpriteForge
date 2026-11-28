@@ -2060,6 +2060,21 @@ def library_get(entry_id: str):
     except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
 
 
+@app.get("/api/library/{entry_id}/relationships")
+def library_relationships(entry_id: str):
+    try:return asset_library.relationships(ROOT,entry_id)
+    except (ValueError,FileNotFoundError) as e:raise HTTPException(404,str(e))
+
+
+@app.post("/api/library/{entry_id}/relationships")
+def library_link(entry_id: str,body: dict=Body(...)):
+    try:
+        if set(body)!={"parent_id","relation"}:raise ValueError("Specify parent and relationship")
+        return asset_library.link(ROOT,entry_id,body["parent_id"],body["relation"])
+    except FileNotFoundError as e:raise HTTPException(404,str(e))
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
 @app.patch("/api/library/{entry_id}")
 def library_update_metadata(entry_id: str,body: dict=Body(...)):
     try:return asset_library.update_metadata(ROOT,entry_id,body)
