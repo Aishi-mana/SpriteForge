@@ -1595,6 +1595,13 @@ def full_frame_consistency(body: dict=Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/full-frame/interpolate")
+def full_frame_interpolate(body: dict=Body(...)):
+    from . import full_frame_interpolation as I
+    try:return I.interpolate(body.get("document"),body.get("options",{}))
+    except ValueError as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame

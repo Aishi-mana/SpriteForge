@@ -933,3 +933,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-E: Character consistency and flicker correction
 
 - PR #108 passed CPU validation and merged. Added local temporal bounds/color diagnostics, opt-in bounded position and color corrections, partial-alpha edge smoothing, chroma despill, selected-frame original/corrected preview and undoable acceptance. Zero strengths preserve exact source data; scale is diagnostic only. Synthetic regression tests added. No semantic identity detection, optical flow or GPU acceptance yet. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-F: Frame interpolation and smooth motion
+
+- Added CPU nearest-frame, premultiplied-alpha blend and bounded translation-assisted interpolation, 2–4x frame multipliers, optional duration preservation, loop seam and non-loop terminal holds, exact original frames, bounded output and separate preview playback/scrub/accept/undo. Tests cover motion, alpha, timing and budgets. Stacked on 61S-E pending validation. Optical flow, neural interpolation and desktop acceptance deferred. No manual CI dispatch.
