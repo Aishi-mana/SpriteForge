@@ -923,3 +923,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 61S-C: Reference-guided character animation
 
 - Add persisted motion presets, optional identity/camera/in-place/loop guidance, view selection, matching neutral/chroma reference backgrounds, safe framing margin and server-generated prompt preview. Existing reference pixels are preserved apart from fit/compositing. Tests cover prompt construction, background, validation and persistence. Stacked on 61S-B pending validation. Identity consistency and seamless loops are guidance only; extraction and actual GPU acceptance pending. No manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 61S-D: Video-to-sprite extraction
+
+- PR #107 passed CPU validation and merged. Added optional imageio/FFmpeg video sampling, start/end range, FPS, chroma key tolerance and soft alpha, shared union crop, common pivot, atomic validated timeline replacement with undo, synthetic CPU regression tests. Actual decoder and desktop acceptance pending; no semantic segmentation, despill or per-frame anatomical alignment yet. No manual CI dispatch.
