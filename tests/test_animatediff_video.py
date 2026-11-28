@@ -41,7 +41,7 @@ ok(not A.readiness(root)["ready"] and "Missing vae/config.json" in A.readiness(r
 (base / "vae/config.json").write_text("fixture")
 body = dict(model=model, reference=data_url(Image.new("RGBA",(32,48),(50,80,120,255))), guidance={"preset":"idle_minimal"}, seed=42)
 def fake(b,m,im,q):
-    ok(b == base and m == motion and im.size == (512,512), "selected model and prepared reference")
+    ok(b.samefile(base) and m.samefile(motion) and im.size == (512,512), "selected model and prepared reference")
     ok(q["frames"] == 16 and q["fps"] == 8 and q["steps"] == 12 and q["seed"] == 42, "short loop defaults")
     return b"fake mp4"
 ok(A.generate(root,body,fake) == b"fake mp4", "video result handed off")
