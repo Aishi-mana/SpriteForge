@@ -3,6 +3,7 @@ import base64, io, math, tempfile
 from pathlib import Path
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 from . import world, full_frame as F, full_frame_guidance as G
 
 def settings(q):
@@ -13,8 +14,8 @@ def settings(q):
     return dict(background=bg,fps=n(q.get("fps",12),1,30,"sampling FPS"),
         start=n(q.get("start",0),0,60000,"start milliseconds"),
         end=n(q.get("end",4000),1,60000,"end milliseconds"),
-        tolerance=n(q.get("tolerance",45),0,255,"key tolerance"),
-        softness=n(q.get("softness",25),0,100,"key softness"),
+        tolerance=n(q.get("tolerance",24),0,255,"key tolerance"),
+        softness=n(q.get("softness",12),0,100,"key softness"),
         trim=world.boolean(q.get("trim",True),"shared trim"))
 
 def key_frame(im,q):
@@ -23,6 +24,14 @@ def key_frame(im,q):
         key=np.array(G.BACKGROUNDS[q["background"]][0],dtype=np.float32)
         dist=np.max(np.abs(a[:,:,:3].astype(np.float32)-key),axis=2)
         alpha=np.clip((dist-q["tolerance"])/max(1,q["softness"]),0,1)
+        # Only remove background-like pixels connected to the canvas border.
+        # Enclosed matching colors (skin, armor, eyes) retain their original alpha.
+        candidate=alpha<1
+        seeds=np.zeros_like(candidate)
+        seeds[0,:]=candidate[0,:];seeds[-1,:]=candidate[-1,:]
+        seeds[:,0]=candidate[:,0];seeds[:,-1]=candidate[:,-1]
+        connected=ndimage.binary_propagation(seeds,mask=candidate)
+        alpha=np.where(connected,alpha,1.0)
         a[:,:,3]=np.rint(a[:,:,3]*alpha).astype(np.uint8)
         a[a[:,:,3]==0,:3]=0
     return Image.fromarray(a,"RGBA")
@@ -54,7 +63,9 @@ def extract(raw,q,doc):
     if not raw or len(raw)>64_000_000:raise ValueError("Video exceeds 64 MB limit")
     count=math.ceil((q["end"]-q["start"])*q["fps"]/1000)
     if count>F.MAX_FRAMES:raise ValueError("Sample at most 120 frames")
-    try:import imageio.v2 as imageio
+    try:
+        import imageio.v2 as imageio
+        import imageio_ffmpeg
     except ImportError as e:raise RuntimeError("Install imageio and imageio-ffmpeg in the engine environment") from e
     with tempfile.TemporaryDirectory() as tmp:
         path=Path(tmp)/"source.mp4";path.write_bytes(raw)
