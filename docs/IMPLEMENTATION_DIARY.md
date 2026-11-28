@@ -1156,3 +1156,7 @@ User reported missing visible sprite exports and oversized timeline thumbnails. 
 ### Phase 63A — Paired preview foundation (2026-11-28, Asia/Manila)
 
 Added independent two-slot preview dialog in Scenes and Full-frame Animation Studio. Reuses CPU scene renderer, supports current clips, actor bundles and PNG sequences, transforms, shared playback and portable pair JSON. Desktop and CI validation pending; source assets and scene state are not mutated.
+
+### Phase 63B — Paired timeline (2026-11-28, Asia/Manila)
+
+Added per-actor active range, source offset, speed and completion mode; shared clickable source-frame tracks, stepping and elapsed-time playback with optional loop. Pair JSON retains timing. Desktop and CI validation pending.
