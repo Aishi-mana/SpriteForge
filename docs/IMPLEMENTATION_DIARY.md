@@ -1184,3 +1184,7 @@ PR #157 CPU validation passed and merged into main at a1b381d. Added paired Wan 
 ### Phase 63H — Experimental joint generation (2026-11-28, Asia/Manila)
 
 PR #158 CPU validation passed and merged at 30a86f6. Added explicit paired Wan prompt, joint composition and generation/import, exclusive pixel assignment masks, per-frame review and validated two-slot acceptance. Added standalone mask tests. No automatic anatomical separation or hidden pixel reconstruction; desktop/GPU/CI validation pending.
+
+### Phase 63I — Paired world integration (2026-11-28, Asia/Manila)
+
+PR #159 CPU validation passed and merged at b6dd909. Added paired world preview, map placement/scale, independent drawing with shared depth group, stage release, footprint warnings and pair validation. Added regression assertions and acceptance checklist. Desktop/GPU and CI validation pending; no movement solver or persistent map interaction instances.
