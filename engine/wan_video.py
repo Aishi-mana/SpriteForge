@@ -1,5 +1,6 @@
 """Owned, short-lived ComfyUI server for the shared Wan 2.2 GGUF workflow."""
-import json, os, secrets, socket, subprocess, tempfile, time, urllib.request, urllib.error
+import json, os, secrets, socket, subprocess, tempfile, time, urllib.request, urllib.error, shutil, logging
+from contextlib import contextmanager
 from pathlib import Path
 from . import local_runtime, full_frame_guidance as G, world
 
@@ -69,6 +70,46 @@ def http(port,path,body=None,timeout=10):
         with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req,timeout=timeout) as res:return json.load(res)
     except urllib.error.HTTPError as e:raise RuntimeError("ComfyUI rejected request: "+e.read(4000).decode(errors="replace")) from e
 
+@contextmanager
+def workspace():
+    """Cleanup is best effort and must never override a render result or error."""
+    d=Path(tempfile.mkdtemp(prefix="spriteforge-wan-"))
+    try:
+        yield d
+    finally:
+        # Keep the last diagnostic log outside the disposable directory.
+        try:
+            logs=local_runtime.ROOT/"wan-logs"
+            logs.mkdir(exist_ok=True)
+            if (d/"engine.log").is_file():
+                shutil.copyfile(d/"engine.log",logs/"last-engine.log")
+        except OSError as exc:
+            logging.warning("Could not preserve Wan log: %s",exc)
+        for attempt in range(5):
+            try:
+                shutil.rmtree(d)
+                break
+            except FileNotFoundError:
+                break
+            except OSError as exc:
+                if attempt==4:
+                    logging.warning("Wan temporary cleanup deferred: %s (%s)",d,exc)
+                else:
+                    time.sleep(.25*(attempt+1))
+
+def stop_owned(child):
+    """Only stop the process launched for this job; wait even after exit."""
+    if child.poll() is None:
+        try:
+            child.terminate()
+        except ProcessLookupError:
+            pass
+    try:
+        child.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        child.kill()
+        child.wait(timeout=15)
+
 def run(root,body):
     from . import generate as gen, full_frame_video as V
     ready,p,comfy,python,nodes=readiness(root)
@@ -79,8 +120,7 @@ def run(root,body):
         import torch,gc
         if not torch.cuda.is_available():raise RuntimeError("CUDA GPU required")
         gen._cache.update(key=None,pipe=None,cn_name=None);gc.collect();torch.cuda.empty_cache()
-        with tempfile.TemporaryDirectory(prefix="spriteforge-wan-") as tmp:
-            d=Path(tmp)
+        with workspace() as d:
             for name in ("input","output","temp","user"):(d/name).mkdir()
             V.prepare_reference(q["reference"],q["width"],q["height"],q["guidance"]).save(d/"input/reference.png")
             # JSON is valid YAML; isolate all per-job data from both desktop apps.
@@ -125,10 +165,12 @@ def run(root,body):
                     raise RuntimeError("Wan generation timed out")
                 finally:
                     STATUS["stage"]="Releasing owned ComfyUI runtime"
-                    if child.poll() is None:
-                        child.terminate()
-                        try:child.wait(timeout=15)
-                        except subprocess.TimeoutExpired:child.kill();child.wait(timeout=15)
+                    try:
+                        stop_owned(child)
+                    except OSError as exc:
+                        logging.warning("Wan process shutdown failed: %s",exc)
+                    except subprocess.TimeoutExpired as exc:
+                        logging.warning("Wan process shutdown timed out: %s",exc)
     finally:
         STATUS["stage"]="Idle"
         gen._lock.release()
