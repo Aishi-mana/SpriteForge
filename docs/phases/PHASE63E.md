@@ -1,0 +1,5 @@
+# Phase 63E — Interaction presets and enter/loop/exit stages
+
+Paired Preview provides Hold hands, Hug, Kiss, Handshake, Dance, Grapple and Custom presets. Presets set a contact label and suggested boundaries relative to existing scene length; they do not generate or change poses or source artwork. Enable stages on scenes with at least three frames. Enter is [0, loopStart), loop is [loopStart, exitStart), exit is [exitStart, count). Start interaction plays enter then repeats loop. Release is queued to the next loop boundary (or the end of enter if requested early), then plays exit once and holds the last image. Playback uses elapsed time. Stage boundaries and preset persist in pair JSON v1; old files default to disabled stages. Ordinary playback remains available when disabled. The stage boundaries are shared across actors, not separate imported clips.
+
+Regression assertions added for boundary clamping, looping, release during enter/loop and completion. Manual desktop and CI validation pending; tests have not been executed at authoring.

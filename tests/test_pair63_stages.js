@@ -1,0 +1,21 @@
+// Run with node tests/test_pair63_stages.js
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const html=fs.readFileSync(path.join(__dirname,'../ui/index.html'),'utf8');
+const code=html.split('/*PAIR63-STAGES-BEGIN*/')[1].split('/*PAIR63-STAGES-END*/')[0];
+const ctx=vm.createContext({});
+vm.runInContext(code,ctx);
+const b=ctx.pair63Bounds(10,3,7);
+assert.equal(ctx.pair63Bounds(2,1,2),null);
+assert.equal(ctx.pair63Bounds(3,58,59).loopStart,1);
+assert.equal(ctx.pair63StageFrame(b,0).frame,0);
+assert.equal(ctx.pair63StageFrame(b,7).frame,3);
+assert.equal(ctx.pair63StageFrame(b,8,5).frame,8);
+assert.equal(ctx.pair63StageFrame(b,7,1).frame,9);
+assert.equal(ctx.pair63StageFrame(b,6,5).frame,6);
+assert.equal(ctx.pair63StageFrame(b,10,5).done,true);
+assert.equal(ctx.pair63StageFrame(b,11,8).frame,7);
+assert.equal(ctx.pair63StageAt(b,7),'exit');
+console.log('paired stage regression checks passed');
