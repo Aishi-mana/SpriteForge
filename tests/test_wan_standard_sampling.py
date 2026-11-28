@@ -2,7 +2,8 @@ from _common import *
 import subprocess
 
 ui = (ROOT / "ui/index.html").read_text(encoding="utf-8")
-ok('<option value="standard" selected>Standard AI animation</option>' in ui, "standard is default workflow")
+workflow = ui.split('id="ffEasyMode"', 1)[1].split('</select>', 1)[0]
+ok(workflow.split('<option', 1)[1].startswith(' value="standard" selected>Standard AI animation</option>'), "standard is first and selected by default")
 ok(ui.index('id="ffWanSamplingSummary"') < ui.index('id="ffTechnical"'), "sampling summary is visible outside advanced")
 parts = []
 for name in ("ffEasyChanged", "ffWanEndpointActive", "ffWanSamplingSummary"):
