@@ -1012,3 +1012,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — 62H-C: Foreground protection and restrained idle
 
 - User confirmed Wan MP4 delivery and 33 extracted frames after manually installing imageio dependencies. Neutral color key damaged face and white armor; requested smaller idle movement. Added border-connected chroma mask, conservative tolerance/softness, minimal idle and prompt intensity, re-extraction with current tolerances, requirements and existing-venv launcher repair. Added synthetic regression. Foreground matching colors connected to border remain a limitation; semantic BiRefNet/SAM planned. Actual desktop retest pending; no manual CI dispatch.
+
+
+## 2026-11-28 PHT — 62J-B manual transparency correction
+
+- Added selected-frame erase/restore brush, radius and strength, stroke overlay, explicit apply/discard, undo and validated server endpoint. Restore uses an explicitly imported, aligned original PNG; it does not reconstruct missing RGB or automatically recover source video frames. Locked frames and unedited frames protected; no SAM tracking or persistent foreground mask yet. Synthetic regression added; browser and desktop acceptance pending.
