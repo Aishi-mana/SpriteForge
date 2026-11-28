@@ -363,7 +363,7 @@ main>.card{padding:16px;max-width:100%;margin-bottom:16px;border-radius:12px}
 <button class="sec" onclick="mdReset()">Clear modular character</button>
 </div>
 <div id="p-library" class="hide">
-<label>Save a reusable asset</label><select id="libKind" onchange="libKindChanged()"><option value="character">Complete character / outfit collection</option><option value="asset">Selected modular layer</option><option value="rig">Saved body rig preset</option><option value="image">Image from file</option><option value="animation">Current full-frame animation</option></select><label id="libImageLabel" hidden>Image file<input id="libImageFile" type="file" accept="image/png,image/webp"></label>
+<label>Save a reusable asset</label><select id="libKind" onchange="libKindChanged()"><option value="character">Complete character / outfit collection</option><option value="asset">Selected modular layer</option><option value="rig">Saved body rig preset</option><option value="image">Image from file</option><option value="animation">Current full-frame animation</option></select><label id="libImageLabel" hidden>Image file<input id="libImageFile" type="file" accept="image/png"></label>
 <label>Library name</label><input id="libName" maxlength="80" placeholder="Traveling knight">
 <label>Tags (comma separated)</label><input id="libTags" maxlength="480" placeholder="rpg, armor, blue">
 <label>Notes</label><textarea id="libNotes" maxlength="1000" placeholder="Character style, intended base, or fitting notes"></textarea>
@@ -1983,13 +1983,13 @@ function libDraw(){const box=$('libRows');box.replaceChildren();$('libStatus').t
  $('libSave').disabled=LIB.busy;
 }
 function libBusy(){return LIB.busy||DR.busy||MA.busy||MR.busy}
-async function libDownloadCopy(entry){try{const d=await api('/api/library/'+entry.id);if(entry.kind==='animation')da64MotionDownload(new Blob([JSON.stringify(d.payload.document)],{type:'application/json'}),entry.id+'.json');else{const a=document.createElement('a');a.href=d.payload.image;a.download=entry.id+(d.payload.image.startsWith('data:image/webp')?'.webp':'.png');a.click()}}catch(e){$('libStatus').textContent='Download failed: '+e.message}}
+async function libDownloadCopy(entry){try{const d=await api('/api/library/'+entry.id);if(entry.kind==='animation')da64MotionDownload(new Blob([JSON.stringify(d.payload.document)],{type:'application/json'}),entry.id+'.json');else{const a=document.createElement('a');a.href=d.payload.image;a.download=entry.id+'.png';a.click()}}catch(e){$('libStatus').textContent='Download failed: '+e.message}}
 async function libSave(){if(libBusy()){ $('libStatus').textContent='Finish the active character job first.';return }
  const kind=$('libKind').value,name=$('libName').value.trim(),tags=$('libTags').value.split(',').map(t=>t.trim()).filter(Boolean),notes=$('libNotes').value;
  if(!name){$('libStatus').textContent='Enter a library name';return}
  if(kind==='asset'&&!MD.recipe.layers[MD.selected]){$('libStatus').textContent='Select a layer in Modular first';return}
  if(kind==='rig'&&!MD.recipe.rig){$('libStatus').textContent='Save a body rig in Modular first';return}
- LIB.busy=true;libDraw();try{const data={kind,name,tags,notes};if(kind==='image'){const f=$('libImageFile').files[0];if(!f||f.size>17000000)throw Error('Choose a PNG or WebP under 17 MB');[data.image]=await da64Read([f])}else if(kind==='animation'){if(FF.busy||FF.videoBusy||!FF.doc.frames.length)throw Error('Finish or create a full-frame animation first');data.document=FF.doc}else{data.recipe=MD.recipe;data.index=MD.selected}const d=await api('/api/library',{...J,body:JSON.stringify(data)});$('status').textContent='Saved library snapshot: '+d.name;await libRefresh()}catch(e){$('libStatus').textContent='Save failed: '+e.message}finally{LIB.busy=false;$('libSave').disabled=false;for(const b of $('libRows').querySelectorAll('button'))b.disabled=false}
+ LIB.busy=true;libDraw();try{const data={kind,name,tags,notes};if(kind==='image'){const f=$('libImageFile').files[0];if(!f||f.size>17000000)throw Error('Choose a PNG under 17 MB');[data.image]=await da64Read([f])}else if(kind==='animation'){if(FF.busy||FF.videoBusy||!FF.doc.frames.length)throw Error('Finish or create a full-frame animation first');data.document=FF.doc}else{data.recipe=MD.recipe;data.index=MD.selected}const d=await api('/api/library',{...J,body:JSON.stringify(data)});$('status').textContent='Saved library snapshot: '+d.name;await libRefresh()}catch(e){$('libStatus').textContent='Save failed: '+e.message}finally{LIB.busy=false;$('libSave').disabled=false;for(const b of $('libRows').querySelectorAll('button'))b.disabled=false}
 }
 async function libApply(entry){if(libBusy())return;
  if(entry.kind==='character'&&MD.recipe.layers.length&&!confirm('Replace the current modular recipe with a copy of '+entry.name+'? Existing project saves and the library snapshot are unchanged.'))return;
