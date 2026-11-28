@@ -12,6 +12,10 @@
 
 Start with the [living implementation diary](docs/IMPLEMENTATION_DIARY.md), [README.md](README.md), [Architecture](docs/ARCHITECTURE.md), [Development](docs/DEVELOPMENT.md), and [Repository workflow](docs/REPOSITORY_WORKFLOW.md).
 
+## Current animation milestone (2026-11-28)
+
+62K-A AnimateDiff backend merged via PR #142 (CPU #348 passed, merge daa53d1). 62K-B guided local setup and component diagnostics implemented on feature branch, validation pending. See [AnimateDiff setup](docs/ANIMATEDIFF.md). Desktop GPU and visual acceptance remain open. Next: 62K-C motion/reference consistency, 62K-D benchmarking; general text-to-video and Wan motion guidance improvements deferred.
+
 ## What this project does
 
 A Windows-local pixel-art sprite studio built around **SDXL + pixel-art LoRA**. Python/FastAPI in `engine/` serves the single-file vanilla-JS `ui/index.html`; a Tauri v2 desktop window in `src-tauri/` starts and stops the local engine. Optional local chat uses a `llama.cpp` server and a GGUF model.
