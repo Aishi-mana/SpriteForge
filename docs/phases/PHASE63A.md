@@ -1,0 +1,5 @@
+# Phase 63A — Paired Preview Foundation
+
+Open Paired Preview from Full-frame Animation Studio or Scenes. Choose a current full-frame, rig or scene actor clip for each slot, or import a spriteforge-actor JSON bundle or 1–32 equal-sized PNG frames (natural filename order, bottom-center pivot, preview FPS at import). Each slot is a validated independent snapshot. Set X/Y, scale, mirror and depth, render and scrub or play the shared preview. Save/load a separate pair JSON bundle; original scenes and projects are not modified. Uses existing CPU scene validation and compositor. Fixed 512×384 canvas, 2–60 preview frames, 1–60 FPS; existing combined scene pixel and encoded budgets apply. No automatic contact alignment, occlusion reconstruction or direct game exports yet.
+
+Manual acceptance pending: open from both workspaces; assign two distinct clips; import PNG sequences; verify overlap, mirroring, depth, timing, save/reload and unchanged source assets; reject malformed bundles and oversized frames. No GPU required. Browser/desktop and CI validation not performed at authoring.
