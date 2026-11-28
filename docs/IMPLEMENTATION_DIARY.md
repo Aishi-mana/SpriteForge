@@ -1172,3 +1172,7 @@ Added exact-frame position/depth overrides, timeline markers, frame-specific con
 ### Phase 63E — Interaction presets and stages (2026-11-28, Asia/Manila)
 
 Added six named interaction presets plus custom, configurable enter/loop/exit ranges, staged playback with queued release and pair JSON persistence. Added standalone Node regression assertions; execution and desktop validation pending. Presets configure existing clips, not AI-generated poses.
+
+### Phase 63F — Independent interaction export (2026-11-28, Asia/Manila)
+
+Added PNG/lossless WebP independent actor atlases, paged texture sheets, engine-neutral interaction manifest with sampled timing, transforms, contacts and stage ranges, ZIP download UI/API and CPU regression cases. Tests and desktop validation pending; no engine-specific controller or combined GIF yet.

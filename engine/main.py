@@ -1844,6 +1844,15 @@ def scene_export_effect(body: dict=Body(...)):
     except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/paired/export")
+def paired_export(body: dict=Body(...)):
+    from . import paired_export as E
+    try:
+        return StreamingResponse(io.BytesIO(E.export(body)),media_type="application/zip",
+            headers={"Content-Disposition":'attachment; filename="spriteforge-interaction.zip"'})
+    except (ValueError,TypeError,AttributeError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/scenes/export")
 def scene_export(body: dict=Body(...)):
     from . import vfx_export as vx
