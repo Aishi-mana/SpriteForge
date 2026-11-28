@@ -1230,3 +1230,8 @@ PR #168 CPU run 46167123563 passed and merged at 0716b2f4. Reviewed direct edito
 ### Phase 65A — Unified asset library foundation (2026-11-29 PHT)
 
 PR #169 CPU run 46167658301 passed and merged at 3801caeb; desktop/GPU acceptance remains pending. Extended engine/asset_library.py and existing library UI with standalone PNG and validated full-frame animation snapshot kinds, filters, thumbnails and copy download; retained character-library storage, legacy apply behavior and quotas. Existing world PNG validator reused, so WebP import explicitly deferred. Added test_asset_library regression coverage and phase notes. No raw MP4 storage, viewer, shared shortcuts or revision management yet. CPU execution and desktop acceptance pending; no manual CI dispatch.
+
+
+### Phase 65B — Shared save shortcuts (2026-11-29 PHT)
+
+PR #170 CPU run 46168050634 passed and merged at 342dffd9. Added global library navigation and shared named save helper in ui/index.html; shortcuts on generated/portrait results, approved character art, appearance, pixel editor, modular composite, full-frame animation/current frame, original/staged direct animation, VFX frame, map and UI layout. Reused existing API/quotas; no project dependency, no automatic application. Native prompts/alerts for initial in-place save; flattened map/layout only, raw video and specialized bundles deferred. Added JS regression for request, cancellation, busy and failure recovery plus placement, registered in test_ui.py. CPU and actual desktop verification pending; no manual CI dispatch.
