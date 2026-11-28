@@ -1282,3 +1282,5 @@ Verified PR #178 CPU run 46177515167 passed Windows (2258 checks) and Ubuntu (22
 ### Phase 66B — Workspace consolidation (2026-11-29 PHT)
 
 Verified PR #179 merged at 0009efb and its CPU run 46178808305 succeeded. Resumed existing branch from identical main after previous uncommitted patch. Moved existing navigation ahead of project and technical setup, kept project controls visible, added local pinned/recent workspace shortcuts and remembered advanced sampling disclosure, global Queue/history and project access, and explicit AI versus rig guidance. No model or generation default changes. Existing ID inventory preserved, JavaScript syntax parsed. Added source and Node regressions and phase notes. CPU execution and Windows desktop acceptance pending; no manual CI dispatch. Branch phase-66b-workspace-ux.
+
+- PR #180 CPU run 46181172750 failed on Windows and Ubuntu; existing library_shortcuts_test.js asserts the toolbar label Open Asset Library. Restored the established label without changing behavior. Automatic revalidation pending.
