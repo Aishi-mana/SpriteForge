@@ -982,3 +982,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62D: Integration and data integrity
 
 - Found saved-gallery edit deleted original before replacement; added validated atomic PUT replacement, unique IDs and project-scoped gallery callbacks. Serialize UI save/load, retain dirty state for edits during save, cancel stale load before application. Preflight secondary assets before modifying project files; serialize reads against writes. Correct directional reference src field; clear transient full-frame candidates on project load; guard shared FPS/canvas and world clip contracts; export keyframe/lock metadata. Regression tests added. Full crash-atomic multi-file saves and desktop/model acceptance remain pending. No manual CI dispatch.
+
+
+## 2026-11-28 10:04 PHT — Phase 62E: Live acceptance tooling
+
+- PRs #117 and #118 passed CPU validation and merged. Added opt-in live API/SDXL benchmark probe, resource snapshots, non-overwriting JSON report, mocked contract regression and manual release gate. No desktop/GPU execution in connector environment. No manual CI dispatch.
