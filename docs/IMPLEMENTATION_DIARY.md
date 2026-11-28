@@ -1240,3 +1240,8 @@ PR #170 CPU run 46168050634 passed and merged at 342dffd9. Added global library 
 ### Phase 65C — Asset browser and organization (2026-11-29 PHT)
 
 PR #171 CPU run 46168688995 passed and merged at 212180f3. Added collection and favorite metadata, atomic metadata-only PATCH, legacy defaults and collection search in engine/asset_library.py and engine/main.py. UI adds metadata dialog, favorites and collection filters, compact list, sorting and clear filters. Single text-label collections; view settings session-only. Added CPU and JS regression assertions for payload/preview isolation, invalid fields, sort/filter and nonmutation. CPU execution and desktop acceptance pending; no manual CI dispatch.
+
+
+### Phase 65D — Animated sprite storage and viewer (2026-11-29 PHT)
+
+PR #172 CPU run 46169352433 passed and merged at 8f8c04802a8223370074a97a0e980b97f3e0cf21. Added read-only directional viewer with timed playback, scrub, step, speed, loop and existing PNG/JSON/WebP/atlas exports. Preserved inactive-direction frames and counts, added VFX rendered sequence save. Added JS timing and Python directional snapshot regression. Existing quotas and exact frame validation remain; no MP4 storage or editable VFX recipe in snapshots. CPU and desktop validation pending; no manual CI dispatch.
