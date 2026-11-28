@@ -13,15 +13,15 @@
 [32m[INFO][0m Adding extra search path text_encoders C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\clip
 [32m[INFO][0m Adding extra search path loras C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\loras
 [32m[INFO][0m Adding extra search path vae C:\Users\Admin\AppData\Local\Comfy-Desktop\ComfyUI-Shared\models\vae
-[32m[INFO][0m Setting output directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-a3a0gvoe\output
-[32m[INFO][0m Setting input directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-a3a0gvoe\input
-[32m[INFO][0m Setting user directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-a3a0gvoe\user
+[32m[INFO][0m Setting output directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-q27p4_dj\output
+[32m[INFO][0m Setting input directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-q27p4_dj\input
+[32m[INFO][0m Setting user directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-q27p4_dj\user
 [32m[INFO][0m Prestartup Skipping comfyui-easy-use due to disable_all_custom_nodes and whitelist_custom_nodes
 [32m[INFO][0m Prestartup Skipping rgthree-comfy due to disable_all_custom_nodes and whitelist_custom_nodes
 [32m[INFO][0m Found comfy_kitchen backend cuda: {'available': True, 'disabled': False, 'unavailable_reason': None, 'capabilities': ['adaln', 'apply_rope', 'apply_rope1', 'apply_rope1_', 'apply_rope_', 'apply_rope_split_half', 'apply_rope_split_half1', 'apply_rope_split_half1_', 'apply_rope_split_half_', 'convrot_w4a4_linear', 'dequantize_convrot_w4a4_weight', 'dequantize_int8_convrot_weight', 'dequantize_int8_convrot_weight_dtype', 'dequantize_int8_simple', 'dequantize_int8_simple_dtype', 'dequantize_nvfp4', 'dequantize_per_tensor_fp8', 'dequantize_w4a8_int8_weight', 'gemv_awq_w4a16', 'int8_linear', 'na3d', 'prepare_int4_weight_for_int8_linear', 'quantize_and_rotate_rowwise', 'quantize_convrot_w4a4_weight', 'quantize_int8_convrot_weight', 'quantize_int8_rowwise', 'quantize_int8_tensorwise', 'quantize_mxfp8', 'quantize_nvfp4', 'quantize_per_tensor_fp8', 'quantize_svdquant_w4a4', 'quantize_w4a8_int8_weight', 'rms_adaln', 'rms_rope', 'rms_rope1', 'rms_rope1_', 'rms_rope_', 'rms_rope_split_half', 'rms_rope_split_half1', 'rms_rope_split_half1_', 'rms_rope_split_half_', 'rotate_int8_convrot_weight', 'scaled_mm_nvfp4', 'scaled_mm_svdquant_w4a4', 'sol_attn', 'stochastic_rounding_fp8', 'w4a8_int8_linear']}
+[32m[INFO][0m Found comfy_kitchen backend triton: {'available': False, 'disabled': True, 'unavailable_reason': "ImportError: No module named 'triton'", 'capabilities': []}
 [32m[INFO][0m Found comfy_kitchen backend eager: {'available': True, 'disabled': False, 'unavailable_reason': None, 'capabilities': ['adaln', 'apply_rope', 'apply_rope1', 'apply_rope1_', 'apply_rope_', 'apply_rope_split_half', 'apply_rope_split_half1', 'apply_rope_split_half1_', 'apply_rope_split_half_', 'convrot_w4a4_linear', 'dequantize_convrot_w4a4_weight', 'dequantize_int8_convrot_weight', 'dequantize_int8_convrot_weight_dtype', 'dequantize_int8_embedding', 'dequantize_int8_simple', 'dequantize_int8_simple_dtype', 'dequantize_mxfp8', 'dequantize_nvfp4', 'dequantize_per_tensor_fp8', 'dequantize_w4a8_int8_weight', 'gemv_awq_w4a16', 'int8_linear', 'na3d', 'prepare_int4_weight_for_int8_linear', 'quantize_and_rotate_rowwise', 'quantize_convrot_w4a4_weight', 'quantize_int8_convrot_weight', 'quantize_int8_rowwise', 'quantize_int8_tensorwise', 'quantize_mxfp8', 'quantize_nvfp4', 'quantize_per_tensor_fp8', 'quantize_svdquant_w4a4', 'quantize_w4a8_int8_weight', 'rms_adaln', 'rms_rope', 'rms_rope1', 'rms_rope1_', 'rms_rope_', 'rms_rope_split_half', 'rms_rope_split_half1', 'rms_rope_split_half1_', 'rms_rope_split_half_', 'rotate_int8_convrot_weight', 'scaled_mm_mxfp8', 'scaled_mm_nvfp4', 'scaled_mm_svdquant_w4a4', 'sol_attn', 'stochastic_rounding_fp8', 'w4a8_int8_linear']}
 [32m[INFO][0m Found comfy_kitchen backend hip: {'available': False, 'disabled': False, 'unavailable_reason': 'PyTorch ROCm/HIP runtime not available', 'capabilities': []}
-[32m[INFO][0m Found comfy_kitchen backend triton: {'available': False, 'disabled': True, 'unavailable_reason': "ImportError: No module named 'triton'", 'capabilities': []}
 [32m[INFO][0m Checkpoint files will always be loaded safely.
 [32m[INFO][0m Total VRAM 8151 MB, total RAM 32189 MB
 [32m[INFO][0m pytorch version: 2.10.0+cu130
@@ -40,7 +40,7 @@
 [32m[INFO][0m ComfyUI version: 0.35.0
 [32m[INFO][0m comfy-aimdo version: 0.5.3
 [32m[INFO][0m comfy-kitchen version: 0.2.33
-[32m[INFO][0m Setting temp directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-a3a0gvoe\temp\temp
+[32m[INFO][0m Setting temp directory to: C:\Users\Admin\AppData\Local\Temp\spriteforge-wan-q27p4_dj\temp\temp
 [32m[INFO][0m comfyui-frontend-package version: 1.51.10
 [32m[INFO][0m comfyui-workflow-templates version: 0.11.57
 [32m[INFO][0m comfyui-embedded-docs version: 0.5.11
@@ -109,7 +109,7 @@ Change preview_id FK from assets.id to asset_references.id.
 [32m[INFO][0m Using RAM pressure cache.
 [32m[INFO][0m Starting server
 
-[32m[INFO][0m To see the GUI go to: http://127.0.0.1:61686
+[32m[INFO][0m To see the GUI go to: http://127.0.0.1:53292
 [32m[INFO][0m got prompt
 [32m[INFO][0m Using pytorch attention in VAE
 [32m[INFO][0m Using pytorch attention in VAE
@@ -128,14 +128,14 @@ Change preview_id FK from assets.id to asset_references.id.
 [32m[INFO][0m model weight dtype torch.float16, manual cast: None
 [32m[INFO][0m model_type FLOW
 [32m[INFO][0m Requested to load WAN21
-[32m[INFO][0m loaded partially; 4861.73 MB usable, 4829.47 MB loaded, 2146.77 MB offloaded, 32.26 MB buffer reserved, lowvram patches: 0
-  0%|          | 0/10 [00:00<?, ?it/s]  0%|          | 0/10 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/10 [00:19<?, ?it/s,  Model Initialization complete!  ] 10%|█         | 1/10 [00:19<02:57, 19.67s/it,  Model Initialization complete!  ] 10%|█         | 1/10 [00:39<02:57, 19.67s/it]                                    20%|██        | 2/10 [00:39<02:37, 19.74s/it] 30%|███       | 3/10 [00:59<02:20, 20.12s/it] 40%|████      | 4/10 [01:19<02:02, 20.37s/it] 50%|█████     | 5/10 [01:40<01:41, 20.28s/it] 60%|██████    | 6/10 [02:00<01:21, 20.43s/it] 70%|███████   | 7/10 [02:21<01:01, 20.42s/it] 80%|████████  | 8/10 [02:41<00:40, 20.50s/it] 90%|█████████ | 9/10 [03:02<00:20, 20.51s/it]100%|██████████| 10/10 [03:22<00:00, 20.49s/it]100%|██████████| 10/10 [03:22<00:00, 20.26s/it]
+[32m[INFO][0m loaded partially; 4861.73 MB usable, 4807.99 MB loaded, 2168.25 MB offloaded, 53.74 MB buffer reserved, lowvram patches: 0
+  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:12<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:12<00:12, 12.33s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:21<00:12, 12.33s/it]                                   100%|██████████| 2/2 [00:21<00:00, 10.91s/it]100%|██████████| 2/2 [00:21<00:00, 10.91s/it]
 [32m[INFO][0m gguf qtypes: F16 (694), Q3_K (280), Q5_K (2), Q4_K (118), F32 (1)
 [32m[INFO][0m model weight dtype torch.float16, manual cast: None
 [32m[INFO][0m model_type FLOW
 [32m[INFO][0m Requested to load WAN21
-[32m[INFO][0m loaded partially; 4860.73 MB usable, 4828.48 MB loaded, 2147.76 MB offloaded, 32.26 MB buffer reserved, lowvram patches: 0
-  0%|          | 0/10 [00:00<?, ?it/s]  0%|          | 0/10 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/10 [00:19<?, ?it/s,  Model Initialization complete!  ] 10%|█         | 1/10 [00:19<02:54, 19.38s/it,  Model Initialization complete!  ] 10%|█         | 1/10 [00:40<02:54, 19.38s/it]                                    20%|██        | 2/10 [00:40<02:41, 20.18s/it] 30%|███       | 3/10 [01:00<02:22, 20.42s/it] 40%|████      | 4/10 [01:21<02:03, 20.51s/it] 50%|█████     | 5/10 [01:41<01:42, 20.49s/it] 60%|██████    | 6/10 [02:02<01:22, 20.56s/it] 70%|███████   | 7/10 [02:22<01:01, 20.56s/it] 80%|████████  | 8/10 [02:43<00:41, 20.58s/it] 90%|█████████ | 9/10 [03:04<00:20, 20.59s/it]100%|██████████| 10/10 [03:24<00:00, 20.51s/it]100%|██████████| 10/10 [03:24<00:00, 20.46s/it]
+[32m[INFO][0m loaded partially; 4860.73 MB usable, 4806.99 MB loaded, 2169.25 MB offloaded, 53.74 MB buffer reserved, lowvram patches: 0
+  0%|          | 0/2 [00:00<?, ?it/s]  0%|          | 0/2 [00:00<?, ?it/s,   Model Initializing ...  ]  0%|          | 0/2 [00:13<?, ?it/s,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:13<00:13, 13.28s/it,  Model Initialization complete!  ] 50%|█████     | 1/2 [00:22<00:13, 13.28s/it]                                   100%|██████████| 2/2 [00:22<00:00, 11.35s/it]100%|██████████| 2/2 [00:22<00:00, 11.35s/it]
 [32m[INFO][0m Requested to load WanVAE
 [32m[INFO][0m Model WanVAE prepared for dynamic VRAM loading. 241MB Staged. 0 patches attached. Force pre-loaded 60 weights: 61 KB.
-[32m[INFO][0m [32mPrompt executed in 441.33 seconds[0m
+[32m[INFO][0m [32mPrompt executed in 84.77 seconds[0m
