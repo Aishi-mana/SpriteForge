@@ -54,4 +54,20 @@ G.release_resources(True,fake)
 ok(G._cache["pipe"] is None and G._cache["key"] is None and calls==["released","released"],"unload clears pipeline")
 cpu=SimpleNamespace(cuda=SimpleNamespace(is_available=lambda:False))
 ok(G.resource_status(cpu)["memory"] is None and not G.resource_status(cpu)["cuda"],"CPU-only status tolerates missing CUDA")
+# Cache identity includes adapter directories only when relevant.
+k=G._pipeline_key
+ok(k("ckpt","lora",1,"a",True)!=k("ckpt","lora",1,"b",True),"LoRA directory change invalidates pipeline")
+ok(k("ckpt",None,1,"a",False)==k("ckpt",None,1,"b",False),"unused LoRA directory does not force reload")
+ok(k("ckpt",None,1,None,False,True,"a")!=k("ckpt",None,1,None,False,True,"b"),"ControlNet directory change invalidates pipeline")
+ok(k("ckpt",None,1,None,False)!=k("ckpt",None,1,None,False,inpaint=True),"generation and inpaint cache isolated")
+class Gone(Exception):pass
+class Denied(Exception):pass
+class Proc:
+    def memory_info(self):return SimpleNamespace(rss=100)
+    def children(self,recursive=False):return [self,SimpleNamespace(memory_info=lambda:(_ for _ in ()).throw(Gone()))]
+ps=SimpleNamespace(Process=Proc,virtual_memory=lambda:SimpleNamespace(available=500,total=1000),NoSuchProcess=Gone,AccessDenied=Denied)
+ram=G.ram_status(ps)
+ok(ram=={"process_rss":100,"child_rss":100,"children":2,"children_measured":1,"available":500,"total":1000},"RAM status tolerates exited worker")
+ok(G.ram_status(SimpleNamespace(Process=lambda:None)) is None,"RAM probe failure is optional")
+ok(status["memory"]["reserved_unused"]==2**30,"unused allocator reserve reported")
 done("test_stability")

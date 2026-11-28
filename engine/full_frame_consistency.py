@@ -21,8 +21,7 @@ def stats(a):
 
 def inspect(doc):
     d=F.validate(doc)
-    arrays=[np.array(world.image(s)) for s in d["frames"]]
-    metrics=[stats(a) for a in arrays]
+    metrics=[stats(np.array(world.image(s))) for s in d["frames"]]
     rows=[]
     for i,s in enumerate(metrics):
         neighbors=[v for v in metrics[max(0,i-1):i+2] if v is not None]

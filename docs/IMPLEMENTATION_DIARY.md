@@ -1289,3 +1289,8 @@ Verified PR #179 merged at 0009efb and its CPU run 46178808305 succeeded. Resume
 ### Phase 66C — Cross-studio transfers (2026-11-29 PHT)
 
 Built on corrected 66B branch pending CPU revalidation. Added result/history and current-frame Send to studio modal (World/System/VFX), reuse of existing PNG imports, revision/busy guards, explicit replacement confirmation and recoverable error state. Added current full-frame animation to Scenes as independent directional actor via existing validation, without file roundtrip. Reference replacement confirmation keeps existing animation frames. VFX first-time preset setup may require retry. Source ID inventory and JavaScript syntax preflight passed; source regression tests added. CPU and desktop acceptance pending; no manual CI dispatch. No model defaults changed.
+
+
+### Phase 66D — Resource optimization (2026-11-29 PHT)
+
+66B PR #180 CPU run 46183202512 passed, merged at 6af2a9f; 66C PR #181 CPU run 46183309896 passed, retargeted and merged at 8d7020e. Added active adapter directory cache identity, stale ControlNet metadata clearing, optional psutil RAM/system/worker RSS reporting and unused allocator reserve, clearer release versus unload labels. Interpolation decodes rolling pairs and hold skips internal array decode; temporal inspection retains metrics only. Existing validation, sampling/offload/defaults and correction algorithm unchanged. Added CPU regressions and phase note. JS syntax preflight passed; Python CPU execution and Windows/GPU measurement pending. No manual CI dispatch.

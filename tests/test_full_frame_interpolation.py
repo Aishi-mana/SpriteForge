@@ -24,4 +24,12 @@ for bad in ({"factor":5},{"mode":"bad"},{"strength":101}):
     except ValueError:ok(True,"invalid interpolation rejected")
 try:I.interpolate({**d,"fps":40},{"factor":2});ok(False,"FPS budget")
 except ValueError:ok(True,"FPS budget enforced")
+# Isolate interpolation decoding from the existing validator's own decoding.
+from unittest.mock import patch
+with patch.object(F,"validate",side_effect=lambda value:value),patch.object(world,"image",wraps=world.image) as decode:
+    I.interpolate(d,{"mode":"hold","factor":2})
+    ok(decode.call_count==0,"hold mode avoids decoding artwork")
+with patch.object(F,"validate",side_effect=lambda value:value),patch.object(world,"image",wraps=world.image) as decode:
+    I.interpolate(d,{"mode":"motion","factor":2})
+    ok(decode.call_count==3,"rolling pair reuses next frame and decodes loop endpoint")
 done("test_full_frame_interpolation")
