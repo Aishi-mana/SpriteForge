@@ -10,3 +10,6 @@ accelerate
 safetensors
 peft
 omegaconf
+
+imageio
+imageio-ffmpeg
