@@ -1262,3 +1262,8 @@ PR #173 CPU run 46169676634 passed and merged at ca35ee2e. Added atomic original
 ### Phase 65G — Asset revisions and relationships (2026-11-29 PHT)
 
 PR #174 CPU run 46171252948 passed and merged at 31f5d95a; PR #175 CPU run 46171391625 passed and retargeted to main, merged at ffa5f9ca. Added parent/relation metadata on new saves, validated link/unlink and ancestry/children APIs, history dialog with source and descendant navigation. Same-kind revisions and video-to-animation extraction type checks; cycle rejection. Independent payloads survive source deletion, with missing-parent indicator. Known in-session video/extraction and exact animation object provenance links added conservatively; manual links for other workflows. Python and JS regression coverage added, CPU and desktop verification pending. No manual CI dispatch.
+
+
+### Phase 65H — Import, export and library backup (2026-11-29 PHT)
+
+PR #176 CPU run 46173496404 passed and merged at 3f801a26. Added engine/library_backup.py, disk-backed ZIP download and multipart restore API, full library/individual export and restore controls. Manifest sizes and SHA-256, strict allowed member paths and payload validation, staged restore with collision remapping, internal relationship preservation and external link detachment. Existing quotas retained; no overwrite mode, models/projects/config excluded. Ordinary publication failure rollback, not crash-atomic. Added six-kind roundtrip and invalid archive/capacity regression plus JS placement assertions. CPU and desktop validation pending; no manual CI dispatch.
