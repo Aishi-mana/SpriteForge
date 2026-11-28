@@ -1614,6 +1614,13 @@ def full_frame_directions(body: dict=Body(...)):
     except ValueError as e:raise HTTPException(400,str(e))
 
 
+@app.post("/api/full-frame/export")
+def full_frame_export(body: dict=Body(...)):
+    from . import full_frame_export as E
+    try:return StreamingResponse(io.BytesIO(E.export(body.get("document"),body.get("kind","atlas"))),media_type="application/zip",headers={"Content-Disposition":'attachment; filename="spriteforge-animation.zip"'})
+    except (ValueError,OSError) as e:raise HTTPException(400,str(e))
+
+
 @app.post("/api/full-frame/validate")
 def full_frame_validate(body: dict=Body(...)):
     from . import full_frame

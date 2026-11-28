@@ -1,0 +1,3 @@
+# Phase 61S-J — World integration and export
+
+Assign Full-frame animation in World Studio playtest slots. Directional playback chooses the movement direction when available, otherwise the active clip; no automatic mirroring. Existing collision and depth sorting remain in use. Current frame event is shown in status. Saved projects expose their full-frame clip. ZIP exports contain paged PNG atlas, individual PNG sequence or lossless animated WebP per populated direction with animation.json and Godot/Unity import notes. Native engine importers, runtime event dispatch, damage, root-motion and desktop/GPU acceptance remain deferred. World playtest retains scene decoder size and aggregate budgets.
