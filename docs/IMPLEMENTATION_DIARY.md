@@ -977,3 +977,8 @@ Use the following template for each future change (replace placeholders with act
 ## 2026-11-28 PHT — Phase 62C: UI/UX consolidation
 
 - PRs #115 and #116 passed CPU validation and merged. Reorganized the existing 20 workspace buttons into six expandable categories plus always-visible Queue, automatically opening the active category on direct navigation. Result cards now prioritize AI editing, full-frame animation, rig animation and save; all remaining actions are retained in expandable More actions. Corrected misleading directional reference label and clarified animation methods. Updated browser smoke for categorized navigation and expandable result actions. Browser/desktop acceptance pending; no manual CI dispatch.
+
+
+## 2026-11-28 PHT — Phase 62D: Integration and data integrity
+
+- Found saved-gallery edit deleted original before replacement; added validated atomic PUT replacement, unique IDs and project-scoped gallery callbacks. Serialize UI save/load, retain dirty state for edits during save, cancel stale load before application. Preflight secondary assets before modifying project files; serialize reads against writes. Correct directional reference src field; clear transient full-frame candidates on project load; guard shared FPS/canvas and world clip contracts; export keyframe/lock metadata. Regression tests added. Full crash-atomic multi-file saves and desktop/model acceptance remain pending. No manual CI dispatch.

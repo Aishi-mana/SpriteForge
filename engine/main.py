@@ -2479,6 +2479,11 @@ def projects_sprites(name: str):
     return {"sprites": _proj(projects.list_sprites, name)}
 
 
+@app.put("/api/projects/{name}/sprites/{sid}")
+def projects_replace_sprite(name: str,sid: str,body: dict=Body(...)):
+    return {"id":_proj(projects.replace_sprite,name,sid,body.get("sprite"))}
+
+
 @app.delete("/api/projects/{name}/sprites/{sid}")
 def projects_del_sprite(name: str, sid: str):
     _proj(projects.delete_sprite, name, sid)

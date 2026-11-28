@@ -36,6 +36,7 @@ def interpolate(doc,options):
     if n<2:raise ValueError("At least two frames are required")
     factor=q["factor"];count=n*factor if d["loop"] or q["preserve_duration"] else (n-1)*factor+1
     fps=d["fps"]*factor if q["preserve_duration"] else d["fps"]
+    if fps!=d["fps"] and any(v["frames"] for v in d["directions"].values()):raise ValueError("Cannot change shared FPS for only one direction; disable preserve duration")
     if fps>60:raise ValueError("Preserving duration would exceed 60 FPS")
     if count>F.MAX_FRAMES or count*d["width"]*d["height"]>F.MAX_PIXELS:raise ValueError("Interpolated sequence exceeds frame or pixel budget")
     arrays=[np.array(world.image(s)) for s in frames];out=[];encoded=0
